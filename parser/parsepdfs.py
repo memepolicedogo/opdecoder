@@ -1,13 +1,13 @@
 #!/bin/python
 import pdfplumber
 import sys
+import os
 import json
+import threading
 
 def type_table(table):
-    match table[0][0]:
-        case 'Opcode':
-            return 'Instruction'
-        case 'Opcode/Instruction':
+    match table[0][0][0:5]:
+        case 'Opcod':
             return 'Instruction'
         case 'Op/En':
             return 'Operand'
@@ -17,6 +17,9 @@ def type_table(table):
 
 def parse(file):
     pdf = pdfplumber.open(file);
+    # get base name for JSON output
+    filename = file.split('/')[-1]
+    filename.replace('.pdf', '')
     full_data = []
     for page in pdf.pages:
         tables = page.extract_tables()
@@ -33,6 +36,9 @@ def parse(file):
     for table in full_data:
         curr = type_table(table)
         if curr == 'Unknown':
+            print("--UNKNOWN--")
+            print(table)
+            print("-----------")
             # Skip unknown tables
             prev = None
             curr = None
@@ -45,12 +51,23 @@ def parse(file):
         else:
             cleaned.append(table)
         prev = curr
-    json.dump(cleaned, open('out.json', 'w'))
+    json.dump(cleaned, open(f"out/{filename}.json", 'w'))
     return
 
 def main(args):
-    for arg in args[1:]:
-        parse(arg)
+    if len(args) == 1:
+        print("Path(s) to PDF(s) required")
+    else:
+        # Create output dir
+        os.makedirs('out', exist_ok=True)
+        # Each PDF is wholly independent so they can each be processed in a unique thread
+        threads = []
+        for arg in args[1:]:
+            threads.append(threading.Thread(target=parse, args=(arg)))
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
     return
 if __name__ == "__main__":
     main(sys.argv)

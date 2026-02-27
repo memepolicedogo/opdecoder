@@ -14,6 +14,10 @@ def type_table(table):
         case _:
             return 'Unknown'
 
+def filter_size(obj):
+    if obj.get('object_type', 0) != 'char':
+        return True
+    return obj.get('size', 0) > 7
 
 def parse(file):
     pdf = pdfplumber.open(file);
@@ -23,6 +27,8 @@ def parse(file):
     print(f"{filename}: " + "Parsing PDF")
     full_data = []
     for page in pdf.pages:
+        # Remove superscript
+        page = page.filter(filter_size)
         tables = page.extract_tables()
         if len(tables) == 0:
             # No tables? must be just description, skip.
@@ -40,17 +46,16 @@ def parse(file):
     prev = None
     for table in full_data: 
         curr = type_table(table)
-        if curr == 'Unknown': 
-            unknown_count += 1
-            print(f"{filename}: " + "--UNKNOWN--")
-            print(f"{filename}: ", end='') 
-            print(table)
-            print(f"{filename}: " + "-----------")
+        if curr == 'Unknown':
             # Skip unknown tables
             prev = None
             curr = None
             continue
-        if curr == prev: 
+        if (table[0][1][:2] != 'Op' and table[0][2][:2] != 'Op' ):
+            cleaned.append(table)
+            prev = None
+            curr = None
+        elif curr == prev: 
             # Remove defenition from table
             table.pop(0)
             # Merge tables
@@ -58,13 +63,8 @@ def parse(file):
         else: 
             cleaned.append(table)
         prev = curr
-    print(f"{filename}: " + "---STATS---")
     print(f"{filename}: " + f"Unique/Total: {len(cleaned)}/{raw_tables}")
-    print(f"{filename}: " + f"Unknown Tables: {unknown_count}")
     # total tables - tables ignored - final table count = tables that were merged into others
-    print(f"{filename}: " + f"Merges: {raw_tables-unknown_count-len(cleaned)}")
-    print(f"{filename}: " + f"Instructions: {int(len(cleaned)/2)}")
-    print(f"{filename}: " + "-----------")
     print(f"{filename}: " + f"Writing JSON results to {filename}.json")
     json.dump(cleaned, open(f"out/{filename}.json", 'w'))
     print(f"{filename}: " + "Exiting")

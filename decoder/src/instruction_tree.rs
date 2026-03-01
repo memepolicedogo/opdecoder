@@ -1,9 +1,10 @@
 use core::panic;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
-use serde::Deserialize;
+use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Instruction {
     pub opcode: String,
     #[serde(rename = "instruction")]
@@ -18,6 +19,52 @@ struct OpByte {
     mask: u8,
     inv_code: u8,
     inv_mask: u8,
+}
+
+impl fmt::Display for OpByte {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:02X}{:02X}{:02X}{:02X}",
+            self.code, self.mask, self.inv_code, self.inv_mask
+        )
+    }
+}
+
+impl std::str::FromStr for OpByte {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 8 {
+            return Err("Invalid length".into());
+        }
+
+        Ok(OpByte {
+            code: u8::from_str_radix(&s[0..2], 16).map_err(|e| e.to_string())?,
+            mask: u8::from_str_radix(&s[2..4], 16).map_err(|e| e.to_string())?,
+            inv_code: u8::from_str_radix(&s[4..6], 16).map_err(|e| e.to_string())?,
+            inv_mask: u8::from_str_radix(&s[6..8], 16).map_err(|e| e.to_string())?,
+        })
+    }
+}
+
+impl Serialize for OpByte {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for OpByte {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(D::Error::custom)
+    }
 }
 
 impl Default for OpByte {
@@ -53,7 +100,7 @@ impl PartialEq<u8> for OpByte {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Node {
     val: OpByte,
     instructions: Vec<Instruction>,
@@ -86,7 +133,7 @@ impl<'a> PartialEq<OpByte> for &Node {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct InstructionTree {
     nodes: Vec<Node>,
     root: usize,
@@ -304,11 +351,23 @@ impl<'a> InstructionTree {
     // Traverse the tree from root using the opcode
     pub fn traverse(&mut self, opcode: &Vec<u8>) -> InsTreeResponse<'_> {
         self.last = self.root;
-        let mut response = InsTreeResponse {
-            val: Vec::new(),
-            bottom: false,
+        let mut curr = self.root;
+        for step in opcode {
+            curr = self.nodes[self.last].get(step).unwrap_or(self.last);
+            // If get failed return empty response
+            if curr == self.last {
+                return InsTreeResponse {
+                    val: Vec::new(),
+                    bottom: true,
+                };
+            }
+            self.last = curr;
+        }
+        // If full path is traversed get relevent instructions and return
+        return InsTreeResponse {
+            val: self.gather_instructions(curr),
+            bottom: self.nodes[curr].children.is_empty(),
         };
-        return response;
     }
 
     // Step down the tree by one byte/node
@@ -329,7 +388,7 @@ impl<'a> InstructionTree {
                 // Get all possible instructions
                 val: self.gather_instructions(exp),
                 // If last node has no children we're at the bottom, otherwise false
-                bottom: self.nodes[exp].children.len() == 0,
+                bottom: self.nodes[exp].children.is_empty(),
             };
         }
     }
@@ -360,50 +419,79 @@ struct Context {
     addr_override: bool,
 }
 
+impl Default for Context {
+    fn default() -> Self {
+        Self {
+            size: ArchSize::I32,
+            one: 0,
+            two: 0,
+            op_override: false,
+            addr_override: false,
+        }
+    }
+}
+
+struct Decoder {
+    context: Context,
+    tree: InstructionTree,
+}
+
 const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
-static mut CONTEXT: Context = Context {
-    size: ArchSize::I64,
-    one: 0,
-    two: 0,
-    op_override: false,
-    addr_override: false,
-};
-static NULL_INSTRUCTION: Instruction = Instruction {
-    opcode: String::new(),
-    text: String::new(),
-    operands: Some(Vec::new()),
-    description: String::new(),
-};
 
-fn parse(bytestring: &Vec<u8>) -> ParseResponse<'_> {
-    let mut offset: usize = 0;
-    let mut byte: u8;
-    let mut prefix = Vec::new();
-    let mut opcode = Vec::new();
-    unsafe {
+impl Decoder {
+    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse<'_> {
+        let mut offset: usize = 0;
+        let mut byte: u8;
+        let mut prefix = Vec::new();
+        let mut opcode = Vec::new();
         // Reset Context
-        CONTEXT.one = 0;
-        CONTEXT.two = 0;
-        CONTEXT.op_override = false;
-        CONTEXT.addr_override = false;
-        // Parse prefixes
-        while offset < MAX_PREFIX && offset < bytestring.len() {
-            byte = bytestring[offset];
+        self.context.one = 0;
+        self.context.two = 0;
+        self.context.op_override = false;
+        self.context.addr_override = false;
+        // Step until we bottom out
+        // If no instructions parse one byte as prefix, step again
+        // Continue until nothing for 4th prefix byte
+        // if still nothing return empty vec and 1 offset (try again 1 byte ahead)
+        let mut prefix_count = 0;
+        let ins = 'parent: loop {
+            for i in (prefix_count..MAX_WIDTH) {
+                let mut rep = self.tree.step(bytestring[i]);
+                if rep.bottom && rep.val.is_empty() {
+                    prefix_count += 1;
+                    break;
+                } else if rep.bottom {
+                    // We've found at least one match
+                    prefix.extend_from_slice(&bytestring[..prefix_count]);
+                    opcode.extend_from_slice(&bytestring[prefix_count..i]);
+                    break 'parent rep.val;
+                }
+            }
+            if prefix_count > 4 {
+                break Vec::new();
+            }
+        };
+        // If we got nothing we do nothing
+        if ins.is_empty() {
+            return ParseResponse {
+                val: Vec::new(),
+                offset: 1,
+            };
+        }
+        // Figure out the prefixes
+        for byte in prefix {
             // If byte isn't in range to be a valid prefix then escape
             if byte < 0x26 || byte > 0xf3 {
                 break;
             } else if byte >= 0xf0 {
-                CONTEXT.one = byte;
-                prefix.push(byte);
+                self.context.one = byte;
             } else if byte == 0x66 {
-                CONTEXT.op_override = true;
-                prefix.push(byte);
+                self.context.op_override = true;
             } else if byte == 0x67 {
-                CONTEXT.addr_override = true;
-                prefix.push(byte);
+                self.context.addr_override = true;
             } else {
-                CONTEXT.two = match byte {
+                self.context.two = match byte {
                     0x2e => 0x2e,
                     0x36 => 0x36,
                     0x3e => 0x3e,
@@ -412,25 +500,21 @@ fn parse(bytestring: &Vec<u8>) -> ParseResponse<'_> {
                     0x65 => 0x65,
                     _ => 0,
                 };
-                if CONTEXT.two == 0 {
+                if self.context.two == 0 {
                     break;
                 }
-                prefix.push(byte);
             }
 
             offset += 1;
         }
+        // Context is probably accurate now idk
+        // Now we have to do conflict resolution and ensure that the prefixes and the instruction
+        // match
+        print!("I CANT STOP WINNING!!!");
+        // If instruction is invalid
+        return ParseResponse {
+            val: Vec::new(),
+            offset: 1,
+        };
     }
-
-    while offset < MAX_WIDTH && offset < bytestring.len() {
-        // Traverse the tree
-        byte = bytestring[offset];
-        opcode.push(byte);
-        offset += 1;
-    }
-    // If instruction is invalid
-    return ParseResponse {
-        val: vec![&NULL_INSTRUCTION],
-        offset: 1,
-    };
 }

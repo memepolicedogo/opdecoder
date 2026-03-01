@@ -54,6 +54,7 @@ impl PartialEq for OpByte {
 impl PartialEq<u8> for OpByte {
     fn eq(&self, other: &u8) -> bool {
         self.code == (other & self.mask)
+            && (self.inv_mask == 0 || self.inv_code != (other & self.inv_mask))
     }
 }
 
@@ -217,11 +218,11 @@ impl<'a> InstructionTree {
                         '!' => neg = true,
                         '1' => {
                             if neg {
-                                inv_mask = inv_mask & (1 << i);
-                                inv_code = inv_code & (1 << i);
+                                inv_mask = inv_mask | (1 << i);
+                                inv_code = inv_code | (1 << i);
                             } else {
-                                mask = mask & (1 << i);
-                                code = code & (1 << i);
+                                mask = mask | (1 << i);
+                                code = code | (1 << i);
                             }
                             i -= 1;
                         }
@@ -229,9 +230,9 @@ impl<'a> InstructionTree {
                         // include it
                         '0' => {
                             if neg {
-                                inv_mask = inv_mask & (1 << i);
+                                inv_mask = inv_mask | (1 << i);
                             } else {
-                                mask = mask & (1 << i);
+                                mask = mask | (1 << i);
                             }
                             i -= 1;
                         }
@@ -332,6 +333,7 @@ impl<'a> InstructionTree {
         } else {
             let exp = curr.expect("Impossible");
             self.last = exp;
+            println!("{:?}", self.nodes[exp].val);
             return InsTreeResponse {
                 // Get all possible instructions
                 val: self.gather_instructions(exp),

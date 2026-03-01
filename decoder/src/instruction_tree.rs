@@ -510,7 +510,10 @@ impl Decoder {
         // Context is probably accurate now idk
         // Now we have to do conflict resolution and ensure that the prefixes and the instruction
         // match
-        print!("I CANT STOP WINNING!!!");
+        for instruction in ins {
+            // Check if instruction matches the vibes
+        }
+
         // If instruction is invalid
         return ParseResponse {
             val: Vec::new(),

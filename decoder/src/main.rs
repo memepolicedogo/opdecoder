@@ -1,3 +1,4 @@
+#![allow(dead_code, unused)]
 mod instruction_tree;
 use std::{fs, io};
 

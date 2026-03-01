@@ -12,11 +12,6 @@ pub struct Instruction {
     pub description: String,
 }
 
-#[derive(Deserialize, Debug)]
-struct InstructionTables {
-    tables: Vec<Vec<Instruction>>,
-}
-
 #[derive(Eq, Hash, Clone, Copy, Debug)]
 struct OpByte {
     code: u8,
@@ -61,7 +56,6 @@ impl PartialEq<u8> for OpByte {
 #[derive(Debug)]
 struct Node {
     val: OpByte,
-    index: usize,
     instructions: Vec<Instruction>,
     children: HashMap<OpByte, usize>,
 }
@@ -268,7 +262,6 @@ impl<'a> InstructionTree {
                     mask: 0,
                     ..Default::default()
                 },
-                index: 0,
                 instructions: Vec::new(),
                 children: HashMap::new(),
             }],
@@ -288,7 +281,6 @@ impl<'a> InstructionTree {
                             let new_index = result.nodes.len();
                             result.nodes.push(Node {
                                 val: step,
-                                index: new_index,
                                 instructions: Vec::new(),
                                 children: HashMap::new(),
                             });
@@ -310,7 +302,7 @@ impl<'a> InstructionTree {
     }
 
     // Traverse the tree from root using the opcode
-    pub fn traverse(&mut self, opcode: &Vec<u8>) -> InsTreeResponse {
+    pub fn traverse(&mut self, opcode: &Vec<u8>) -> InsTreeResponse<'_> {
         self.last = self.root;
         let mut response = InsTreeResponse {
             val: Vec::new(),
@@ -321,7 +313,7 @@ impl<'a> InstructionTree {
 
     // Step down the tree by one byte/node
     // Like traverse but from self.last instead of root
-    pub fn step(&mut self, byte: u8) -> InsTreeResponse {
+    pub fn step(&mut self, byte: u8) -> InsTreeResponse<'_> {
         let curr = self.nodes[self.last].get(&byte);
         // If curr and last point to the same node then the given byte does not apply to an opcode
         if curr.is_none() {
@@ -333,7 +325,6 @@ impl<'a> InstructionTree {
         } else {
             let exp = curr.expect("Impossible");
             self.last = exp;
-            println!("{:?}", self.nodes[exp].val);
             return InsTreeResponse {
                 // Get all possible instructions
                 val: self.gather_instructions(exp),

@@ -1,14 +1,15 @@
+use core::panic;
 use std::collections::HashMap;
 
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Instruction {
-    opcode: String,
+    pub opcode: String,
     #[serde(rename = "instruction")]
-    text: String,
-    operands: Vec<String>,
-    description: String,
+    pub text: String,
+    pub operands: Option<Vec<String>>,
+    pub description: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -20,14 +21,33 @@ struct InstructionTables {
 struct OpByte {
     code: u8,
     mask: u8,
+    inv_code: u8,
+    inv_mask: u8,
+}
+
+impl Default for OpByte {
+    fn default() -> Self {
+        Self {
+            code: 0,
+            mask: 255,
+            inv_code: 0,
+            inv_mask: 0,
+        }
+    }
 }
 
 impl PartialEq for OpByte {
     fn eq(&self, other: &Self) -> bool {
-        (self.code == other.code) && (self.mask == other.mask)
+        (self.code == other.code)
+            && (self.mask == other.mask)
+            && (self.inv_mask == other.inv_mask)
+            && (self.inv_code == other.inv_code)
     }
     fn ne(&self, other: &Self) -> bool {
-        (self.code != other.code) || (self.mask != other.mask)
+        (self.code != other.code)
+            || (self.mask != other.mask)
+            || (self.inv_mask != other.inv_mask)
+            || (self.inv_code != other.inv_code)
     }
 }
 
@@ -45,10 +65,9 @@ struct Node {
     children: HashMap<OpByte, usize>,
 }
 
-impl Node<'_> {
+impl Node {
     fn get(&self, byte: &u8) -> Option<usize> {
         for key in self.children.keys() {
-            println!("Key: {:?}", key);
             if key == byte {
                 return Some(*self.children.get(key).expect("THIS DUDE WATCHING PORN"));
             }
@@ -57,7 +76,7 @@ impl Node<'_> {
     }
 }
 
-impl PartialEq for Node<'_> {
+impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         self.val == other.val
     }
@@ -66,7 +85,7 @@ impl PartialEq for Node<'_> {
         self.val != other.val
     }
 }
-impl<'a> PartialEq<OpByte> for &Node<'a> {
+impl<'a> PartialEq<OpByte> for &Node {
     fn eq(&self, other: &OpByte) -> bool {
         self.val == *other
     }
@@ -86,11 +105,14 @@ struct ParseResponse<'a> {
 
 #[derive(Debug)]
 pub struct InsTreeResponse<'a> {
-    val: Vec<&'a Instruction>,
-    bottom: bool,
+    pub val: Vec<&'a Instruction>,
+    pub bottom: bool,
 }
+const IGNORED_CODES: [&'static str; 13] = [
+    "NP", "NFx", "cb", "cw", "cd", "cp", "co", "ct", "ib", "iw", "id", "io", "+i",
+];
 
-impl InstructionTree {
+impl<'a> InstructionTree {
     fn parse_opcode(opcode: &String) -> Vec<OpByte> {
         let mut result = Vec::new();
         let components = opcode.split(' ');
@@ -104,13 +126,16 @@ impl InstructionTree {
             {
                 result.push(OpByte {
                     code: val,
-                    mask: 255,
+                    ..Default::default()
                 });
+            } else if IGNORED_CODES.contains(&byte) {
+                // Ignore
             } else if byte.contains("+") {
                 // 0xXX+r[bwd]
                 result.push(OpByte {
                     code: u8::from_str_radix(&byte[..2], 16).expect("Invalid Opcode"),
                     mask: 0b11111000,
+                    ..Default::default()
                 });
             } else if byte.starts_with("REX.") {
                 if byte.ends_with('R') {
@@ -118,12 +143,14 @@ impl InstructionTree {
                     result.push(OpByte {
                         code: 0b01000000,
                         mask: 0b11111000,
+                        ..Default::default()
                     });
                 } else {
                     // REX.W
                     result.push(OpByte {
                         code: 0b01001000,
                         mask: 0b11111000,
+                        ..Default::default()
                     });
                 }
             } else if byte.starts_with('/') {
@@ -132,57 +159,114 @@ impl InstructionTree {
                     result.push(OpByte {
                         code: 0b00000000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('1') {
                     result.push(OpByte {
                         code: 0b00001000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('2') {
                     result.push(OpByte {
                         code: 0b00010000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('3') {
                     result.push(OpByte {
                         code: 0b00011000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('4') {
                     result.push(OpByte {
                         code: 0b00100000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('5') {
                     result.push(OpByte {
                         code: 0b00101000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('6') {
                     result.push(OpByte {
                         code: 0b00110000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 } else if byte.ends_with('7') {
                     result.push(OpByte {
                         code: 0b00111000,
                         mask: 0b00111000,
+                        ..Default::default()
                     });
                 }
+            } else if byte.contains(':') {
+                // 11:rrr:bbb type bytes
+                let mut mask: u8 = 0;
+                let mut code: u8 = 0;
+                let mut inv_mask: u8 = 0;
+                let mut inv_code: u8 = 0;
+                let mut i = 7;
+                let mut neg = false;
+                for bit in byte.chars() {
+                    match bit {
+                        '!' => neg = true,
+                        '1' => {
+                            if neg {
+                                inv_mask = inv_mask & (1 << i);
+                                inv_code = inv_code & (1 << i);
+                            } else {
+                                mask = mask & (1 << i);
+                                code = code & (1 << i);
+                            }
+                            i -= 1;
+                        }
+                        // If the required byte is null then we just have to update the mask to
+                        // include it
+                        '0' => {
+                            if neg {
+                                inv_mask = inv_mask & (1 << i);
+                            } else {
+                                mask = mask & (1 << i);
+                            }
+                            i -= 1;
+                        }
+                        'r' => i -= 1,
+                        'b' => i -= 1,
+                        _ => continue,
+                    }
+                }
+                result.push(OpByte {
+                    code,
+                    mask,
+                    inv_code,
+                    inv_mask,
+                });
+            } else {
+                println!("Unimplemented Byte: {:?}", byte);
+                panic!("Implement my pages");
             }
         }
         return result;
     }
 
     pub fn from_json(json: &String) -> Self {
-        let tables: Vec<Vec<Instruction>> = serde_json::from_str(json).unwrap();
+        let tables: Vec<Vec<Instruction>> = serde_json::from_str(json).expect("FUCK");
         if tables.len() == 0 {
             println!("Invalid JSON");
         }
         let mut result = Self {
             root: 0,
             nodes: vec![Node {
-                val: OpByte { code: 0, mask: 0 },
+                val: OpByte {
+                    code: 0,
+                    mask: 0,
+                    ..Default::default()
+                },
                 index: 0,
                 instructions: Vec::new(),
                 children: HashMap::new(),
@@ -247,23 +331,23 @@ impl InstructionTree {
             };
         } else {
             let exp = curr.expect("Impossible");
-            self.last = exp.index;
+            self.last = exp;
             return InsTreeResponse {
                 // Get all possible instructions
-                val: self.gather_instructions(exp.index),
+                val: self.gather_instructions(exp),
                 // If last node has no children we're at the bottom, otherwise false
-                bottom: exp.children.len() == 0,
+                bottom: self.nodes[exp].children.len() == 0,
             };
         }
     }
 
     // Recursively get all instructions from self.last down
-    pub fn gather_instructions(&self, index: usize) -> Vec<&'a Instruction> {
+    pub fn gather_instructions(&self, index: usize) -> Vec<&Instruction> {
         let mut response = Vec::new();
         let curr = &self.nodes[index];
         response.extend(&curr.instructions);
         for (_, node) in &curr.children {
-            response.extend(self.gather_instructions(node.index));
+            response.extend(self.gather_instructions(*node));
         }
         return response;
     }
@@ -295,7 +379,7 @@ static mut CONTEXT: Context = Context {
 static NULL_INSTRUCTION: Instruction = Instruction {
     opcode: String::new(),
     text: String::new(),
-    operands: Vec::new(),
+    operands: Some(Vec::new()),
     description: String::new(),
 };
 

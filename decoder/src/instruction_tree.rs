@@ -140,11 +140,6 @@ pub struct InstructionTree {
     last: usize,
 }
 
-struct ParseResponse<'a> {
-    val: Vec<&'a Instruction>,
-    offset: usize,
-}
-
 #[derive(Debug)]
 pub struct InsTreeResponse<'a> {
     pub val: Vec<&'a Instruction>,
@@ -405,18 +400,18 @@ impl<'a> InstructionTree {
     }
 }
 
-enum ArchSize {
+pub enum ArchSize {
     I16,
     I32,
     I64,
 }
 
-struct Context {
-    size: ArchSize,
-    one: u8,
-    two: u8,
-    op_override: bool,
-    addr_override: bool,
+pub struct Context {
+    pub size: ArchSize,
+    pub one: u8,
+    pub two: u8,
+    pub op_override: bool,
+    pub addr_override: bool,
 }
 
 impl Default for Context {
@@ -431,16 +426,21 @@ impl Default for Context {
     }
 }
 
-struct Decoder {
-    context: Context,
-    tree: InstructionTree,
+pub struct ParseResponse {
+    pub val: Option<Instruction>,
+    pub offset: usize,
+}
+
+pub struct Decoder {
+    pub context: Context,
+    pub tree: InstructionTree,
 }
 
 const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
 
 impl Decoder {
-    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse<'_> {
+    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse {
         let mut offset: usize = 0;
         let mut byte: u8;
         let mut prefix = Vec::new();
@@ -475,7 +475,7 @@ impl Decoder {
         // If we got nothing we do nothing
         if ins.is_empty() {
             return ParseResponse {
-                val: Vec::new(),
+                val: None,
                 offset: 1,
             };
         }
@@ -504,19 +504,49 @@ impl Decoder {
                     break;
                 }
             }
-
-            offset += 1;
         }
         // Context is probably accurate now idk
         // Now we have to do conflict resolution and ensure that the prefixes and the instruction
         // match
+        let mut valids = Vec::new();
         for instruction in ins {
             // Check if instruction matches the vibes
+            if instruction.opcode.contains("NP")
+                && (self.context.one == 0xf2
+                    || self.context.one == 0xf3
+                    || self.context.op_override)
+            {
+                //Invalid
+                continue;
+            } else if instruction.opcode.contains("NFx")
+                && (self.context.one == 0xf2 || self.context.one == 0xf3)
+            {
+                //Invalid
+                continue;
+            }
+            valids.push(instruction);
         }
+
+        if valids.is_empty() {
+            return ParseResponse {
+                val: None,
+                offset: 1,
+            };
+        } else if valids.len() == 1 {
+            return ParseResponse {
+                val: Some(valids[0].clone()),
+                offset: prefix_count + opcode.len(),
+            };
+        }
+        // What possibly can be here?
+        // same code but diff size
+        // ??
+        println!("{:?}", valids);
+        panic!("At the disco");
 
         // If instruction is invalid
         return ParseResponse {
-            val: Vec::new(),
+            val: None,
             offset: 1,
         };
     }

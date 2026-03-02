@@ -410,6 +410,16 @@ pub enum ArchSize {
     I64,
 }
 
+pub enum OpType {
+    Reg, // Register
+    Mem, // Memory
+    Imm, // Immediate
+}
+
+pub struct Opperand {
+    pub kind: OpType,
+}
+
 pub struct Context {
     pub size: ArchSize,
     pub one: u8,
@@ -430,7 +440,7 @@ impl Default for Context {
     }
 }
 
-pub struct ParseResponse {
+pub struct InstructionResponse {
     pub val: Option<Instruction>,
     pub offset: usize,
 }
@@ -444,7 +454,24 @@ const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
 
 impl Decoder {
-    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse {
+    fn parse_modrm(&self, bytestring: Vec<u8>) {
+        let byte = bytestring[0];
+        let mode = (byte & 0b1100000) >> 6;
+        let rm = byte & 0b00000111;
+        let reg = (byte & 0b00111000) >> 3;
+        // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
+        if mode != 3 && rm == 4 {
+            let sib = bytestring[1];
+        }
+        match mode {
+            0 => println!("Zero"),
+            1 => println!("Zero"),
+            2 => println!("Zero"),
+            3 => println!("Zero"),
+            _ => panic!("Mod field had invalid value"),
+        }
+    }
+    pub fn parse_instruction(&mut self, bytestring: &Vec<u8>) -> InstructionResponse {
         let mut offset: usize = 0;
         let mut byte: u8;
         let mut prefix = Vec::new();
@@ -478,7 +505,7 @@ impl Decoder {
         };
         // If we got nothing we do nothing
         if ins.is_empty() {
-            return ParseResponse {
+            return InstructionResponse {
                 val: None,
                 offset: 1,
             };
@@ -532,12 +559,12 @@ impl Decoder {
         }
 
         if valids.is_empty() {
-            return ParseResponse {
+            return InstructionResponse {
                 val: None,
                 offset: 1,
             };
         } else if valids.len() == 1 {
-            return ParseResponse {
+            return InstructionResponse {
                 val: Some(valids[0].clone()),
                 offset: prefix_count + opcode.len(),
             };
@@ -549,7 +576,7 @@ impl Decoder {
         panic!("At the disco");
 
         // If instruction is invalid
-        return ParseResponse {
+        return InstructionResponse {
             val: None,
             offset: 1,
         };

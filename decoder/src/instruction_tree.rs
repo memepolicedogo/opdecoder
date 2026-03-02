@@ -450,6 +450,20 @@ pub struct InstructionResponse {
     pub offset: usize,
 }
 
+pub struct OperandResponse {
+    pub val: Option<Vec<String>>,
+    pub offset: usize,
+}
+
+impl Default for OperandResponse {
+    fn default() -> Self {
+        Self {
+            val: None,
+            offset: 0,
+        }
+    }
+}
+
 pub struct Decoder {
     pub context: Context,
     pub tree: InstructionTree,
@@ -457,8 +471,74 @@ pub struct Decoder {
 
 const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
+static REG_MAP: phf::Map<usize, phf::Map<&'static str, &'static str>> = phf_map!{
+    phf_map!{
+    ""
+}
+};
 
 impl Decoder {
+    let reg_map = vec![
+        &HashMap::from([
+            ("8", "AL"),
+        ]),
+    ];
+    pub fn parse_operands(
+        &self,
+        ins: &InstructionResponse,
+        bytestring: &Vec<u8>,
+    ) -> OperandResponse {
+        let instruction = ins.val.as_ref().unwrap();
+        let mut rex_w = false;
+        let mut rex_r = 0;
+        let mut rex_x = 0;
+        let mut rex_b = 0;
+        if instruction.opcode.starts_with("REX") {
+            if bytestring[0] & 0b11110000 != 0b01000000 {
+                panic!("Invalid REX prefix");
+            }
+            // Parse REX prefix
+            rex_w = (bytestring[0] & 0b00001000) != 0;
+            rex_r = (bytestring[0] & 0b00000100) << 1;
+            rex_x = (bytestring[0] & 0b00000010) << 2;
+            rex_b = (bytestring[0] & 0b00000001) << 3;
+        }
+        if instruction.operands.is_none() {
+            return OperandResponse {
+                ..Default::default()
+            };
+        }
+
+        let mut offset = ins.offset;
+        let mut op_strings: Vec<String> = Vec::new();
+        for op in instruction.operands.as_ref().unwrap() {
+            // N/A means we're at the last one
+            if op == "N/A" {
+                break;
+            }
+            let mut op_str = String::new();
+            // Handle ModRM variations
+            if op.starts_with("ModRM") {
+                let byte = bytestring[offset];
+                let mode = (byte & 0b1100000) >> 6;
+                let rm = byte & 0b00000111;
+                let reg = (byte & 0b00111000) >> 3;
+                // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
+                if mode != 3 && rm == 4 {
+                    offset += 1;
+                    let sib = bytestring[offset];
+                }
+                if mode == 3 {
+                    // Register literal
+                }
+                op_str += "[";
+                offset += 1;
+            }
+        }
+        return OperandResponse {
+            ..Default::default()
+        };
+    }
     fn parse_modrm(&self, bytestring: Vec<u8>) {
         let byte = bytestring[0];
         let mode = (byte & 0b1100000) >> 6;

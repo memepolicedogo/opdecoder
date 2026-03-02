@@ -1,6 +1,7 @@
 use core::panic;
 use std::{collections::HashMap, fmt};
 
+use regex::Regex;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -402,6 +403,10 @@ impl<'a> InstructionTree {
         }
         return response;
     }
+
+    pub fn reset(&mut self) {
+        self.last = self.root;
+    }
 }
 
 pub enum ArchSize {
@@ -471,12 +476,28 @@ impl Decoder {
             _ => panic!("Mod field had invalid value"),
         }
     }
+
+    fn calc_opcode_size(opcode: &String) -> usize {
+        let opperands = Regex::new("(/[r0-7])|(^[icr][bwdo])").unwrap();
+        let mut i = 0;
+        for byte in opcode.split(' ').into_iter() {
+            // If byte is /{digit} or /r etc, that describes an opperand, and everthing following
+            // must nessecarrily be an operand too
+            if opperands.is_match(byte) {
+                break;
+            }
+            i += 1;
+        }
+        return i;
+    }
+
     pub fn parse_instruction(&mut self, bytestring: &Vec<u8>) -> InstructionResponse {
         let mut offset: usize = 0;
         let mut byte: u8;
         let mut prefix = Vec::new();
         let mut opcode = Vec::new();
         // Reset Context
+        self.tree.reset();
         self.context.one = 0;
         self.context.two = 0;
         self.context.op_override = false;
@@ -487,6 +508,7 @@ impl Decoder {
         // if still nothing return empty vec and 1 offset (try again 1 byte ahead)
         let mut prefix_count = 0;
         let ins = 'parent: loop {
+            self.tree.reset();
             for i in (prefix_count..MAX_WIDTH) {
                 let mut rep = self.tree.step(bytestring[i]);
                 if rep.bottom && rep.val.is_empty() {
@@ -503,6 +525,7 @@ impl Decoder {
                 break Vec::new();
             }
         };
+        println!("Prefix Count: {}", prefix_count);
         // If we got nothing we do nothing
         if ins.is_empty() {
             println!("No instructions whatsoever");
@@ -594,7 +617,7 @@ impl Decoder {
         } else if valids.len() == 1 {
             return InstructionResponse {
                 val: Some(valids[0].clone()),
-                offset: prefix_count + opcode.len(),
+                offset: prefix_count + Decoder::calc_opcode_size(&valids[0].opcode),
             };
         // Still may have multiple if entries rely on prefixes to infer size
         } else {
@@ -608,14 +631,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
                             && ins.text.contains("16")
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         }
                     }
@@ -625,14 +648,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
                             && ins.text.contains("32")
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         }
                     }
@@ -642,14 +665,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
-                            && ins.text.contains("32")
+                            && (ins.text.contains("32") || ins.text.contains("64"))
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + opcode.len(),
+                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
                             };
                         }
                     }

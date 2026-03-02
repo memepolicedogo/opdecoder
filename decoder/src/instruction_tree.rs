@@ -431,7 +431,7 @@ pub struct Context {
 impl Default for Context {
     fn default() -> Self {
         Self {
-            size: ArchSize::I32,
+            size: ArchSize::I64,
             one: 0,
             two: 0,
             op_override: false,
@@ -505,6 +505,7 @@ impl Decoder {
         };
         // If we got nothing we do nothing
         if ins.is_empty() {
+            println!("No instructions whatsoever");
             return InstructionResponse {
                 val: None,
                 offset: 1,
@@ -558,6 +559,33 @@ impl Decoder {
             valids.push(instruction);
         }
 
+        // Are any invalid on target arch?
+        let mut i = 0;
+        while i < valids.len() {
+            match self.context.size {
+                ArchSize::I16 => {
+                    if valids[i].legacy != "V" {
+                        valids.remove(i);
+                    } else {
+                        i += 1;
+                    }
+                }
+                ArchSize::I32 => {
+                    if valids[i].legacy != "V" {
+                        valids.remove(i);
+                    } else {
+                        i += 1;
+                    }
+                }
+                ArchSize::I64 => {
+                    if valids[i].x64 != "V" {
+                        valids.remove(i);
+                    } else {
+                        i += 1;
+                    }
+                }
+            };
+        }
         if valids.is_empty() {
             return InstructionResponse {
                 val: None,
@@ -568,11 +596,68 @@ impl Decoder {
                 val: Some(valids[0].clone()),
                 offset: prefix_count + opcode.len(),
             };
+        // Still may have multiple if entries rely on prefixes to infer size
+        } else {
+            for ins in valids {
+                //  Pull largest digit from name
+                // Or maybe just
+                match self.context.size {
+                    ArchSize::I16 => {
+                        if (self.context.op_override || self.context.addr_override)
+                            && ins.text.contains("8")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        } else if (!self.context.op_override && !self.context.addr_override)
+                            && ins.text.contains("16")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        }
+                    }
+                    ArchSize::I32 => {
+                        if (self.context.op_override || self.context.addr_override)
+                            && ins.text.contains("16")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        } else if (!self.context.op_override && !self.context.addr_override)
+                            && ins.text.contains("32")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        }
+                    }
+                    ArchSize::I64 => {
+                        if (self.context.op_override || self.context.addr_override)
+                            && ins.text.contains("16")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        } else if (!self.context.op_override && !self.context.addr_override)
+                            && ins.text.contains("32")
+                        {
+                            return InstructionResponse {
+                                val: Some(ins.clone()),
+                                offset: prefix_count + opcode.len(),
+                            };
+                        }
+                    }
+                };
+            }
         }
         // What possibly can be here?
-        // YEah its mostly fuckin arch dependant stuff man
         // ??
-        println!("{:?}", valids);
         panic!("At the disco");
 
         // If instruction is invalid

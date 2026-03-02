@@ -10,10 +10,10 @@ fn main() {
         context: instruction_tree::Context {
             ..Default::default()
         },
-        tree: serde_json::from_str(&fs::read_to_string("tree.json").expect("AHH")).expect("AHHH"),
+        tree: serde_json::from_str(&fs::read_to_string("tree2.json").expect("AHH")).expect("AHHH"),
     };
-    let code = vec![0x66, 0x0f, 0x1a];
-    let rep = dec.parse(&code).val.expect("Poop from a butt");
+    let code = vec![0x48, 0x89];
+    let rep = dec.parse_instruction(&code).val.expect("Poop from a butt");
     println!("Match:");
     println!("{}:", rep.text);
     println!("\t{}", rep.opcode);

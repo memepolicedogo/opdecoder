@@ -9,6 +9,10 @@ pub struct Instruction {
     pub opcode: String,
     #[serde(rename = "instruction")]
     pub text: String,
+    #[serde(rename = "current_support")]
+    pub x64: String,
+    #[serde(rename = "legacy_support")]
+    pub legacy: String,
     pub operands: Option<Vec<String>>,
     pub description: String,
 }
@@ -539,7 +543,7 @@ impl Decoder {
             };
         }
         // What possibly can be here?
-        // same code but diff size
+        // YEah its mostly fuckin arch dependant stuff man
         // ??
         println!("{:?}", valids);
         panic!("At the disco");

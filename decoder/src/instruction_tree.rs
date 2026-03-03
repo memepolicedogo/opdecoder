@@ -1,4 +1,5 @@
 use core::panic;
+use std::usize;
 use std::{collections::HashMap, fmt};
 
 use regex::Regex;
@@ -409,12 +410,6 @@ impl<'a> InstructionTree {
     }
 }
 
-pub enum ArchSize {
-    I16,
-    I32,
-    I64,
-}
-
 pub enum OpType {
     Reg, // Register
     Mem, // Memory
@@ -423,6 +418,11 @@ pub enum OpType {
 
 pub struct Opperand {
     pub kind: OpType,
+}
+pub enum ArchSize {
+    I16,
+    I32,
+    I64,
 }
 
 pub struct Context {
@@ -471,24 +471,53 @@ pub struct Decoder {
 
 const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
-static REG_MAP: phf::Map<usize, phf::Map<&'static str, &'static str>> = phf_map!{
-    phf_map!{
-    ""
-}
-};
+const BASE_REGS_REX_EXTENDED: [&str; 16] = [
+    "A", "C", "D", "B", "SP", "BP", "SI", "DI", "R8", "R9", "R10", "R11", "R12", "R13", "R14",
+    "R15",
+];
 
 impl Decoder {
-    let reg_map = vec![
-        &HashMap::from([
-            ("8", "AL"),
-        ]),
-    ];
     pub fn parse_operands(
         &self,
         ins: &InstructionResponse,
         bytestring: &Vec<u8>,
     ) -> OperandResponse {
+        match self.context.size {
+            ArchSize::I32 => return self.parse_operands_i32(ins, bytestring),
+            ArchSize::I64 => return self.parse_operands_i64(ins, bytestring),
+            _ => {
+                return OperandResponse {
+                    ..Default::default()
+                };
+            }
+        };
+        return OperandResponse {
+            ..Default::default()
+        };
+    }
+
+    fn parse_operands_i32(
+        &self,
+        ins: &InstructionResponse,
+        bytestring: &Vec<u8>,
+    ) -> OperandResponse {
+        return OperandResponse {
+            ..Default::default()
+        };
+    }
+
+    fn parse_operands_i64(
+        &self,
+        ins: &InstructionResponse,
+        bytestring: &Vec<u8>,
+    ) -> OperandResponse {
         let instruction = ins.val.as_ref().unwrap();
+        // Get this out of the way first
+        if instruction.operands.is_none() {
+            return OperandResponse {
+                ..Default::default()
+            };
+        }
         let mut rex_w = false;
         let mut rex_r = 0;
         let mut rex_x = 0;
@@ -503,11 +532,6 @@ impl Decoder {
             rex_x = (bytestring[0] & 0b00000010) << 2;
             rex_b = (bytestring[0] & 0b00000001) << 3;
         }
-        if instruction.operands.is_none() {
-            return OperandResponse {
-                ..Default::default()
-            };
-        }
 
         let mut offset = ins.offset;
         let mut op_strings: Vec<String> = Vec::new();
@@ -518,27 +542,213 @@ impl Decoder {
             }
             let mut op_str = String::new();
             // Handle ModRM variations
+            // already almost 150 lines, now imagine if I was doing VEX stuff too
             if op.starts_with("ModRM") {
-                let byte = bytestring[offset];
-                let mode = (byte & 0b1100000) >> 6;
-                let rm = byte & 0b00000111;
-                let reg = (byte & 0b00111000) >> 3;
-                // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
-                if mode != 3 && rm == 4 {
+                // First byte of the opperands
+                let modrm = bytestring[ins.offset];
+                let mode = (modrm & 0b1100000) >> 6;
+                let rm = modrm & 0b00000111;
+                let reg = (modrm & 0b00111000) >> 3;
+                // ModR/M:reg or ModR/M:r/m and mod = 3 means we're dealing with a register
+                if op.contains("reg") || (op.contains("r/m") && mode == 3) {
+                    // Operand is just a register
+                    // Get name based on size
+                    op_str = Decoder::format_reg(
+                        // Smallest name of reg, e.g. A or R13 or SP
+                        BASE_REGS_REX_EXTENDED[usize::from(rex_b | reg)],
+                        // ADD r/m8, r8 => ["ADD r/m8", " r8"]
+                        // offset - ins.offset = operand index
+                        instruction.text.split(',').collect::<Vec<_>>()[offset - ins.offset],
+                    );
                     offset += 1;
-                    let sib = bytestring[offset];
+                } else {
+                    // Operand is memory
+                    // This is the proper way of formatting memory accesses
+                    // MASM can get bent
+                    op_str.insert(0, '[');
+                    // Special cases
+                    // Increment offset because we aren't accessing the
+                    offset += 1;
+                    // Literal displacement
+                    // 0x67 prefix and mod == 0b00 and rm == 0b101 -> Just a 32 bit displacement, zero
+                    // extended
+                    if (self.context.addr_override && mode == 0 && rm == 5) {
+                        // Next 4 bytes are displacements
+                        op_str = Decoder::format_imm(bytestring, offset, 4);
+                        // Add brackets
+                        op_str.insert(0, '[');
+                        op_str.push(']');
+                    } else {
+                        // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
+                        // This is true independant of the REX prefix
+                        if mode != 3 && rm == 4 {
+                            // SIB Stuff
+                            offset += 1;
+                            let scale = bytestring[offset] & 0b11000000 >> 6;
+                            let index = bytestring[offset] & 0b00111000 >> 3;
+                            let base = bytestring[offset] & 0b00000111;
+                            if (rex_x | index) == 4 {
+                                // RSP is not to be used as an index
+                            } else {
+                                // Get index register
+                                op_str += &Decoder::format_reg(
+                                    BASE_REGS_REX_EXTENDED[usize::from(rex_x | index)],
+                                    "r64",
+                                );
+                                // Apply scaling
+                                match scale {
+                                    1 => {
+                                        op_str.push('*');
+                                        op_str.push('2');
+                                        op_str.push('+');
+                                    }
+                                    2 => {
+                                        op_str.push('*');
+                                        op_str.push('4');
+                                        op_str.push('+');
+                                    }
+                                    3 => {
+                                        op_str.push('*');
+                                        op_str.push('8');
+                                        op_str.push('+');
+                                    }
+                                    _ => op_str.push('+'),
+                                }
+                            }
+                            // Add base register
+                            if base != 5 {
+                                op_str += &Decoder::format_reg(
+                                    BASE_REGS_REX_EXTENDED[usize::from(rex_b | base)],
+                                    "r64",
+                                );
+                            } else {
+                                // When base is 0b101 it means either it's based on RBP or a
+                                // displacement, depending on mod
+                                match mode {
+                                    // Just disp32
+                                    0 => {
+                                        op_str.push('+');
+                                        op_str
+                                            .push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                        op_str.push(']');
+                                    }
+                                    // disp8 + ebp
+                                    1 => {
+                                        op_str.push('+');
+                                        op_str
+                                            .push_str(&Decoder::format_imm(bytestring, offset, 1));
+                                        op_str.push('+');
+                                        op_str.push_str("RBP");
+                                        op_str.push(']');
+                                    }
+                                    // disp32 + ebp
+                                    // all this to enable C local variabes. Very cool
+                                    2 => {
+                                        op_str.push('+');
+                                        op_str
+                                            .push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                        op_str.push('+');
+                                        op_str.push_str("RBP");
+                                        op_str.push(']');
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        } else {
+                            // This is where the normal ModR/M parsing begins
+                            // Get base register
+                            op_str +=
+                            // Base reg is determined by REX.B and R/M bits, and bc we're in 64 bit mode it
+                            // has to be 64 bit, hence passing "r64" literal rather than using anything
+                            // from the instruction
+                            &Decoder::format_reg(BASE_REGS_REX_EXTENDED[usize::from(rex_b | rm)], "r64");
+                            // op_str = "[{reg}"
+                            // Now we find any displacement
+                            match mode {
+                                // No IMM displacement
+                                0 => {
+                                    op_str.push(']');
+                                }
+                                // 8 bit displacement
+                                1 => {
+                                    op_str.push('+');
+                                    op_str.push_str(&Decoder::format_imm(bytestring, offset, 1));
+                                    op_str.push(']');
+                                }
+                                // 32 bit displacement
+                                2 => {
+                                    op_str.push('+');
+                                    op_str.push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                    op_str.push(']');
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
                 }
-                if mode == 3 {
-                    // Register literal
-                }
-                op_str += "[";
-                offset += 1;
             }
+            op_strings.push(op_str);
         }
         return OperandResponse {
             ..Default::default()
         };
     }
+
+    fn format_imm(bytestring: &Vec<u8>, offset: usize, count: usize) -> String {
+        // Number of bytes
+        let mut i = count;
+        let mut val: u64 = 0;
+        while i > 0 {
+            i -= 1;
+            // as i decreases we step further in the bytestring, and shift less
+            // immediate values are ordered most significant byte first
+            // The byte we pull from the bytetring has to be converted to a u64 first
+            // or it'll overflow to zero
+            val += u64::from(bytestring[offset + (count - (i + 1))]) << (i * 8);
+        }
+        val.to_string()
+    }
+
+    fn format_reg(base: &str, ins_str: &str) -> String {
+        let mut result = base.to_string();
+        if ins_str.contains("r8") {
+            if result.starts_with("R") {
+                return result + "B";
+            } else {
+                return result + "L";
+            }
+        } else if ins_str.contains("r16") {
+            if result.starts_with("R") {
+                return result + "W";
+            } else if result.len() == 1 {
+                return result + "X";
+            } else {
+                return result;
+            }
+        } else if ins_str.contains("r32") {
+            if result.starts_with("R") {
+                return result + "D";
+            } else if result.len() == 1 {
+                result.insert(0, 'E');
+                return result + "X";
+            } else {
+                result.insert(0, 'E');
+                return result;
+            }
+        } else if ins_str.contains("r64") {
+            if result.starts_with("R") {
+                return result;
+            } else if result.len() == 1 {
+                result.insert(0, 'R');
+                return result + "X";
+            } else {
+                result.insert(0, 'R');
+                return result;
+            }
+        }
+        return result;
+    }
+
     fn parse_modrm(&self, bytestring: Vec<u8>) {
         let byte = bytestring[0];
         let mode = (byte & 0b1100000) >> 6;

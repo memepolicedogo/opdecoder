@@ -445,6 +445,38 @@ impl Default for Context {
     }
 }
 
+pub struct ByteString {
+    code: Vec<u8>,
+    curr: usize,
+}
+
+impl ByteString {
+    // Advance the cursor by some number of bytes
+    pub fn advance(&mut self, by: usize) -> bool {
+        self.curr += by;
+        if self.curr >= self.code.len() {
+            self.curr -= by;
+            return false;
+        }
+        true
+    }
+
+    // Remove bytes behind cursor and reset cursor value
+    pub fn trim(&mut self) {
+        self.code.drain(..self.curr);
+        self.curr = 0;
+    }
+
+    // Add more bytes to the bytestring
+    pub fn append(&mut self, bytes: &Vec<u8>) {
+        self.code.extend(bytes);
+    }
+
+    pub fn push(&mut self, byte: u8) {
+        self.code.push(byte);
+    }
+}
+
 pub struct InstructionResponse {
     pub val: Option<Instruction>,
     pub offset: usize,
@@ -453,6 +485,38 @@ pub struct InstructionResponse {
 pub struct OperandResponse {
     pub val: Option<Vec<String>>,
     pub offset: usize,
+}
+
+pub struct ParseResponse {
+    pub instruction: Option<Instruction>,
+    pub operands: Option<Vec<String>>,
+    pub offset: usize,
+}
+
+impl ParseResponse {
+    pub fn pretty_print(&self) {
+        if self.instruction.is_none() {
+            println!("No instruction");
+            return;
+        }
+        let mut full_str = String::new();
+        let ins = self.instruction.as_ref().unwrap();
+        // Get the base instruction name sans ops
+        full_str.push_str(ins.text.split(' ').collect::<Vec<_>>()[0]);
+        if self.operands.is_none() {
+            println!("{}", full_str);
+            return;
+        }
+        for op in self.operands.as_ref().unwrap() {
+            // Leading space and trailing comma for each
+            full_str.push(' ');
+            full_str.push_str(op);
+            full_str.push(',');
+        }
+        // Remove trailing comma
+        full_str.pop();
+        println!("{}", full_str);
+    }
 }
 
 impl Default for OperandResponse {
@@ -477,6 +541,16 @@ const BASE_REGS_REX_EXTENDED: [&str; 16] = [
 ];
 
 impl Decoder {
+    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse {
+        let instruction = self.parse_instruction(bytestring);
+        let operands = self.parse_operands(&instruction, bytestring);
+        ParseResponse {
+            instruction: instruction.val,
+            operands: operands.val,
+            offset: instruction.offset + operands.offset,
+        }
+    }
+
     pub fn parse_operands(
         &self,
         ins: &InstructionResponse,
@@ -546,7 +620,7 @@ impl Decoder {
             if op.starts_with("ModRM") {
                 // First byte of the opperands
                 let modrm = bytestring[ins.offset];
-                let mode = (modrm & 0b1100000) >> 6;
+                let mode = (modrm & 0b11000000) >> 6;
                 let rm = modrm & 0b00000111;
                 let reg = (modrm & 0b00111000) >> 3;
                 // ModR/M:reg or ModR/M:r/m and mod = 3 means we're dealing with a register
@@ -555,7 +629,7 @@ impl Decoder {
                     // Get name based on size
                     op_str = Decoder::format_reg(
                         // Smallest name of reg, e.g. A or R13 or SP
-                        BASE_REGS_REX_EXTENDED[usize::from(rex_b | reg)],
+                        BASE_REGS_REX_EXTENDED[usize::from(rex_b | rm)],
                         // ADD r/m8, r8 => ["ADD r/m8", " r8"]
                         // offset - ins.offset = operand index
                         instruction.text.split(',').collect::<Vec<_>>()[offset - ins.offset],
@@ -686,11 +760,29 @@ impl Decoder {
                         }
                     }
                 }
+            } else if op.starts_with("imm") || op.starts_with("disp") {
+                // Immediate
+                // We have to get the size from the instruction part not the operands
+                let imm_str = instruction.text.split(',').collect::<Vec<_>>()[offset - ins.offset];
+                if imm_str.ends_with("64") {
+                    op_str = Decoder::format_imm(bytestring, offset, 8);
+                    offset += 8;
+                } else if imm_str.ends_with("32") {
+                    op_str = Decoder::format_imm(bytestring, offset, 4);
+                    offset += 4;
+                } else if imm_str.ends_with("16") {
+                    op_str = Decoder::format_imm(bytestring, offset, 2);
+                    offset += 2;
+                } else if imm_str.ends_with("8") {
+                    op_str = Decoder::format_imm(bytestring, offset, 1);
+                    offset += 1;
+                }
             }
             op_strings.push(op_str);
         }
         return OperandResponse {
-            ..Default::default()
+            val: Some(op_strings),
+            offset: offset - ins.offset,
         };
     }
 
@@ -711,13 +803,13 @@ impl Decoder {
 
     fn format_reg(base: &str, ins_str: &str) -> String {
         let mut result = base.to_string();
-        if ins_str.contains("r8") {
+        if ins_str.contains("r8") || ins_str.contains("r/m8") {
             if result.starts_with("R") {
                 return result + "B";
             } else {
                 return result + "L";
             }
-        } else if ins_str.contains("r16") {
+        } else if ins_str.contains("r16") || ins_str.contains("r/m16") {
             if result.starts_with("R") {
                 return result + "W";
             } else if result.len() == 1 {
@@ -725,7 +817,7 @@ impl Decoder {
             } else {
                 return result;
             }
-        } else if ins_str.contains("r32") {
+        } else if ins_str.contains("r32") || ins_str.contains("r/m32") {
             if result.starts_with("R") {
                 return result + "D";
             } else if result.len() == 1 {
@@ -735,7 +827,7 @@ impl Decoder {
                 result.insert(0, 'E');
                 return result;
             }
-        } else if ins_str.contains("r64") {
+        } else if ins_str.contains("r64") || ins_str.contains("r/m64") {
             if result.starts_with("R") {
                 return result;
             } else if result.len() == 1 {
@@ -815,10 +907,8 @@ impl Decoder {
                 break Vec::new();
             }
         };
-        println!("Prefix Count: {}", prefix_count);
         // If we got nothing we do nothing
         if ins.is_empty() {
-            println!("No instructions whatsoever");
             return InstructionResponse {
                 val: None,
                 offset: 1,

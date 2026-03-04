@@ -56,18 +56,54 @@ fn main() {
         ..Default::default()
     };
     // Get all but the first arg
-    let args: Vec<String> = env::args().skip(1).collect();
+    let mut args: Vec<String> = env::args().skip(1).collect();
     let mut i = 0;
+    // Iter by index so we can access the next val as needed
     while i < args.len() {
-        // Iter by index so we can access the next val as needed
+        // Split {opt}={val} into seperate args
+        if args[i].contains("=") {
+            let split: Vec<&str> = args[i].split('=').collect();
+            args[i] = String::from(split[0]);
+            args.insert(i + 1, String::from(split[1]));
+        }
         match args[i].as_str() {
             "-t" | "--tree" => {
-                opts.tree_path = args[i + 1].clone();
                 i += 1;
+                opts.tree_path = args[i].clone();
             }
             "-a" | "--arch" => {
-                opts.arch_size = parse_arch(args[i + 1].as_str());
                 i += 1;
+                opts.arch_size = parse_arch(args[i].as_str());
+            }
+            "-i" | "--input" => {
+                i += 1;
+                opts.input = args[i].clone();
+            }
+            "--offset" => {
+                i += 1;
+                let offset = u64::from_str_radix(args[i].as_str(), 10);
+                if offset.is_err() {
+                    println!("Invalid offset");
+                    return;
+                }
+                opts.input_offset = offset.unwrap();
+            }
+            "-m" | "--max" => {
+                i += 1;
+                let max = u64::from_str_radix(args[i].as_str(), 10);
+                if max.is_err() {
+                    println!("Invalid max");
+                    return;
+                }
+                opts.read_max = max.unwrap();
+            }
+            "-o" | "--output" => {
+                i += 1;
+                opts.input = args[i].clone();
+            }
+            "-f" | "--format" => {
+                i += 1;
+                opts.output_format = parse_format(args[i].as_str());
             }
             _ => {
                 println!("Unknown arg \"{}\"", args[i]);
@@ -79,12 +115,22 @@ fn main() {
 }
 
 fn parse_arch(arch: &str) -> ArchSize {
-    match arch {
-        "64" | "I64" | "i64" | "X64" | "x64" => ArchSize::I64,
-        "32" | "I32" | "i32" | "X32" | "x32" => ArchSize::I32,
-        "16" | "I16" | "i16" | "X16" | "x16" => ArchSize::I16,
+    match arch.to_lowercase().as_str() {
+        "64" | "i64" | "x64" => ArchSize::I64,
+        "32" | "i32" | "x32" => ArchSize::I32,
+        "16" | "i16" | "x16" => ArchSize::I16,
         _ => {
             panic!("Invalid arch size");
+        }
+    }
+}
+
+fn parse_format(format: &str) -> OutputFormat {
+    match format.to_lowercase().as_str() {
+        "print" | "p" => OutputFormat::PrettyPrint,
+        "json" | "j" => OutputFormat::JSON,
+        _ => {
+            panic!("Invalid output format");
         }
     }
 }

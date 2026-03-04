@@ -446,8 +446,8 @@ impl Default for Context {
 }
 
 pub struct ByteString {
-    code: Vec<u8>,
-    curr: usize,
+    pub code: Vec<u8>,
+    pub curr: usize,
 }
 
 impl ByteString {
@@ -472,31 +472,81 @@ impl ByteString {
         self.code.extend(bytes);
     }
 
+    // Add a single byte to the bytestring
     pub fn push(&mut self, byte: u8) {
         self.code.push(byte);
     }
+
+    // Get the byte at the specific index
+    pub fn get_at(&self, index: usize) -> u8 {
+        self.code[index]
+    }
+
+    // Get the byte at the index relative to curr
+    pub fn get_offset(&self, offset: isize) -> u8 {
+        let mut index = self.curr as isize + offset;
+        self.code[index as usize]
+    }
+
+    // Get the byte at curr
+    pub fn get(&self) -> u8 {
+        self.code[self.curr]
+    }
+
+    // Increase curr and get next byte
+    pub fn step(&mut self) -> u8 {
+        self.curr += 1;
+        self.code[self.curr]
+    }
+
+    pub fn inc(&mut self) -> bool {
+        if self.is_end() {
+            false
+        } else {
+            self.curr += 1;
+            true
+        }
+    }
+
+    pub fn is_end(&mut self) -> bool {
+        self.curr >= (self.code.len() - 1)
+    }
+
+    pub fn get_slice(&mut self, from: usize, to: usize) -> &[u8] {
+        &self.code[from..to]
+    }
+
+    pub fn get_slice_offset(&mut self, from: isize, to: isize) -> &[u8] {
+        // man this is ugly
+        &self.code[((self.curr as isize + from) as usize)..((self.curr as isize + to) as usize)]
+    }
 }
 
+#[derive(Debug)]
 pub struct InstructionResponse {
     pub val: Option<Instruction>,
-    pub offset: usize,
+    pub size: usize,
 }
 
+#[derive(Debug)]
 pub struct OperandResponse {
     pub val: Option<Vec<String>>,
-    pub offset: usize,
+    pub size: usize,
 }
 
 pub struct ParseResponse {
     pub instruction: Option<Instruction>,
     pub operands: Option<Vec<String>>,
-    pub offset: usize,
+    pub bytes: Option<Vec<u8>>,
 }
 
 impl ParseResponse {
     pub fn pretty_print(&self) {
-        if self.instruction.is_none() {
-            println!("No instruction");
+        if self.bytes.is_none() {
+            println!("Failed to parse");
+            return;
+        } else if self.instruction.is_none() {
+            self.print_bytes();
             return;
         }
         let mut full_str = String::new();
@@ -517,20 +567,29 @@ impl ParseResponse {
         full_str.pop();
         println!("{}", full_str);
     }
+
+    pub fn print_bytes(&self) {
+        if self.bytes.is_none() {
+            return;
+        }
+        for byte in self.bytes.as_ref().unwrap() {
+            print!("{:02X} ", byte);
+        }
+        println!("");
+        return;
+    }
 }
 
 impl Default for OperandResponse {
     fn default() -> Self {
-        Self {
-            val: None,
-            offset: 0,
-        }
+        Self { val: None, size: 0 }
     }
 }
 
 pub struct Decoder {
     pub context: Context,
     pub tree: InstructionTree,
+    pub code: ByteString,
 }
 
 const MAX_PREFIX: usize = 4;
@@ -541,24 +600,53 @@ const BASE_REGS_REX_EXTENDED: [&str; 16] = [
 ];
 
 impl Decoder {
-    pub fn parse(&mut self, bytestring: &Vec<u8>) -> ParseResponse {
-        let instruction = self.parse_instruction(bytestring);
-        let operands = self.parse_operands(&instruction, bytestring);
-        ParseResponse {
-            instruction: instruction.val,
-            operands: operands.val,
-            offset: instruction.offset + operands.offset,
+    //
+    pub fn parse(&mut self) -> Vec<ParseResponse> {
+        let mut responses = Vec::new();
+        while !self.code.is_end() {
+            responses.push(self.parse_one());
+        }
+        responses
+    }
+    pub fn parse_one(&mut self) -> ParseResponse {
+        // If no code is left return nothing
+        if self.code.is_end() {
+            return ParseResponse {
+                instruction: None,
+                operands: None,
+                bytes: None,
+            };
+        }
+        let instruction = self.parse_instruction();
+        if instruction.val.is_none() {
+            // Increment code and return nothing (invalid instruction)
+            return ParseResponse {
+                instruction: None,
+                operands: None,
+                bytes: Some(vec![self.code.step()]),
+            };
+        }
+        let operands = self.parse_operands(&instruction);
+        let start_offset = -((instruction.size + operands.size) as isize);
+        if self.code.inc() {
+            ParseResponse {
+                instruction: instruction.val,
+                operands: operands.val,
+                bytes: Some(Vec::from(self.code.get_slice_offset(start_offset, 0))),
+            }
+        } else {
+            ParseResponse {
+                instruction: instruction.val,
+                operands: operands.val,
+                bytes: Some(Vec::from(self.code.get_slice_offset(start_offset + 1, 1))),
+            }
         }
     }
 
-    pub fn parse_operands(
-        &self,
-        ins: &InstructionResponse,
-        bytestring: &Vec<u8>,
-    ) -> OperandResponse {
+    pub fn parse_operands(&mut self, ins: &InstructionResponse) -> OperandResponse {
         match self.context.size {
-            ArchSize::I32 => return self.parse_operands_i32(ins, bytestring),
-            ArchSize::I64 => return self.parse_operands_i64(ins, bytestring),
+            ArchSize::I32 => return self.parse_operands_i32(ins),
+            ArchSize::I64 => return self.parse_operands_i64(ins),
             _ => {
                 return OperandResponse {
                     ..Default::default()
@@ -570,44 +658,43 @@ impl Decoder {
         };
     }
 
-    fn parse_operands_i32(
-        &self,
-        ins: &InstructionResponse,
-        bytestring: &Vec<u8>,
-    ) -> OperandResponse {
+    fn parse_operands_i32(&self, ins: &InstructionResponse) -> OperandResponse {
         return OperandResponse {
             ..Default::default()
         };
     }
 
-    fn parse_operands_i64(
-        &self,
-        ins: &InstructionResponse,
-        bytestring: &Vec<u8>,
-    ) -> OperandResponse {
+    fn parse_operands_i64(&mut self, ins: &InstructionResponse) -> OperandResponse {
         let instruction = ins.val.as_ref().unwrap();
+        let mut size = 0;
         // Get this out of the way first
         if instruction.operands.is_none() {
             return OperandResponse {
                 ..Default::default()
             };
         }
+        //  modrm is the first byte of ops, if there is no modrm for this instruction this is
+        //  ignored
+        let modrm = self.code.get();
         let mut rex_w = false;
         let mut rex_r = 0;
         let mut rex_x = 0;
         let mut rex_b = 0;
         if instruction.opcode.starts_with("REX") {
-            if bytestring[0] & 0b11110000 != 0b01000000 {
+            let rex = self.code.get_offset(-(ins.size as isize));
+            if rex & 0b11110000 != 0b01000000 {
                 panic!("Invalid REX prefix");
             }
             // Parse REX prefix
-            rex_w = (bytestring[0] & 0b00001000) != 0;
-            rex_r = (bytestring[0] & 0b00000100) << 1;
-            rex_x = (bytestring[0] & 0b00000010) << 2;
-            rex_b = (bytestring[0] & 0b00000001) << 3;
+            rex_w = (rex & 0b00001000) != 0;
+            rex_r = (rex & 0b00000100) << 1;
+            rex_x = (rex & 0b00000010) << 2;
+            rex_b = (rex & 0b00000001) << 3;
         }
 
-        let mut offset = ins.offset;
+        // Offset is the operand #, size is the amount of bytes
+        // e.g. modrm w/ sib, imm64 has 2 opperands but is 10 bytes
+        let mut offset = 0;
         let mut op_strings: Vec<String> = Vec::new();
         for op in instruction.operands.as_ref().unwrap() {
             // N/A means we're at the last one
@@ -618,8 +705,12 @@ impl Decoder {
             // Handle ModRM variations
             // already almost 150 lines, now imagine if I was doing VEX stuff too
             if op.starts_with("ModRM") {
+                // The modrm byte is only one byte, but it may be used for multiple operands
+                // so we have to be careful not to double count
+                if size == 0 {
+                    size += 1;
+                }
                 // First byte of the opperands
-                let modrm = bytestring[ins.offset];
                 let mode = (modrm & 0b11000000) >> 6;
                 let rm = modrm & 0b00000111;
                 let reg = (modrm & 0b00111000) >> 3;
@@ -631,10 +722,9 @@ impl Decoder {
                         // Smallest name of reg, e.g. A or R13 or SP
                         BASE_REGS_REX_EXTENDED[usize::from(rex_b | rm)],
                         // ADD r/m8, r8 => ["ADD r/m8", " r8"]
-                        // offset - ins.offset = operand index
-                        instruction.text.split(',').collect::<Vec<_>>()[offset - ins.offset],
+                        // offset = operand index
+                        instruction.text.split(',').collect::<Vec<_>>()[offset],
                     );
-                    offset += 1;
                 } else {
                     // Operand is memory
                     // This is the proper way of formatting memory accesses
@@ -642,13 +732,12 @@ impl Decoder {
                     op_str.insert(0, '[');
                     // Special cases
                     // Increment offset because we aren't accessing the
-                    offset += 1;
                     // Literal displacement
                     // 0x67 prefix and mod == 0b00 and rm == 0b101 -> Just a 32 bit displacement, zero
                     // extended
                     if (self.context.addr_override && mode == 0 && rm == 5) {
                         // Next 4 bytes are displacements
-                        op_str = Decoder::format_imm(bytestring, offset, 4);
+                        op_str = self.format_imm(4);
                         // Add brackets
                         op_str.insert(0, '[');
                         op_str.push(']');
@@ -657,10 +746,12 @@ impl Decoder {
                         // This is true independant of the REX prefix
                         if mode != 3 && rm == 4 {
                             // SIB Stuff
-                            offset += 1;
-                            let scale = bytestring[offset] & 0b11000000 >> 6;
-                            let index = bytestring[offset] & 0b00111000 >> 3;
-                            let base = bytestring[offset] & 0b00000111;
+                            let sib = self.code.step();
+                            // SIB doesn't change the offset but it does change the size
+                            size += 1;
+                            let scale = sib & 0b11000000 >> 6;
+                            let index = sib & 0b00111000 >> 3;
+                            let base = sib & 0b00000111;
                             if (rex_x | index) == 4 {
                                 // RSP is not to be used as an index
                             } else {
@@ -702,15 +793,13 @@ impl Decoder {
                                     // Just disp32
                                     0 => {
                                         op_str.push('+');
-                                        op_str
-                                            .push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                        op_str.push_str(&self.format_imm(4));
                                         op_str.push(']');
                                     }
                                     // disp8 + ebp
                                     1 => {
                                         op_str.push('+');
-                                        op_str
-                                            .push_str(&Decoder::format_imm(bytestring, offset, 1));
+                                        op_str.push_str(&self.format_imm(1));
                                         op_str.push('+');
                                         op_str.push_str("RBP");
                                         op_str.push(']');
@@ -719,8 +808,7 @@ impl Decoder {
                                     // all this to enable C local variabes. Very cool
                                     2 => {
                                         op_str.push('+');
-                                        op_str
-                                            .push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                        op_str.push_str(&self.format_imm(4));
                                         op_str.push('+');
                                         op_str.push_str("RBP");
                                         op_str.push(']');
@@ -746,14 +834,16 @@ impl Decoder {
                                 // 8 bit displacement
                                 1 => {
                                     op_str.push('+');
-                                    op_str.push_str(&Decoder::format_imm(bytestring, offset, 1));
+                                    op_str.push_str(&self.format_imm(1));
                                     op_str.push(']');
+                                    size += 1;
                                 }
                                 // 32 bit displacement
                                 2 => {
                                     op_str.push('+');
-                                    op_str.push_str(&Decoder::format_imm(bytestring, offset, 4));
+                                    op_str.push_str(&self.format_imm(4));
                                     op_str.push(']');
+                                    size += 4;
                                 }
                                 _ => {}
                             }
@@ -763,30 +853,31 @@ impl Decoder {
             } else if op.starts_with("imm") || op.starts_with("disp") {
                 // Immediate
                 // We have to get the size from the instruction part not the operands
-                let imm_str = instruction.text.split(',').collect::<Vec<_>>()[offset - ins.offset];
+                let imm_str = instruction.text.split(',').collect::<Vec<_>>()[offset];
                 if imm_str.ends_with("64") {
-                    op_str = Decoder::format_imm(bytestring, offset, 8);
-                    offset += 8;
+                    op_str = self.format_imm(8);
+                    size += 8;
                 } else if imm_str.ends_with("32") {
-                    op_str = Decoder::format_imm(bytestring, offset, 4);
-                    offset += 4;
+                    op_str = self.format_imm(4);
+                    size += 4;
                 } else if imm_str.ends_with("16") {
-                    op_str = Decoder::format_imm(bytestring, offset, 2);
-                    offset += 2;
+                    op_str = self.format_imm(2);
+                    size += 2;
                 } else if imm_str.ends_with("8") {
-                    op_str = Decoder::format_imm(bytestring, offset, 1);
-                    offset += 1;
+                    op_str = self.format_imm(1);
+                    size += 1;
                 }
             }
             op_strings.push(op_str);
+            offset += 1;
         }
         return OperandResponse {
             val: Some(op_strings),
-            offset: offset - ins.offset,
+            size,
         };
     }
 
-    fn format_imm(bytestring: &Vec<u8>, offset: usize, count: usize) -> String {
+    fn format_imm(&mut self, count: usize) -> String {
         // Number of bytes
         let mut i = count;
         let mut val: u64 = 0;
@@ -796,7 +887,7 @@ impl Decoder {
             // immediate values are ordered most significant byte first
             // The byte we pull from the bytetring has to be converted to a u64 first
             // or it'll overflow to zero
-            val += u64::from(bytestring[offset + (count - (i + 1))]) << (i * 8);
+            val += (self.code.step() as u64) << (i * 8);
         }
         val.to_string()
     }
@@ -841,24 +932,6 @@ impl Decoder {
         return result;
     }
 
-    fn parse_modrm(&self, bytestring: Vec<u8>) {
-        let byte = bytestring[0];
-        let mode = (byte & 0b1100000) >> 6;
-        let rm = byte & 0b00000111;
-        let reg = (byte & 0b00111000) >> 3;
-        // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
-        if mode != 3 && rm == 4 {
-            let sib = bytestring[1];
-        }
-        match mode {
-            0 => println!("Zero"),
-            1 => println!("Zero"),
-            2 => println!("Zero"),
-            3 => println!("Zero"),
-            _ => panic!("Mod field had invalid value"),
-        }
-    }
-
     fn calc_opcode_size(opcode: &String) -> usize {
         let opperands = Regex::new("(/[r0-7])|(^[icr][bwdo])").unwrap();
         let mut i = 0;
@@ -873,11 +946,10 @@ impl Decoder {
         return i;
     }
 
-    pub fn parse_instruction(&mut self, bytestring: &Vec<u8>) -> InstructionResponse {
-        let mut offset: usize = 0;
+    pub fn parse_instruction(&mut self) -> InstructionResponse {
+        let mut size: usize = 0;
         let mut byte: u8;
         let mut prefix = Vec::new();
-        let mut opcode = Vec::new();
         // Reset Context
         self.tree.reset();
         self.context.one = 0;
@@ -892,27 +964,29 @@ impl Decoder {
         let ins = 'parent: loop {
             self.tree.reset();
             for i in (prefix_count..MAX_WIDTH) {
-                let mut rep = self.tree.step(bytestring[i]);
+                let mut rep = self.tree.step(self.code.get_offset(i as isize));
                 if rep.bottom && rep.val.is_empty() {
                     prefix_count += 1;
                     break;
                 } else if rep.bottom {
                     // We've found at least one match
-                    prefix.extend_from_slice(&bytestring[..prefix_count]);
-                    opcode.extend_from_slice(&bytestring[prefix_count..i]);
+                    // Iterate and handle prefix bytes
+                    for _ in 0..prefix_count {
+                        prefix.push(self.code.step());
+                    }
+                    size = (i - prefix_count);
+                    for _ in 0..size {
+                        self.code.step();
+                    }
                     break 'parent rep.val;
                 }
             }
-            if prefix_count > 4 {
+            if prefix_count > MAX_PREFIX {
                 break Vec::new();
             }
         };
-        // If we got nothing we do nothing
         if ins.is_empty() {
-            return InstructionResponse {
-                val: None,
-                offset: 1,
-            };
+            return InstructionResponse { val: None, size: 1 };
         }
         // Figure out the prefixes
         for byte in prefix {
@@ -990,14 +1064,11 @@ impl Decoder {
             };
         }
         if valids.is_empty() {
-            return InstructionResponse {
-                val: None,
-                offset: 1,
-            };
+            return InstructionResponse { val: None, size: 0 };
         } else if valids.len() == 1 {
             return InstructionResponse {
                 val: Some(valids[0].clone()),
-                offset: prefix_count + Decoder::calc_opcode_size(&valids[0].opcode),
+                size,
             };
         // Still may have multiple if entries rely on prefixes to infer size
         } else {
@@ -1011,14 +1082,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
                             && ins.text.contains("16")
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         }
                     }
@@ -1028,14 +1099,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
                             && ins.text.contains("32")
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         }
                     }
@@ -1045,14 +1116,14 @@ impl Decoder {
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
                             && (ins.text.contains("32") || ins.text.contains("64"))
                         {
                             return InstructionResponse {
                                 val: Some(ins.clone()),
-                                offset: prefix_count + Decoder::calc_opcode_size(&ins.opcode),
+                                size,
                             };
                         }
                     }
@@ -1064,9 +1135,6 @@ impl Decoder {
         panic!("At the disco");
 
         // If instruction is invalid
-        return InstructionResponse {
-            val: None,
-            offset: 1,
-        };
+        return InstructionResponse { val: None, size: 0 };
     }
 }

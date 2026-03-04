@@ -11,10 +11,13 @@ fn main() {
             ..Default::default()
         },
         tree: serde_json::from_str(&fs::read_to_string("tree2.json").expect("AHH")).expect("AHHH"),
+        code: instruction_tree::ByteString {
+            code: vec![0x48, 0x83, 0xf8, 0x01],
+            curr: 0,
+        },
     };
-    let mut code = vec![0x48, 0x83, 0xf8, 0x01];
-    let mut rep = dec.parse(&code);
+    let mut rep = dec.parse_one();
     println!("Match:");
-    println!("Offset: {}", rep.offset);
     rep.pretty_print();
+    rep.print_bytes();
 }

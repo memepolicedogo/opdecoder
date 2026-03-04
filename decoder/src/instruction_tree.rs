@@ -419,6 +419,8 @@ pub enum OpType {
 pub struct Opperand {
     pub kind: OpType,
 }
+
+#[derive(Debug)]
 pub enum ArchSize {
     I16,
     I32,
@@ -540,6 +542,33 @@ pub struct ParseResponse {
     pub bytes: Option<Vec<u8>>,
 }
 
+impl fmt::Display for ParseResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return if self.bytes.is_none() {
+            writeln!(f, "Failed to parse")
+        } else if self.instruction.is_none() {
+            writeln!(f, "{:02X}", self.bytes.as_ref().unwrap()[0])
+        } else {
+            let mut full_str = String::new();
+            let ins = self.instruction.as_ref().unwrap();
+            // Get the base instruction name sans ops
+            full_str.push_str(ins.text.split(' ').collect::<Vec<_>>()[0]);
+            if self.operands.is_none() {
+                writeln!(f, "{}", full_str);
+            }
+            for op in self.operands.as_ref().unwrap() {
+                // Leading space and trailing comma for each
+                full_str.push(' ');
+                full_str.push_str(op);
+                full_str.push(',');
+            }
+            // Remove trailing comma
+            full_str.pop();
+            writeln!(f, "{}", full_str)
+        };
+    }
+}
+
 impl ParseResponse {
     pub fn pretty_print(&self) {
         if self.bytes.is_none() {
@@ -600,6 +629,12 @@ const BASE_REGS_REX_EXTENDED: [&str; 16] = [
 ];
 
 impl Decoder {
+    pub fn parse_n_print(&mut self) {
+        while !self.code.is_end() {
+            self.parse_one().pretty_print();
+        }
+    }
+
     //
     pub fn parse(&mut self) -> Vec<ParseResponse> {
         let mut responses = Vec::new();

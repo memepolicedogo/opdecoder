@@ -7,11 +7,13 @@ use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder};
 
 const REXW: u8 = 0b01001000;
 
+#[derive(Debug)]
 enum OutputFormat {
     PrettyPrint,
     JSON,
 }
 
+#[derive(Debug)]
 struct Options {
     //----INPUT OPTIONS----
     // Path to tree JSON
@@ -62,7 +64,8 @@ fn main() {
     while i < args.len() {
         // Split {opt}={val} into seperate args
         if args[i].contains("=") {
-            let split: Vec<&str> = args[i].split('=').collect();
+            let tmp = args[i].clone();
+            let split: Vec<&str> = tmp.split('=').collect();
             args[i] = String::from(split[0]);
             args.insert(i + 1, String::from(split[1]));
         }
@@ -99,7 +102,7 @@ fn main() {
             }
             "-o" | "--output" => {
                 i += 1;
-                opts.input = args[i].clone();
+                opts.output = args[i].clone();
             }
             "-f" | "--format" => {
                 i += 1;
@@ -112,6 +115,25 @@ fn main() {
         }
         i += 1;
     }
+
+    let bytes = fs::read(opts.input).unwrap();
+
+    let tree_str = &fs::read_to_string(opts.tree_path);
+    if tree_str.is_err() {
+        println!("Invalid tree path");
+        return;
+    }
+    let mut dec = Decoder {
+        context: Context {
+            size: opts.arch_size,
+            ..Default::default()
+        },
+        tree: serde_json::from_str(&tree_str.unwrap()).expect("Invalid tree JSON"),
+        code: ByteString {
+            code: bytes,
+            curr: 0,
+        },
+    };
 }
 
 fn parse_arch(arch: &str) -> ArchSize {

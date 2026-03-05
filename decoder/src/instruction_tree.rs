@@ -636,7 +636,9 @@ const BASE_REGS: [&str; 8] = ["A", "C", "D", "B", "AH", "CH", "DH", "BH"];
 impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
-            self.parse_one().pretty_print();
+            let inc = self.parse_one();
+            //inc.print_bytes();
+            inc.pretty_print();
         }
     }
 
@@ -742,6 +744,7 @@ impl Decoder {
                 // so we have to be careful not to double count
                 if size == 0 {
                     size += 1;
+                    self.code.inc();
                 }
                 // First byte of the opperands
                 let mode = (modrm & 0b11000000) >> 6;
@@ -757,7 +760,6 @@ impl Decoder {
                     // Operand is just a register
                     // Get name based on size
                     op_str = Decoder::format_reg(
-                        // Smallest name of reg, e.g. A or R13 or SP
                         loc_index,
                         // ADD r/m8, r8 => ["ADD r/m8", " r8"]
                         // offset = operand index
@@ -788,7 +790,8 @@ impl Decoder {
                         // This is true independant of the REX prefix
                         if mode != 3 && rm == 4 && op.contains("r/m") {
                             // SIB Stuff
-                            let sib = self.code.step();
+                            let sib = self.code.get();
+                            self.code.inc();
                             // SIB doesn't change the offset but it does change the size
                             size += 1;
                             let scale = sib & 0b11000000 >> 6;
@@ -828,14 +831,14 @@ impl Decoder {
                                 match mode {
                                     // Just disp32
                                     0 => {
-                                        op_str.push('+');
                                         op_str.push_str(&self.format_imm(4));
+                                        size += 4;
                                         op_str.push(']');
                                     }
                                     // disp8 + ebp
                                     1 => {
-                                        op_str.push('+');
                                         op_str.push_str(&self.format_imm(1));
+                                        size += 1;
                                         op_str.push('+');
                                         op_str.push_str("RBP");
                                         op_str.push(']');
@@ -843,8 +846,8 @@ impl Decoder {
                                     // disp32 + ebp
                                     // all this to enable C local variabes. Very cool
                                     2 => {
-                                        op_str.push('+');
                                         op_str.push_str(&self.format_imm(4));
+                                        size += 4;
                                         op_str.push('+');
                                         op_str.push_str("RBP");
                                         op_str.push(']');
@@ -885,9 +888,6 @@ impl Decoder {
                             }
                         }
                     }
-                }
-                for _ in 0..size {
-                    self.code.inc();
                 }
             } else if op.starts_with("imm")
                 || op.starts_with("disp")
@@ -935,17 +935,12 @@ impl Decoder {
     }
 
     fn format_imm(&mut self, count: usize) -> String {
-        // Number of bytes
-        let mut i = count;
+        let mut i = 0;
         let mut val: u64 = 0;
-        while i > 0 {
-            i -= 1;
-            // as i decreases we step further in the bytestring, and shift less
-            // immediate values are ordered most significant byte first
-            // The byte we pull from the bytetring has to be converted to a u64 first
-            // or it'll overflow to zero
+        while i < count {
             val += (self.code.get() as u64) << (i * 8);
             self.code.inc();
+            i += 1;
         }
         format!("0x{:02X}", val)
     }
@@ -1158,64 +1153,73 @@ impl Decoder {
             };
         // Still may have multiple if entries rely on prefixes to infer size
         } else {
-            for ins in valids {
+            i = 0;
+            while i < valids.len() {
                 //  Pull largest digit from name
                 // Or maybe just
                 match self.context.size {
                     ArchSize::I16 => {
                         if (self.context.op_override || self.context.addr_override)
-                            && ins.text.contains("8")
+                            && valids[i].text.contains("8")
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
-                            && ins.text.contains("16")
+                            && valids[i].text.contains("16")
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         }
                     }
                     ArchSize::I32 => {
                         if (self.context.op_override || self.context.addr_override)
-                            && ins.text.contains("16")
+                            && valids[i].text.contains("16")
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
-                            && ins.text.contains("32")
+                            && valids[i].text.contains("32")
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         }
                     }
                     ArchSize::I64 => {
                         if (self.context.op_override || self.context.addr_override)
-                            && ins.text.contains("16")
+                            && valids[i].text.contains("16")
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         } else if (!self.context.op_override && !self.context.addr_override)
-                            && (ins.text.contains("32") || ins.text.contains("64"))
+                            && (valids[i].text.contains("32") || valids[i].text.contains("64"))
                         {
                             return InstructionResponse {
-                                val: Some(ins.clone()),
+                                val: Some(valids[i].clone()),
                                 size,
                             };
                         }
                     }
                 };
+                i += 1;
             }
+            // There are some jumps that are the same but have aliases
+            // so just return the first one i guess
+            return InstructionResponse {
+                val: Some(valids[0].clone()),
+                size,
+            };
         }
+
         // What possibly can be here?
         // ??
         panic!("At the disco");

@@ -631,6 +631,7 @@ const BASE_REGS_REX_EXTENDED: [&str; 16] = [
     "A", "C", "D", "B", "SP", "BP", "SI", "DI", "R8", "R9", "R10", "R11", "R12", "R13", "R14",
     "R15",
 ];
+const BASE_REGS: [&str; 8] = ["A", "C", "D", "B", "AH", "CH", "DH", "BH"];
 
 impl Decoder {
     pub fn parse_n_print(&mut self) {
@@ -665,11 +666,8 @@ impl Decoder {
                 bytes: Some(vec![self.code.step()]),
             };
         }
-        println!("Instruction: {}", instruction.val.as_ref().unwrap().text);
-        println!("Instruction size: {}", instruction.size);
         let operands = self.parse_operands(&instruction);
         let start_offset = -((instruction.size + operands.size) as isize);
-        println!("Operands size: {}", operands.size);
         ParseResponse {
             instruction: instruction.val,
             operands: operands.val,
@@ -731,6 +729,7 @@ impl Decoder {
         let mut offset = 0;
         let mut op_strings: Vec<String> = Vec::new();
         for op in instruction.operands.as_ref().unwrap() {
+            let op_in_code = Regex::new("\\+r[bwdo]").unwrap();
             // N/A means we're at the last one
             if op == "N/A" {
                 break;
@@ -748,10 +747,10 @@ impl Decoder {
                 let mode = (modrm & 0b11000000) >> 6;
                 let rm = modrm & 0b00000111;
                 let reg = (modrm & 0b00111000) >> 3;
-                let loc_index = if op.contains("r/m") {
-                    (rex_b | rm) as usize
-                } else {
+                let loc_index = if op.contains("reg") {
                     (rex_r | reg) as usize
+                } else {
+                    (rex_b | rm) as usize
                 };
                 // ModR/M:reg or ModR/M:r/m and mod = 3 means we're dealing with a register
                 if op.contains("reg") || (op.contains("r/m") && mode == 3) {
@@ -759,7 +758,7 @@ impl Decoder {
                     // Get name based on size
                     op_str = Decoder::format_reg(
                         // Smallest name of reg, e.g. A or R13 or SP
-                        BASE_REGS_REX_EXTENDED[loc_index],
+                        loc_index,
                         // ADD r/m8, r8 => ["ADD r/m8", " r8"]
                         // offset = operand index
                         if rex_r != 1 {
@@ -799,10 +798,7 @@ impl Decoder {
                                 // RSP is not to be used as an index
                             } else {
                                 // Get index register
-                                op_str += &Decoder::format_reg(
-                                    BASE_REGS_REX_EXTENDED[usize::from(rex_x | index)],
-                                    "r64",
-                                );
+                                op_str += &Decoder::format_reg(loc_index, "r64");
                                 // Apply scaling
                                 match scale {
                                     1 => {
@@ -825,10 +821,7 @@ impl Decoder {
                             }
                             // Add base register
                             if base != 5 {
-                                op_str += &Decoder::format_reg(
-                                    BASE_REGS_REX_EXTENDED[usize::from(rex_b | base)],
-                                    "r64",
-                                );
+                                op_str += &Decoder::format_reg(loc_index, "r64");
                             } else {
                                 // When base is 0b101 it means either it's based on RBP or a
                                 // displacement, depending on mod
@@ -866,7 +859,7 @@ impl Decoder {
                             // Base reg is determined by REX.B and R/M bits, and bc we're in 64 bit mode it
                             // has to be 64 bit, hence passing "r64" literal rather than using anything
                             // from the instruction
-                            &Decoder::format_reg(BASE_REGS_REX_EXTENDED[loc_index], "r64");
+                            &Decoder::format_reg(loc_index, "r64");
                             // op_str = "[{reg}"
                             // Now we find any displacement
                             match mode {
@@ -893,6 +886,9 @@ impl Decoder {
                         }
                     }
                 }
+                for _ in 0..size {
+                    self.code.inc();
+                }
             } else if op.starts_with("imm")
                 || op.starts_with("disp")
                 || op.starts_with("rel")
@@ -914,6 +910,20 @@ impl Decoder {
                     op_str = self.format_imm(1);
                     size += 1;
                 }
+            } else if op.starts_with("opcode") {
+                // Get last byte of instruction
+                let register = self.code.get_offset(-(size as isize)) & 0b00000111 | rex_b;
+                op_str = Decoder::format_reg(
+                    // Smallest name of reg, e.g. A or R13 or SP
+                    register as usize,
+                    // ADD r/m8, r8 => ["ADD r/m8", " r8"]
+                    // offset = operand index
+                    if rex_r != 1 {
+                        instruction.text.split(',').collect::<Vec<_>>()[offset]
+                    } else {
+                        "r64"
+                    },
+                );
             }
             op_strings.push(op_str);
             offset += 1;
@@ -934,47 +944,65 @@ impl Decoder {
             // immediate values are ordered most significant byte first
             // The byte we pull from the bytetring has to be converted to a u64 first
             // or it'll overflow to zero
-            val += (self.code.step() as u64) << (i * 8);
+            val += (self.code.get() as u64) << (i * 8);
+            self.code.inc();
         }
-        format!("{:X}", val)
+        format!("0x{:02X}", val)
     }
 
-    fn format_reg(base: &str, ins_str: &str) -> String {
+    fn format_reg(index: usize, ins_str: &str) -> String {
+        let base = BASE_REGS_REX_EXTENDED[index];
         let mut result = base.to_string();
+        let mut size = 64;
         if ins_str.contains("r8") || ins_str.contains("r/m8") {
-            if result.starts_with("R") {
-                return result + "B";
-            } else {
-                return result + "L";
-            }
+            size = 8;
         } else if ins_str.contains("r16") || ins_str.contains("r/m16") {
-            if result.starts_with("R") {
-                return result + "W";
-            } else if result.len() == 1 {
-                return result + "X";
-            } else {
-                return result;
-            }
+            size = 16;
         } else if ins_str.contains("r32") || ins_str.contains("r/m32") {
-            if result.starts_with("R") {
-                return result + "D";
-            } else if result.len() == 1 {
-                result.insert(0, 'E');
-                return result + "X";
-            } else {
-                result.insert(0, 'E');
-                return result;
-            }
+            size = 32;
         } else if ins_str.contains("r64") || ins_str.contains("r/m64") {
-            if result.starts_with("R") {
-                return result;
-            } else if result.len() == 1 {
-                result.insert(0, 'R');
-                return result + "X";
-            } else {
-                result.insert(0, 'R');
-                return result;
+            size = 64;
+        }
+        match size {
+            64 => {
+                if result.starts_with("R") {
+                    return result;
+                } else if result.len() == 1 {
+                    result.insert(0, 'R');
+                    return result + "X";
+                } else {
+                    result.insert(0, 'R');
+                    return result;
+                }
             }
+            32 => {
+                if result.starts_with("R") {
+                    return result + "D";
+                } else if result.len() == 1 {
+                    result.insert(0, 'E');
+                    return result + "X";
+                } else {
+                    result.insert(0, 'E');
+                    return result;
+                }
+            }
+            16 => {
+                if result.starts_with("R") {
+                    return result + "W";
+                } else if result.len() == 1 {
+                    return result + "X";
+                } else {
+                    return result;
+                }
+            }
+            8 => {
+                if result.starts_with("R") {
+                    return result + "B";
+                } else {
+                    return result + "L";
+                }
+            }
+            _ => return result,
         }
         return result;
     }

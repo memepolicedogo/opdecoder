@@ -510,6 +510,10 @@ impl ByteString {
         }
     }
 
+    pub fn dec(&mut self) {
+        self.curr -= 1;
+    }
+
     pub fn is_end(&mut self) -> bool {
         self.curr >= (self.code.len() - 1)
     }
@@ -661,20 +665,15 @@ impl Decoder {
                 bytes: Some(vec![self.code.step()]),
             };
         }
+        println!("Instruction: {}", instruction.val.as_ref().unwrap().text);
+        println!("Instruction size: {}", instruction.size);
         let operands = self.parse_operands(&instruction);
         let start_offset = -((instruction.size + operands.size) as isize);
-        if self.code.inc() {
-            ParseResponse {
-                instruction: instruction.val,
-                operands: operands.val,
-                bytes: Some(Vec::from(self.code.get_slice_offset(start_offset, 0))),
-            }
-        } else {
-            ParseResponse {
-                instruction: instruction.val,
-                operands: operands.val,
-                bytes: Some(Vec::from(self.code.get_slice_offset(start_offset + 1, 1))),
-            }
+        println!("Operands size: {}", operands.size);
+        ParseResponse {
+            instruction: instruction.val,
+            operands: operands.val,
+            bytes: Some(Vec::from(self.code.get_slice_offset(start_offset, 0))),
         }
     }
 
@@ -749,16 +748,25 @@ impl Decoder {
                 let mode = (modrm & 0b11000000) >> 6;
                 let rm = modrm & 0b00000111;
                 let reg = (modrm & 0b00111000) >> 3;
+                let loc_index = if op.contains("r/m") {
+                    (rex_b | rm) as usize
+                } else {
+                    (rex_r | reg) as usize
+                };
                 // ModR/M:reg or ModR/M:r/m and mod = 3 means we're dealing with a register
                 if op.contains("reg") || (op.contains("r/m") && mode == 3) {
                     // Operand is just a register
                     // Get name based on size
                     op_str = Decoder::format_reg(
                         // Smallest name of reg, e.g. A or R13 or SP
-                        BASE_REGS_REX_EXTENDED[usize::from(rex_b | rm)],
+                        BASE_REGS_REX_EXTENDED[loc_index],
                         // ADD r/m8, r8 => ["ADD r/m8", " r8"]
                         // offset = operand index
-                        instruction.text.split(',').collect::<Vec<_>>()[offset],
+                        if rex_r != 1 {
+                            instruction.text.split(',').collect::<Vec<_>>()[offset]
+                        } else {
+                            "r64"
+                        },
                     );
                 } else {
                     // Operand is memory
@@ -779,7 +787,7 @@ impl Decoder {
                     } else {
                         // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
                         // This is true independant of the REX prefix
-                        if mode != 3 && rm == 4 {
+                        if mode != 3 && rm == 4 && op.contains("r/m") {
                             // SIB Stuff
                             let sib = self.code.step();
                             // SIB doesn't change the offset but it does change the size
@@ -858,7 +866,7 @@ impl Decoder {
                             // Base reg is determined by REX.B and R/M bits, and bc we're in 64 bit mode it
                             // has to be 64 bit, hence passing "r64" literal rather than using anything
                             // from the instruction
-                            &Decoder::format_reg(BASE_REGS_REX_EXTENDED[usize::from(rex_b | rm)], "r64");
+                            &Decoder::format_reg(BASE_REGS_REX_EXTENDED[loc_index], "r64");
                             // op_str = "[{reg}"
                             // Now we find any displacement
                             match mode {
@@ -885,7 +893,11 @@ impl Decoder {
                         }
                     }
                 }
-            } else if op.starts_with("imm") || op.starts_with("disp") {
+            } else if op.starts_with("imm")
+                || op.starts_with("disp")
+                || op.starts_with("rel")
+                || op == "Offset"
+            {
                 // Immediate
                 // We have to get the size from the instruction part not the operands
                 let imm_str = instruction.text.split(',').collect::<Vec<_>>()[offset];
@@ -924,7 +936,7 @@ impl Decoder {
             // or it'll overflow to zero
             val += (self.code.step() as u64) << (i * 8);
         }
-        val.to_string()
+        format!("{:X}", val)
     }
 
     fn format_reg(base: &str, ins_str: &str) -> String {
@@ -1009,7 +1021,7 @@ impl Decoder {
                     for _ in 0..prefix_count {
                         prefix.push(self.code.step());
                     }
-                    size = (i - prefix_count);
+                    size = ((i + 1) - prefix_count);
                     for _ in 0..size {
                         self.code.step();
                     }
@@ -1100,7 +1112,18 @@ impl Decoder {
         }
         if valids.is_empty() {
             return InstructionResponse { val: None, size: 0 };
-        } else if valids.len() == 1 {
+        } else {
+            // Adjust size
+            // any /digit references a field in the ModR/M byte but based on the logic I have
+            // implemented it is counted as part of the instruction AND the opcode without this
+            // adjustment
+            let re = Regex::new("/[0-7]").unwrap();
+            if re.is_match(&valids[0].opcode) {
+                size -= 1;
+                self.code.dec();
+            }
+        }
+        if valids.len() == 1 {
             return InstructionResponse {
                 val: Some(valids[0].clone()),
                 size,

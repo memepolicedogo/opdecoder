@@ -116,13 +116,18 @@ fn main() {
         i += 1;
     }
 
-    let bytes = fs::read(opts.input).unwrap();
+    let bytes = if opts.input != "-" {
+        fs::read(opts.input).unwrap()
+    } else {
+        Vec::new()
+    };
 
     let tree_str = &fs::read_to_string(opts.tree_path);
     if tree_str.is_err() {
         println!("Invalid tree path");
         return;
     }
+
     let mut dec = Decoder {
         context: Context {
             size: opts.arch_size,
@@ -158,18 +163,25 @@ fn parse_format(format: &str) -> OutputFormat {
 }
 
 fn test() {
+    let mut test_one = vec![
+        0x58, 0x48, 0x83, 0xf8, 0x01, 0x0F, 0x84, 0x04, 0x04, 0x00, 0x00,
+    ];
+    let mut test_two = vec![0x48, 0xf7, 0xe3, 0x4c, 0x01, 0xd8, 0x4d, 0x31, 0xd2];
     let mut dec = Decoder {
         context: Context {
             ..Default::default()
         },
         tree: serde_json::from_str(&fs::read_to_string("tree2.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
-            code: vec![0x48, 0x83, 0xf8, 0x01],
+            code: test_one,
             curr: 0,
         },
     };
-    let mut rep = dec.parse_one();
-    println!("Match:");
-    rep.pretty_print();
-    rep.print_bytes();
+    dec.parse_n_print();
+    return;
+    let mut reps = dec.parse();
+    for rep in reps {
+        rep.pretty_print();
+        rep.print_bytes();
+    }
 }

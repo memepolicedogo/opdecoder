@@ -487,7 +487,11 @@ impl ByteString {
     // Get the byte at the index relative to curr
     pub fn get_offset(&self, offset: isize) -> u8 {
         let mut index = self.curr as isize + offset;
-        self.code[index as usize]
+        if index as usize >= self.code.len() {
+            0
+        } else {
+            self.code[index as usize]
+        }
     }
 
     // Get the byte at curr
@@ -710,20 +714,22 @@ impl Decoder {
         //  modrm is the first byte of ops, if there is no modrm for this instruction this is
         //  ignored
         let modrm = self.code.get();
+        let rex_byte = if instruction.opcode.starts_with("REX") {
+            self.code.get_offset(-(ins.size as isize))
+        } else {
+            self.code.get_offset(-(ins.size as isize + 1))
+        };
+        let has_rex = rex_byte & 0b11110000 == 0b01000000;
         let mut rex_w = false;
         let mut rex_r = 0;
         let mut rex_x = 0;
         let mut rex_b = 0;
-        if instruction.opcode.starts_with("REX") {
-            let rex = self.code.get_offset(-(ins.size as isize));
-            if rex & 0b11110000 != 0b01000000 {
-                panic!("Invalid REX prefix");
-            }
+        if has_rex {
             // Parse REX prefix
-            rex_w = (rex & 0b00001000) != 0;
-            rex_r = (rex & 0b00000100) << 1;
-            rex_x = (rex & 0b00000010) << 2;
-            rex_b = (rex & 0b00000001) << 3;
+            rex_w = (rex_byte & 0b00001000) != 0;
+            rex_r = (rex_byte & 0b00000100) << 1;
+            rex_x = (rex_byte & 0b00000010) << 2;
+            rex_b = (rex_byte & 0b00000001) << 3;
         }
 
         // Offset is the operand #, size is the amount of bytes
@@ -794,14 +800,14 @@ impl Decoder {
                             self.code.inc();
                             // SIB doesn't change the offset but it does change the size
                             size += 1;
-                            let scale = sib & 0b11000000 >> 6;
-                            let index = sib & 0b00111000 >> 3;
+                            let scale = (sib & 0b11000000) >> 6;
+                            let index = (sib & 0b00111000) >> 3;
                             let base = sib & 0b00000111;
                             if (rex_x | index) == 4 {
                                 // RSP is not to be used as an index
                             } else {
                                 // Get index register
-                                op_str += &Decoder::format_reg(loc_index, "r64");
+                                op_str += &Decoder::format_reg((rex_x | index) as usize, "r64");
                                 // Apply scaling
                                 match scale {
                                     1 => {

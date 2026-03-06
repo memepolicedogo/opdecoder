@@ -659,6 +659,21 @@ const BASE_REGS_REX_EXTENDED: [&str; 16] = [
 const BASE_REGS: [&str; 8] = ["A", "C", "D", "B", "AH", "CH", "DH", "BH"];
 
 impl Decoder {
+    pub fn has_code(&self) -> bool {
+        self.code.code.is_empty()
+    }
+
+    pub fn load_code(&mut self, code: &Vec<u8>) {
+        self.code = ByteString {
+            code: code.clone(),
+            curr: 0,
+        };
+    }
+
+    pub fn append_code(&mut self, code: &Vec<u8>) {
+        self.code.append(code);
+    }
+
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
@@ -675,6 +690,7 @@ impl Decoder {
         }
         responses
     }
+
     pub fn parse_one(&mut self) -> ParseResponse {
         // If no code is left return nothing
         if self.code.is_end() {

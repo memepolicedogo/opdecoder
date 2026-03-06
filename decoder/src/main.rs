@@ -1,13 +1,16 @@
 #![allow(dead_code, unused)]
 mod instruction_tree;
 use serde_json;
-use std::{env, fs, io};
+use std::{
+    env, fs,
+    io::{self, IsTerminal, Read, Seek, SeekFrom},
+};
 
 use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder, InstructionTree};
 
 const REXW: u8 = 0b01001000;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 enum OutputFormat {
     PrettyPrint,
     JSON,
@@ -50,12 +53,13 @@ impl Default for Options {
     }
 }
 
+const HELP_MSG: &str = "There is no help message I lied";
 fn main() {
     //let mut tree = InstructionTree::from_json(&fs::read_to_string("reduced.json").unwrap());
     //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
+    // Parse CLI args
     test();
     return;
-    // Parse CLI args
     let mut opts = Options {
         ..Default::default()
     };
@@ -110,26 +114,27 @@ fn main() {
                 i += 1;
                 opts.output_format = parse_format(args[i].as_str());
             }
+            "-h" | "--help" => {
+                println!("{}", HELP_MSG);
+                return;
+            }
             _ => {
-                println!("Unknown arg \"{}\"", args[i]);
+                println!("Unknown arg \"{}\", use -h for help", args[i]);
                 return;
             }
         }
         i += 1;
     }
 
-    let bytes = if opts.input != "-" {
-        fs::read(opts.input).unwrap()
-    } else {
-        Vec::new()
-    };
-
+    println!("{:#?}", opts);
+    return;
     let tree_str = &fs::read_to_string(opts.tree_path);
     if tree_str.is_err() {
         println!("Invalid tree path");
         return;
     }
 
+    // Initilize the bleep with no code
     let mut dec = Decoder {
         context: Context {
             size: opts.arch_size,
@@ -137,10 +142,52 @@ fn main() {
         },
         tree: serde_json::from_str(&tree_str.unwrap()).expect("Invalid tree JSON"),
         code: ByteString {
-            code: bytes,
+            code: Vec::new(),
             curr: 0,
         },
     };
+
+    // Load data
+    if opts.input == "-" {
+        load_from_stdin(&mut dec, &opts);
+    } else {
+        load_from_file(&mut dec, &opts);
+    }
+    if !dec.has_code() && opts.input == "-" {
+        // Read byte by byte from stdin
+        // actually fuck that
+    } else if !dec.has_code() {
+        panic!("No code was loaded, check your input options");
+    }
+    // Pretty printing to stdout we should print as we go bc we don't have to worry about messing
+    // up computer readable shit
+    if opts.output == "-" && opts.output_format == OutputFormat::PrettyPrint {
+        dec.parse_n_print();
+    } else {
+        // Otherwise we can wait till its all done
+        let mut responses = dec.parse();
+    }
+}
+
+fn load_from_stdin(dec: &mut Decoder, opts: &Options) {
+    let mut stdin = io::stdin();
+    if io::Stdin::is_terminal(&stdin) {
+        panic!("Can't be run interactivly, Specify a file or pipe data in");
+    } else {
+        // Load in stdin as code
+        dec.load_code(&stdin.bytes().map(|x| x.unwrap()).collect());
+    }
+}
+
+fn load_from_file(dec: &mut Decoder, opts: &Options) {
+    // Get file
+    let mut file = fs::File::open(&opts.input).expect("Invalid input file");
+    // Seek to offset
+    file.seek(SeekFrom::Start(opts.input_offset));
+    // Load code
+    let mut code: Vec<u8> = Vec::new();
+    file.read_to_end(&mut code);
+    dec.load_code(&code);
 }
 
 fn parse_arch(arch: &str) -> ArchSize {

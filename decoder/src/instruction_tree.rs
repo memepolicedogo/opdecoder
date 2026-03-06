@@ -660,7 +660,7 @@ const BASE_REGS: [&str; 8] = ["A", "C", "D", "B", "AH", "CH", "DH", "BH"];
 
 impl Decoder {
     pub fn has_code(&self) -> bool {
-        self.code.code.is_empty()
+        !self.code.code.is_empty()
     }
 
     pub fn load_code(&mut self, code: &Vec<u8>) {
@@ -677,7 +677,7 @@ impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
-            inc.print_bytes();
+            //inc.print_bytes();
             inc.pretty_print();
         }
     }
@@ -980,7 +980,7 @@ impl Decoder {
             self.code.inc();
             i += 1;
         }
-        format!("0x{:0width$X}", val, width = count * 2)
+        format!("0x{:02X}", val)
     }
 
     fn format_reg(index: usize, ins_str: &str) -> String {

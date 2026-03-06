@@ -1,8 +1,11 @@
 #![allow(dead_code, unused)]
 mod instruction_tree;
+use core::panic;
+use goblin::{Object, elf::Elf, pe::PE};
 use serde_json;
 use std::{
-    env, fs,
+    env,
+    fs::{self, File},
     io::{self, IsTerminal, Read, Seek, SeekFrom},
 };
 
@@ -42,7 +45,7 @@ struct Options {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            tree_path: String::new(),
+            tree_path: String::from("./tree2.json"),
             arch_size: ArchSize::I64,
             input: String::from("-"),
             input_offset: 0,
@@ -58,8 +61,8 @@ fn main() {
     //let mut tree = InstructionTree::from_json(&fs::read_to_string("reduced.json").unwrap());
     //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
     // Parse CLI args
-    test();
-    return;
+    //test();
+    //return;
     let mut opts = Options {
         ..Default::default()
     };
@@ -126,9 +129,7 @@ fn main() {
         i += 1;
     }
 
-    println!("{:#?}", opts);
-    return;
-    let tree_str = &fs::read_to_string(opts.tree_path);
+    let tree_str = &fs::read_to_string(&opts.tree_path);
     if tree_str.is_err() {
         println!("Invalid tree path");
         return;
@@ -137,10 +138,14 @@ fn main() {
     // Initilize the bleep with no code
     let mut dec = Decoder {
         context: Context {
-            size: opts.arch_size,
+            size: match opts.arch_size {
+                ArchSize::I16 => ArchSize::I16,
+                ArchSize::I32 => ArchSize::I32,
+                ArchSize::I64 => ArchSize::I64,
+            },
             ..Default::default()
         },
-        tree: serde_json::from_str(&tree_str.unwrap()).expect("Invalid tree JSON"),
+        tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
         code: ByteString {
             code: Vec::new(),
             curr: 0,
@@ -151,7 +156,7 @@ fn main() {
     if opts.input == "-" {
         load_from_stdin(&mut dec, &opts);
     } else {
-        load_from_file(&mut dec, &opts);
+        load_from_file(&mut dec, &mut opts);
     }
     if !dec.has_code() && opts.input == "-" {
         // Read byte by byte from stdin
@@ -179,15 +184,46 @@ fn load_from_stdin(dec: &mut Decoder, opts: &Options) {
     }
 }
 
-fn load_from_file(dec: &mut Decoder, opts: &Options) {
+fn load_from_file(dec: &mut Decoder, opts: &mut Options) {
     // Get file
     let mut file = fs::File::open(&opts.input).expect("Invalid input file");
+    // If no offset/max then infer from file
+    if opts.input_offset == 0 && opts.read_max == 0 {
+        let buf = fs::read(&opts.input).unwrap();
+        match Object::parse(&buf).unwrap_or(Object::Unknown(0)) {
+            Object::Elf(elf) => {
+                opts_from_elf(&elf, opts);
+            }
+            Object::PE(pe) => {
+                opts_from_pe(&pe, opts);
+            }
+            _ => {}
+        }
+    }
     // Seek to offset
     file.seek(SeekFrom::Start(opts.input_offset));
     // Load code
     let mut code: Vec<u8> = Vec::new();
     file.read_to_end(&mut code);
+    if opts.read_max != 0 {
+        code.drain((opts.read_max as usize)..);
+    }
     dec.load_code(&code);
+}
+
+fn opts_from_pe(pe: &PE, opts: &mut Options) {
+    println!("IDK how PEs work sorry twin");
+}
+
+fn opts_from_elf(elf: &Elf, opts: &mut Options) {
+    for header in &elf.program_headers {
+        // R_X
+        if header.p_flags == 5 {
+            opts.input_offset = header.p_offset;
+            opts.read_max = header.p_filesz;
+            return;
+        }
+    }
 }
 
 fn parse_arch(arch: &str) -> ArchSize {

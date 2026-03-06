@@ -964,7 +964,7 @@ impl Decoder {
             self.code.inc();
             i += 1;
         }
-        format!("0x{:02X}", val)
+        format!("0x{:0width$X}", val, width = count * 2)
     }
 
     fn format_reg(index: usize, ins_str: &str) -> String {

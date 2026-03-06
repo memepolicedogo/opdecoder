@@ -194,7 +194,7 @@ fn test() {
         },
         tree: serde_json::from_str(&fs::read_to_string("tree2.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
-            code: test_one,
+            code: test_three,
             curr: 0,
         },
     };

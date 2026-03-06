@@ -427,12 +427,32 @@ pub enum ArchSize {
     I64,
 }
 
+#[derive(Debug)]
+pub struct Rex {
+    pub w: bool,
+    pub r: u8,
+    pub b: u8,
+    pub x: u8,
+}
+
+impl Rex {
+    fn from(value: u8) -> Self {
+        Self {
+            w: (value & 0b00001000) != 0,
+            r: (value & 0b00000100) << 1,
+            x: (value & 0b00000010) << 2,
+            b: (value & 0b00000001) << 3,
+        }
+    }
+}
+
 pub struct Context {
     pub size: ArchSize,
     pub one: u8,
     pub two: u8,
     pub op_override: bool,
     pub addr_override: bool,
+    pub rex: Option<Rex>,
 }
 
 impl Default for Context {
@@ -443,6 +463,7 @@ impl Default for Context {
             two: 0,
             op_override: false,
             addr_override: false,
+            rex: None,
         }
     }
 }
@@ -641,7 +662,7 @@ impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
-            //inc.print_bytes();
+            inc.print_bytes();
             inc.pretty_print();
         }
     }
@@ -665,11 +686,12 @@ impl Decoder {
         }
         let instruction = self.parse_instruction();
         if instruction.val.is_none() {
+            let byte = self.code.step();
             // Increment code and return nothing (invalid instruction)
             return ParseResponse {
                 instruction: None,
                 operands: None,
-                bytes: Some(vec![self.code.step()]),
+                bytes: Some(vec![byte]),
             };
         }
         let operands = self.parse_operands(&instruction);
@@ -714,22 +736,16 @@ impl Decoder {
         //  modrm is the first byte of ops, if there is no modrm for this instruction this is
         //  ignored
         let modrm = self.code.get();
-        let rex_byte = if instruction.opcode.starts_with("REX") {
-            self.code.get_offset(-(ins.size as isize))
-        } else {
-            self.code.get_offset(-(ins.size as isize + 1))
-        };
-        let has_rex = rex_byte & 0b11110000 == 0b01000000;
         let mut rex_w = false;
         let mut rex_r = 0;
         let mut rex_x = 0;
         let mut rex_b = 0;
-        if has_rex {
+        if self.context.rex.is_some() {
             // Parse REX prefix
-            rex_w = (rex_byte & 0b00001000) != 0;
-            rex_r = (rex_byte & 0b00000100) << 1;
-            rex_x = (rex_byte & 0b00000010) << 2;
-            rex_b = (rex_byte & 0b00000001) << 3;
+            rex_w = self.context.rex.as_ref().unwrap().w;
+            rex_r = self.context.rex.as_ref().unwrap().r;
+            rex_x = self.context.rex.as_ref().unwrap().x;
+            rex_b = self.context.rex.as_ref().unwrap().b;
         }
 
         // Offset is the operand #, size is the amount of bytes
@@ -918,7 +934,7 @@ impl Decoder {
                 }
             } else if op.starts_with("opcode") {
                 // Get last byte of instruction
-                let register = self.code.get_offset(-(size as isize)) & 0b00000111 | rex_b;
+                let register = (self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex_b;
                 op_str = Decoder::format_reg(
                     // Smallest name of reg, e.g. A or R13 or SP
                     register as usize,
@@ -1026,8 +1042,10 @@ impl Decoder {
         let mut size: usize = 0;
         let mut byte: u8;
         let mut prefix = Vec::new();
+        let mut opcode = Vec::new();
         // Reset Context
         self.tree.reset();
+        self.context.rex = None;
         self.context.one = 0;
         self.context.two = 0;
         self.context.op_override = false;
@@ -1040,7 +1058,8 @@ impl Decoder {
         let ins = 'parent: loop {
             self.tree.reset();
             for i in (prefix_count..MAX_WIDTH) {
-                let mut rep = self.tree.step(self.code.get_offset(i as isize));
+                byte = self.code.get_offset(i as isize);
+                let mut rep = self.tree.step(byte);
                 if rep.bottom && rep.val.is_empty() {
                     prefix_count += 1;
                     break;
@@ -1048,11 +1067,13 @@ impl Decoder {
                     // We've found at least one match
                     // Iterate and handle prefix bytes
                     for _ in 0..prefix_count {
-                        prefix.push(self.code.step());
+                        prefix.push(self.code.get());
+                        self.code.inc();
                     }
                     size = ((i + 1) - prefix_count);
                     for _ in 0..size {
-                        self.code.step();
+                        opcode.push(self.code.get());
+                        self.code.inc();
                     }
                     break 'parent rep.val;
                 }
@@ -1067,7 +1088,9 @@ impl Decoder {
         // Figure out the prefixes
         for byte in prefix {
             // If byte isn't in range to be a valid prefix then escape
-            if byte < 0x26 || byte > 0xf3 {
+            if (byte & 0b11110000) == 0b01000000 {
+                self.context.rex = Some(Rex::from(byte));
+            } else if byte < 0x26 || byte > 0xf3 {
                 break;
             } else if byte >= 0xf0 {
                 self.context.one = byte;
@@ -1089,6 +1112,9 @@ impl Decoder {
                     break;
                 }
             }
+        }
+        if (opcode[0] & 0b11110000) == 0b01000000 {
+            self.context.rex = Some(Rex::from(opcode[0]));
         }
         // Context is probably accurate now idk
         // Now we have to do conflict resolution and ensure that the prefixes and the instruction

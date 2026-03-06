@@ -3,7 +3,7 @@ mod instruction_tree;
 use serde_json;
 use std::{env, fs, io};
 
-use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder};
+use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder, InstructionTree};
 
 const REXW: u8 = 0b01001000;
 
@@ -51,6 +51,8 @@ impl Default for Options {
 }
 
 fn main() {
+    //let mut tree = InstructionTree::from_json(&fs::read_to_string("reduced.json").unwrap());
+    //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
     test();
     return;
     // Parse CLI args

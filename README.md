@@ -1,6 +1,7 @@
 # Hi
 This repo is an awful mess. I'm gonna clean it up someday I promise. If you want to try the disassembler its in decoder/. Its a rust project so you'll need all the rust stuff to build it.
 ## Running the disassembler
+The text below is a LIE that is only true if not an ELF executable, if you are trying to disassembly an ELF then just pass the path with the `-i` flag and you'll be chill\
 Currently it can't parse executable headers of any kind, I'm working on that, so you'll have to do some stupid annoying stuff.\
 The command you probably want is 
 ```

@@ -565,7 +565,7 @@ pub struct OperandResponse {
     pub size: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ParseResponse {
     pub instruction: Option<Instruction>,
     pub operands: Option<Vec<String>>,
@@ -575,31 +575,41 @@ pub struct ParseResponse {
 impl fmt::Display for ParseResponse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         return if self.bytes.is_none() {
-            writeln!(f, "Failed to parse")
+            write!(f, "Failed to parse")
         } else if self.instruction.is_none() {
-            writeln!(f, "{:02X}", self.bytes.as_ref().unwrap()[0])
+            write!(f, "{:02X}", self.bytes.as_ref().unwrap()[0])
         } else {
             let mut full_str = String::new();
             let ins = self.instruction.as_ref().unwrap();
             // Get the base instruction name sans ops
             full_str.push_str(ins.text.split(' ').collect::<Vec<_>>()[0]);
-            if self.operands.is_none() {
-                writeln!(f, "{}", full_str);
+            if self.operands.is_some() {
+                for op in self.operands.as_ref().unwrap() {
+                    // Leading space and trailing comma for each
+                    full_str.push(' ');
+                    full_str.push_str(op);
+                    full_str.push(',');
+                }
+                // Remove trailing comma
+                full_str.pop();
             }
-            for op in self.operands.as_ref().unwrap() {
-                // Leading space and trailing comma for each
-                full_str.push(' ');
-                full_str.push_str(op);
-                full_str.push(',');
-            }
-            // Remove trailing comma
-            full_str.pop();
-            writeln!(f, "{}", full_str)
+            write!(f, "{}", full_str)
         };
     }
 }
 
 impl ParseResponse {
+    pub fn bytes_to_string(&self) -> String {
+        return if self.bytes.is_none() {
+            String::from("Failed to parse")
+        } else {
+            let mut str = String::new();
+            for byte in self.bytes.as_ref().unwrap() {
+                str += format!("{:02X} ", byte).as_str();
+            }
+            str
+        };
+    }
     pub fn pretty_print(&self) {
         if self.bytes.is_none() {
             println!("Failed to parse");

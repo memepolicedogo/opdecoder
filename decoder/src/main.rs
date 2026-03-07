@@ -6,7 +6,7 @@ use serde_json;
 use std::{
     env,
     fs::{self, File},
-    io::{self, IsTerminal, Read, Seek, SeekFrom},
+    io::{self, IsTerminal, Read, Seek, SeekFrom, Write},
 };
 
 use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder, InstructionTree};
@@ -15,6 +15,7 @@ const REXW: u8 = 0b01001000;
 
 #[derive(Debug, PartialEq, PartialOrd)]
 enum OutputFormat {
+    PlusBytes,
     PrettyPrint,
     JSON,
 }
@@ -56,18 +57,52 @@ impl Default for Options {
     }
 }
 
-const HELP_MSG: &str = "There is no help message I lied";
+const HELP_MSG: &str = "
+    usage: decoder [OPTIONS]
+
+    Options:
+        -t, --tree      Specify the JSON instruction tree to load
+                        Default: ./tree2.json
+        -a, --arch      Specify the architecture size (16, 32, 64)
+                        Default: x84
+        -i, --input     Specify the input file or \"-\" for stdin 
+                        Default: -
+        --offset        Specify the offset in byte from the start of the file to start dissassembly
+                        Default: 0
+        -m, --max       Specify the maximum number of bytes to read from the file, or 0 to read to EOF
+                        Default: 0
+        -o, --ouput     Specify the output file or \"-\" for stdout
+                        Default: -
+        -f, --format    Specify the output format (PrettyPrint, PlusBytes, JSON)
+                        Default: PrettyPrint
+        --no-infer      Do not attempt parse executable headers from the input when max and offset == 0
+                        Default: false
+        -h, --help      Display this help message and exit
+
+    Common commands:
+        decoder -i {exe_path} -o {file}.json -f j
+            Decode the file at {exe_path}, infering executable sections from the headers, and write a JSON representation
+            of the result to {file}.json
+
+    Notes:
+        Currently only x64 is supported
+        Stdin cannot be used interactivly
+        Format specifiers are not case sensitive
+        Max and Offset are ignored in stdin mode
+";
 fn main() {
     //let mut tree = InstructionTree::from_json(&fs::read_to_string("reduced.json").unwrap());
     //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
     // Parse CLI args
-    test();
-    return;
     let mut opts = Options {
         ..Default::default()
     };
     // Get all but the first arg
     let mut args: Vec<String> = env::args().skip(1).collect();
+    if args.len() == 0 {
+        println!("{}", HELP_MSG);
+        return;
+    }
     let mut i = 0;
     // Iter by index so we can access the next val as needed
     while i < args.len() {
@@ -164,13 +199,38 @@ fn main() {
     } else if !dec.has_code() {
         panic!("No code was loaded, check your input options");
     }
-    // Pretty printing to stdout we should print as we go bc we don't have to worry about messing
-    // up computer readable shit
-    if opts.output == "-" && opts.output_format == OutputFormat::PrettyPrint {
-        dec.parse_n_print();
+    // Get write object for output
+    let mut output = open_output(&opts.output);
+    let mut responses = dec.parse();
+    match opts.output_format {
+        OutputFormat::JSON => {
+            let json = serde_json::to_string(&responses);
+            if json.is_err() {
+                println!("Failed to serialize response data:");
+                println!("{}", &json.unwrap_err());
+                return;
+            }
+            write!(output, "{}", json.unwrap());
+        }
+        OutputFormat::PrettyPrint => {
+            for rep in responses {
+                writeln!(output, "{}", rep);
+            }
+        }
+        OutputFormat::PlusBytes => {
+            for rep in responses {
+                writeln!(output, "{}", rep.bytes_to_string());
+                writeln!(output, "{}", rep);
+            }
+        }
+    }
+}
+
+fn open_output(path: &String) -> Box<dyn Write> {
+    if path == "-" {
+        Box::new(io::stdout())
     } else {
-        // Otherwise we can wait till its all done
-        let mut responses = dec.parse();
+        Box::new(File::create(path).expect("Bad output file"))
     }
 }
 
@@ -220,7 +280,7 @@ fn opts_from_elf(elf: &Elf, opts: &mut Options) {
         // R_X
         if header.p_flags == 5 {
             opts.input_offset = header.p_offset;
-            opts.read_max = header.p_filesz;
+            opts.read_max = header.p_filesz + 1;
             return;
         }
     }
@@ -241,6 +301,7 @@ fn parse_format(format: &str) -> OutputFormat {
     match format.to_lowercase().as_str() {
         "print" | "p" => OutputFormat::PrettyPrint,
         "json" | "j" => OutputFormat::JSON,
+        "bytes" | "byte" | "b" => OutputFormat::PlusBytes,
         _ => {
             panic!("Invalid output format");
         }

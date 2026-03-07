@@ -565,6 +565,7 @@ pub struct OperandResponse {
     pub size: usize,
 }
 
+#[derive(Debug)]
 pub struct ParseResponse {
     pub instruction: Option<Instruction>,
     pub operands: Option<Vec<String>>,
@@ -677,6 +678,7 @@ impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
+            println!("{:#?}", &inc);
             //inc.print_bytes();
             inc.pretty_print();
         }
@@ -966,10 +968,14 @@ impl Decoder {
             op_strings.push(op_str);
             offset += 1;
         }
-        return OperandResponse {
-            val: Some(op_strings),
-            size,
-        };
+        if op_strings.is_empty() {
+            OperandResponse { val: None, size: 0 }
+        } else {
+            OperandResponse {
+                val: Some(op_strings),
+                size,
+            }
+        }
     }
 
     fn format_imm(&mut self, count: usize) -> String {

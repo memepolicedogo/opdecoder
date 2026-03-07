@@ -151,11 +151,46 @@ pub struct InsTreeResponse<'a> {
     pub val: Vec<&'a Instruction>,
     pub bottom: bool,
 }
+
 const IGNORED_CODES: [&'static str; 13] = [
     "NP", "NFx", "cb", "cw", "cd", "cp", "co", "ct", "ib", "iw", "id", "io", "+i",
 ];
 
+const VEX_THREE_BYTE_FORM_REQS: [&'static str; 5] = ["W0", "W1", "0F", "0F38", "0F3A"];
+
 impl<'a> InstructionTree {
+    // VEX prefixes can have two valid encodings, a three byte form and a two byte form
+    // I am giving up on this
+    fn parse_vex(opcode: &String) -> (Vec<OpByte>, Option<Vec<OpByte>>) {
+        let mut three_byte = Vec::from([OpByte {
+            code: 0b11000100,
+            mask: 255,
+            ..Default::default()
+        }]);
+        let mut two_byte = Vec::from([OpByte {
+            code: 0b11000101,
+            mask: 255,
+            ..Default::default()
+        }]);
+        let mut prefix = opcode.clone();
+        let normal_bytes = prefix.split_off(prefix.find(' ').unwrap());
+        let vex_comps = prefix.split('.').collect::<Vec<&str>>();
+        // Does it require the three byte form?
+        for comp in vex_comps {
+            if VEX_THREE_BYTE_FORM_REQS.contains(&comp) {
+                two_byte = Vec::new();
+                break;
+            }
+        }
+        if two_byte.is_empty() {
+            // Build only for three byte
+
+            (three_byte, None)
+        } else {
+            // Build both
+            (three_byte, Some(two_byte))
+        }
+    }
     fn parse_opcode(opcode: &String) -> Vec<OpByte> {
         let mut result = Vec::new();
         let components = opcode.split(' ');

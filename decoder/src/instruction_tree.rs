@@ -446,7 +446,7 @@ impl<'a> InstructionTree {
         if ops[0] == "N/A" {
             return None;
         }
-        let ins_ops: Vec<&str> = instruction.text.split(",").collect();
+        let mut ins_ops: Vec<&str> = instruction.text.split(",").collect();
         let mut res = Vec::new();
         let mut i = 0;
         while i < ops.len() && ops[i] != "N/A" {
@@ -454,18 +454,16 @@ impl<'a> InstructionTree {
             if ops[i] == "1" {
                 break;
             }
+            ins_ops[i] = ins_ops[i].trim();
             let mut new = Operand {
                 size: OperandSize::Any,
                 encoding: OperandEncoding::Modrm,
                 value: OperandType::RM,
                 reg: None,
-                text: ops[i].clone(),
+                text: String::from(ins_ops[i]),
             };
             // Get size
-            // This should be ops not ins_ops real
-            new.size = if ops[i].contains("8/16/32") {
-                OperandSize::Any
-            } else if ins_ops[i].ends_with("512") {
+            new.size = if ins_ops[i].ends_with("512") {
                 OperandSize::DoubleQuadQuad
             } else if ins_ops[i].ends_with("256") {
                 OperandSize::QuadQuad
@@ -927,7 +925,7 @@ impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
-            println!("{:#?}", &inc);
+            //println!("{:#?}", &inc);
             //inc.print_bytes();
             inc.pretty_print();
         }
@@ -937,7 +935,8 @@ impl Decoder {
     pub fn parse(&mut self) -> Vec<ParseResponse> {
         let mut responses = Vec::new();
         while !self.code.is_end() {
-            responses.push(self.parse_one());
+            let rep = self.parse_one();
+            responses.push(rep);
         }
         responses
     }
@@ -1072,7 +1071,10 @@ impl Decoder {
                             // Index
                             if (rex.x | index) == 0b100 {
                             } else {
-                                op_str += &Decoder::format_reg((index | rex.x) as usize, real_size);
+                                op_str += &Decoder::format_reg(
+                                    (index | rex.x) as usize,
+                                    &OperandSize::Quad,
+                                );
                                 match scale {
                                     1 => {
                                         op_str.push('*');
@@ -1102,11 +1104,15 @@ impl Decoder {
                                 // When base is 0b101 it means either it's based on RBP or a
                                 // displacement, depending on mod
                                 match modrm.mode {
-                                    // Just disp32
+                                    // Just displacement
                                     0 => {
-                                        op_str.push_str(&self.format_imm(4));
-                                        size += 4;
-                                        op_str.push(']');
+                                        if rex.w {
+                                            op_str.push_str(&self.format_imm(4));
+                                            size += 4;
+                                        } else {
+                                            op_str.push_str(&self.format_imm(4));
+                                            size += 4;
+                                        }
                                     }
                                     // disp8 + ebp
                                     1 => {
@@ -1114,7 +1120,6 @@ impl Decoder {
                                         size += 1;
                                         op_str.push('+');
                                         op_str.push_str("RBP");
-                                        op_str.push(']');
                                     }
                                     // disp32 + ebp
                                     // all this to enable C local variabes. Very cool
@@ -1123,14 +1128,16 @@ impl Decoder {
                                         size += 4;
                                         op_str.push('+');
                                         op_str.push_str("RBP");
-                                        op_str.push(']');
                                     }
                                     _ => {}
                                 }
                             }
                         } else {
                             // Normal base reg
-                            op_str += &Decoder::format_reg((modrm.rm | rex.b) as usize, real_size);
+                            op_str += &Decoder::format_reg(
+                                (modrm.rm | rex.b) as usize,
+                                &OperandSize::Quad,
+                            );
                         }
                         match modrm.mode {
                             0b1 => {
@@ -1143,7 +1150,24 @@ impl Decoder {
                             }
                             _ => {}
                         }
+                    }
+                    if op_str.starts_with('[') {
                         op_str.push(']');
+                        match real_size {
+                            &OperandSize::Byte => {
+                                op_str.insert_str(0, "byte ");
+                            }
+                            &OperandSize::Word => {
+                                op_str.insert_str(0, "word ");
+                            }
+                            &OperandSize::Double => {
+                                op_str.insert_str(0, "dword ");
+                            }
+                            &OperandSize::Quad => {
+                                op_str.insert_str(0, "qword ");
+                            }
+                            _ => {}
+                        }
                     }
                 }
                 OperandEncoding::Modreg => {
@@ -1204,9 +1228,16 @@ impl Decoder {
             }
             op_strings.push(op_str);
         }
-        return OperandResponse {
-            ..Default::default()
-        };
+        if op_strings.is_empty() {
+            OperandResponse {
+                ..Default::default()
+            }
+        } else {
+            OperandResponse {
+                val: Some(op_strings),
+                size,
+            }
+        }
     }
 
     fn format_imm(&mut self, count: usize) -> String {
@@ -1384,10 +1415,9 @@ impl Decoder {
             }
             valids.push(instruction);
         }
-
         // Are any invalid on target arch?
         let mut i = 0;
-        while i < valids.len() {
+        while i < valids.len() && valids.len() > 1 {
             match self.context.size {
                 ArchSize::I16 => {
                     if !valids[i].legacy || valids[i].size > OperandSize::Word {
@@ -1404,7 +1434,17 @@ impl Decoder {
                     }
                 }
                 ArchSize::I64 => {
+                    // Invalid for target arch
                     if !valids[i].x64 {
+                        valids.remove(i);
+                    } else if valids[i].size < OperandSize::Quad
+                        // If the op's size is less than 64
+                        && (!self.context.addr_override || !self.context.op_override)
+                        // And ther isn't an overide prefix
+                        && ((self.context.rex.is_none() && valids[i].size != OperandSize::Double) || (self.context.rex.is_some() &&!self.context.rex.as_ref().unwrap().w))
+                    // And REX.W isn't set
+                    {
+                        // Remove
                         valids.remove(i);
                     } else {
                         i += 1;
@@ -1430,11 +1470,18 @@ impl Decoder {
                 val: Some(valids[0].clone()),
                 size,
             };
-            // Still may have multiple if entries rely on prefixes to infer size
+        } else if valids[0].description.starts_with("Jump") {
+            // Jump instructions have multiple identical entries where the logical operation is
+            // the same but can be refered to in differnt ways, i.e. JL == JNGE
+            return InstructionResponse {
+                val: Some(valids[0].clone()),
+                size,
+            };
         }
 
         // What possibly can be here?
         // ??
+        println!("{:#?}", valids);
         panic!("At the disco");
 
         // If instruction is invalid

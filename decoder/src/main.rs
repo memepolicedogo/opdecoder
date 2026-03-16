@@ -46,7 +46,7 @@ struct Options {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            tree_path: String::from("./tree2.json"),
+            tree_path: String::from("./tree3.json"),
             arch_size: ArchSize::I64,
             input: String::from("-"),
             input_offset: 0,
@@ -63,7 +63,7 @@ const HELP_MSG: &str = "
 
     Options:
         -t, --tree      Specify the JSON instruction tree to load
-                        Default: ./tree2.json
+                        Default: ./tree3.json
         -a, --arch      Specify the architecture size (16, 32, 64)
                         Default: x84
         -i, --input     Specify the input file or \"-\" for stdin 
@@ -94,6 +94,12 @@ const HELP_MSG: &str = "
 //}
 
 fn main() {
+    //let mut tree =
+    //    InstructionTree::from_json(&fs::read_to_string("instructions/reduced.json").unwrap());
+    //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
+    //return;
+    //test();
+    //return;
     // Parse CLI args
     let mut opts = Options {
         ..Default::default()
@@ -333,12 +339,12 @@ fn test() {
         0x48, 0x83, 0xF8, 0x24, 0x0F, 0x8F, 0xEC, 0x03, 0x00, 0x00, 0x48, 0x89, 0x04, 0x25, 0xDE,
         0x22, 0x40, 0x00, 0x48, 0x8B, 0x04, 0x25, 0xD4, 0x22, 0x40, 0x00, 0x00,
     ];
-    let mut test_four = vec![0x0f, 0x05, 0x00];
+    let mut test_four = vec![0x80, 0x38, 0x00, 0x00];
     let mut dec = Decoder {
         context: Context {
             ..Default::default()
         },
-        tree: serde_json::from_str(&fs::read_to_string("tree2.json").expect("AHH")).expect("AHHH"),
+        tree: serde_json::from_str(&fs::read_to_string("tree3.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
             code: test_four,
             curr: 0,

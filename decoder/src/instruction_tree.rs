@@ -7,7 +7,7 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Instruction {
+pub struct InstructionJSON {
     pub opcode: String,
     #[serde(rename = "instruction")]
     pub text: String,
@@ -17,6 +17,67 @@ pub struct Instruction {
     pub legacy: String,
     pub operands: Option<Vec<String>>,
     pub description: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Instruction {
+    pub opcode: String,
+    pub text: String,
+    pub x64: bool,
+    pub legacy: bool,
+    pub operands: Option<Vec<Operand>>,
+    pub invalid_prefixes: Vec<u8>,
+    pub description: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum OperandSize {
+    Any = 0,
+    Byte = 8,
+    Word = 16,
+    Double = 32,
+    Quad = 64,
+    Penta = 80,
+    DoubleQuad = 128,
+    QuadQuad = 256,
+    DoubleQuadQuad = 512, // man
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum OperandEncoding {
+    Opcode,    // In instruction opcode
+    Immediate, // Immediate value, including offsets
+    Modrm,     // Modrm +? SIB byte(s)
+    Modreg,
+    Bespoke, // Something evil and vile
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum OperandType {
+    RM, // Register or memory
+    Reg,
+    Mem,
+    Imm,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum RegisterType {
+    GPReg,
+    SegReg,
+    FPUReg,
+    MMXReg,
+    BoundReg,
+    KReg,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct Operand {
+    pub size: OperandSize,         // Size of the value
+    pub encoding: OperandEncoding, // How the value is encoded
+    pub value: OperandType,        // What sort of value is encoded
+    pub reg: Option<RegisterType>, // If it's a register, what kind
+    pub text: String, // The actual text of the operand for edge cases where the previous data
+                      // isn't enough
 }
 
 #[derive(Eq, Hash, Clone, Copy, Debug)]
@@ -109,7 +170,7 @@ impl PartialEq<u8> for OpByte {
 #[derive(Debug, Serialize, Deserialize)]
 struct Node {
     val: OpByte,
-    instructions: Vec<Instruction>,
+    instructions: Vec<InstructionJSON>,
     children: HashMap<OpByte, usize>,
 }
 
@@ -148,7 +209,7 @@ pub struct InstructionTree {
 
 #[derive(Debug)]
 pub struct InsTreeResponse<'a> {
-    pub val: Vec<&'a Instruction>,
+    pub val: Vec<&'a InstructionJSON>,
     pub bottom: bool,
 }
 
@@ -191,6 +252,7 @@ impl<'a> InstructionTree {
             (three_byte, Some(two_byte))
         }
     }
+
     fn parse_opcode(opcode: &String) -> Vec<OpByte> {
         let mut result = Vec::new();
         let components = opcode.split(' ');
@@ -332,8 +394,135 @@ impl<'a> InstructionTree {
         return result;
     }
 
+    pub fn from_legacy_json(json: &String) -> Vec<Vec<Instruction>> {
+        let tables: Vec<Vec<InstructionJSON>> = serde_json::from_str(json).expect("Bad JSON");
+        let mut updated: Vec<Vec<Instruction>> = Vec::new();
+        for table in tables {
+            let mut instructions: Vec<Instruction> = Vec::new();
+            for ins in table {
+                // Convert to new instruction format
+                instructions.push(Instruction {
+                    opcode: ins.opcode.clone(),
+                    text: ins.text.clone(),
+                    x64: ins.x64.starts_with("V"),
+                    legacy: ins.legacy.starts_with("V"),
+                    operands: Self::operands_from_instruction(&ins),
+                    invalid_prefixes: if ins.opcode.contains("NP") {
+                        vec![0xf2, 0xf3, 0x66]
+                    } else if ins.opcode.contains("NFx") {
+                        vec![0xf2, 0xf3]
+                    } else {
+                        Vec::new()
+                    },
+                    description: ins.description.clone(),
+                });
+            }
+            updated.push(instructions);
+        }
+        return updated;
+    }
+
+    fn operands_from_instruction(instruction: &InstructionJSON) -> Option<Vec<Operand>> {
+        let op_in_code = Regex::new("\\+[ir][bwdo]").unwrap();
+        if instruction.operands.is_none() && op_in_code.is_match(&instruction.opcode) {
+            return None;
+        }
+        let ops = if instruction.operands.is_none() {
+            // Evil FPU code
+            &vec![String::from("opcode")]
+        } else {
+            instruction.operands.as_ref().unwrap()
+        };
+        if ops[0] == "N/A" {
+            return None;
+        }
+        let ins_ops: Vec<&str> = instruction.text.split(",").collect();
+        let mut res = Vec::new();
+        let mut i = 0;
+        while ops[i] != "N/A" {
+            // Evil bit shift endcoding
+            if ops[i] == "1" {
+                break;
+            }
+            let mut new = Operand {
+                size: OperandSize::Any,
+                encoding: OperandEncoding::Modrm,
+                value: OperandType::RM,
+                reg: None,
+                text: ops[i].clone(),
+            };
+            // Get size
+            // This should be ops not ins_ops real
+            new.size = if ops[i].contains("8/16/32") {
+                OperandSize::Any
+            } else if ins_ops[i].ends_with("512") {
+                OperandSize::DoubleQuadQuad
+            } else if ins_ops[i].ends_with("256") {
+                OperandSize::QuadQuad
+            } else if ins_ops[i].ends_with("128") {
+                OperandSize::DoubleQuad
+            } else if ins_ops[i].ends_with("80") {
+                OperandSize::Penta
+            } else if ins_ops[i].ends_with("64") {
+                OperandSize::Quad
+            } else if ins_ops[i].ends_with("32") {
+                OperandSize::Double
+            } else if ins_ops[i].ends_with("16") {
+                OperandSize::Word
+            } else if ins_ops[i].ends_with("8") {
+                OperandSize::Byte
+            } else {
+                OperandSize::Any
+            };
+
+            // Encoding
+            new.encoding = if ops[i].contains("ModRM:reg") {
+                OperandEncoding::Modreg
+            } else if ops[i].contains("ModRM:r/m") {
+                OperandEncoding::Modrm
+            } else if ops[i].starts_with("imm") || ops[i].starts_with("Offset") {
+                OperandEncoding::Immediate
+            } else if ops[i].contains("opcode") {
+                OperandEncoding::Opcode
+            } else {
+                OperandEncoding::Bespoke
+            };
+            // Reg
+            new.reg = match new.encoding {
+                OperandEncoding::Modreg => {
+                    if ins_ops[i].contains("mm") {
+                        Some(RegisterType::MMXReg)
+                    } else {
+                        Some(RegisterType::GPReg)
+                    }
+                }
+                OperandEncoding::Bespoke => {
+                    if ins_ops[i].contains("ST") {
+                        Some(RegisterType::FPUReg)
+                    } else if ins_ops[i].contains("bnd") {
+                        Some(RegisterType::BoundReg)
+                    } else if ins_ops[i].contains("k1") {
+                        Some(RegisterType::KReg)
+                    } else {
+                        None
+                    }
+                }
+                OperandEncoding::Immediate => None,
+                _ => Some(RegisterType::GPReg),
+            };
+            res.push(new);
+            i += 1;
+        }
+        return Some(res);
+    }
+
     pub fn from_json(json: &String) -> Self {
-        let tables: Vec<Vec<Instruction>> = serde_json::from_str(json).expect("FUCK");
+        let json_result = serde_json::from_str::<Vec<Vec<Instruction>>>(json);
+        let tables = if json_result.is_err() {
+            InstructionTree::from_legacy_json(json)
+        } else {
+            json_result.unwrap()
+        };
         if tables.len() == 0 {
             println!("Invalid JSON");
         }
@@ -430,7 +619,7 @@ impl<'a> InstructionTree {
     }
 
     // Recursively get all instructions from self.last down
-    pub fn gather_instructions(&self, index: usize) -> Vec<&Instruction> {
+    pub fn gather_instructions(&self, index: usize) -> Vec<&InstructionJSON> {
         let mut response = Vec::new();
         let curr = &self.nodes[index];
         response.extend(&curr.instructions);
@@ -590,7 +779,7 @@ impl ByteString {
 
 #[derive(Debug)]
 pub struct InstructionResponse {
-    pub val: Option<Instruction>,
+    pub val: Option<InstructionJSON>,
     pub size: usize,
 }
 
@@ -602,7 +791,7 @@ pub struct OperandResponse {
 
 #[derive(Debug, Serialize)]
 pub struct ParseResponse {
-    pub instruction: Option<Instruction>,
+    pub instruction: Option<InstructionJSON>,
     pub operands: Option<Vec<String>>,
     pub bytes: Option<Vec<u8>>,
 }
@@ -816,7 +1005,6 @@ impl Decoder {
         let mut offset = 0;
         let mut op_strings: Vec<String> = Vec::new();
         for op in instruction.operands.as_ref().unwrap() {
-            let op_in_code = Regex::new("\\+r[bwdo]").unwrap();
             // N/A means we're at the last one
             if op == "N/A" {
                 break;

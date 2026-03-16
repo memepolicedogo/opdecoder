@@ -26,11 +26,12 @@ pub struct Instruction {
     pub x64: bool,
     pub legacy: bool,
     pub operands: Option<Vec<Operand>>,
+    pub size: OperandSize,
     pub invalid_prefixes: Vec<u8>,
     pub description: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd)]
 pub enum OperandSize {
     Any = 0,
     Byte = 8,
@@ -170,7 +171,7 @@ impl PartialEq<u8> for OpByte {
 #[derive(Debug, Serialize, Deserialize)]
 struct Node {
     val: OpByte,
-    instructions: Vec<InstructionJSON>,
+    instructions: Vec<Instruction>,
     children: HashMap<OpByte, usize>,
 }
 
@@ -209,7 +210,7 @@ pub struct InstructionTree {
 
 #[derive(Debug)]
 pub struct InsTreeResponse<'a> {
-    pub val: Vec<&'a InstructionJSON>,
+    pub val: Vec<&'a Instruction>,
     pub bottom: bool,
 }
 
@@ -401,7 +402,7 @@ impl<'a> InstructionTree {
             let mut instructions: Vec<Instruction> = Vec::new();
             for ins in table {
                 // Convert to new instruction format
-                instructions.push(Instruction {
+                let mut tmp = Instruction {
                     opcode: ins.opcode.clone(),
                     text: ins.text.clone(),
                     x64: ins.x64.starts_with("V"),
@@ -415,7 +416,16 @@ impl<'a> InstructionTree {
                         Vec::new()
                     },
                     description: ins.description.clone(),
-                });
+                    size: OperandSize::Any,
+                };
+                if tmp.operands.is_some() {
+                    for o in tmp.operands.as_ref().unwrap() {
+                        if o.size > tmp.size {
+                            tmp.size = o.size.clone();
+                        }
+                    }
+                }
+                instructions.push(tmp);
             }
             updated.push(instructions);
         }
@@ -439,7 +449,7 @@ impl<'a> InstructionTree {
         let ins_ops: Vec<&str> = instruction.text.split(",").collect();
         let mut res = Vec::new();
         let mut i = 0;
-        while ops[i] != "N/A" {
+        while i < ops.len() && ops[i] != "N/A" {
             // Evil bit shift endcoding
             if ops[i] == "1" {
                 break;
@@ -490,7 +500,7 @@ impl<'a> InstructionTree {
             // Reg
             new.reg = match new.encoding {
                 OperandEncoding::Modreg => {
-                    if ins_ops[i].contains("mm") {
+                    if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
                     } else {
                         Some(RegisterType::GPReg)
@@ -619,7 +629,7 @@ impl<'a> InstructionTree {
     }
 
     // Recursively get all instructions from self.last down
-    pub fn gather_instructions(&self, index: usize) -> Vec<&InstructionJSON> {
+    pub fn gather_instructions(&self, index: usize) -> Vec<&Instruction> {
         let mut response = Vec::new();
         let curr = &self.nodes[index];
         response.extend(&curr.instructions);
@@ -651,12 +661,17 @@ pub enum ArchSize {
     I64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rex {
     pub w: bool,
     pub r: u8,
     pub b: u8,
     pub x: u8,
+}
+pub struct Modrm {
+    pub mode: u8,
+    pub rm: u8,
+    pub reg: u8,
 }
 
 impl Rex {
@@ -779,7 +794,7 @@ impl ByteString {
 
 #[derive(Debug)]
 pub struct InstructionResponse {
-    pub val: Option<InstructionJSON>,
+    pub val: Option<Instruction>,
     pub size: usize,
 }
 
@@ -791,7 +806,7 @@ pub struct OperandResponse {
 
 #[derive(Debug, Serialize)]
 pub struct ParseResponse {
-    pub instruction: Option<InstructionJSON>,
+    pub instruction: Option<Instruction>,
     pub operands: Option<Vec<String>>,
     pub bytes: Option<Vec<u8>>,
 }
@@ -978,104 +993,86 @@ impl Decoder {
 
     fn parse_operands_i64(&mut self, ins: &InstructionResponse) -> OperandResponse {
         let instruction = ins.val.as_ref().unwrap();
-        let mut size = 0;
-        // Get this out of the way first
         if instruction.operands.is_none() {
             return OperandResponse {
                 ..Default::default()
             };
         }
-        //  modrm is the first byte of ops, if there is no modrm for this instruction this is
-        //  ignored
-        let modrm = self.code.get();
-        let mut rex_w = false;
-        let mut rex_r = 0;
-        let mut rex_x = 0;
-        let mut rex_b = 0;
-        if self.context.rex.is_some() {
-            // Parse REX prefix
-            rex_w = self.context.rex.as_ref().unwrap().w;
-            rex_r = self.context.rex.as_ref().unwrap().r;
-            rex_x = self.context.rex.as_ref().unwrap().x;
-            rex_b = self.context.rex.as_ref().unwrap().b;
-        }
-
-        // Offset is the operand #, size is the amount of bytes
-        // e.g. modrm w/ sib, imm64 has 2 opperands but is 10 bytes
-        let mut offset = 0;
-        let mut op_strings: Vec<String> = Vec::new();
-        for op in instruction.operands.as_ref().unwrap() {
-            // N/A means we're at the last one
-            if op == "N/A" {
-                break;
+        let rex = if self.context.rex.is_some() {
+            self.context.rex.as_ref().unwrap().clone()
+        } else {
+            Rex {
+                w: false,
+                r: 0,
+                b: 0,
+                x: 0,
             }
+        };
+        // # of operands
+        let mut offset = 0;
+        // # of bytes comprising the opperands
+        let mut size = 0;
+        let mut op_strings = Vec::new();
+        // We have to store this ahead of time because it encodes two values, modrm and modreg, and
+        // the order of these operands isn't consistant, so modreg may be parsed before or after
+        // modrm, which may advance the decoding to parse an SIB byte, ergo we can't rely on the
+        // current code to be the modrm byte
+        let mut modrm = Modrm {
+            mode: (self.code.get() & 0b11000000) >> 6,
+            reg: (self.code.get() & 0b00111000) >> 3,
+            rm: (self.code.get() & 0b00000111),
+        };
+        let mut has_modrm = false;
+        for op in instruction.operands.as_ref().unwrap() {
+            // Consider prefixes for ops of unspecified size
+            let real_size = if op.size != OperandSize::Any {
+                &op.size
+            } else if rex.w {
+                &OperandSize::Quad
+            } else if self.context.rex.is_none() && self.context.op_override {
+                &OperandSize::Word
+            } else {
+                &OperandSize::Double
+            };
             let mut op_str = String::new();
-            // Handle ModRM variations
-            // already almost 150 lines, now imagine if I was doing VEX stuff too
-            if op.starts_with("ModRM") {
-                // The modrm byte is only one byte, but it may be used for multiple operands
-                // so we have to be careful not to double count
-                if size == 0 {
-                    size += 1;
-                    self.code.inc();
-                }
-                // First byte of the opperands
-                let mode = (modrm & 0b11000000) >> 6;
-                let rm = modrm & 0b00000111;
-                let reg = (modrm & 0b00111000) >> 3;
-                let loc_index = if op.contains("reg") {
-                    (rex_r | reg) as usize
-                } else {
-                    (rex_b | rm) as usize
-                };
-                // ModR/M:reg or ModR/M:r/m and mod = 3 means we're dealing with a register
-                if op.contains("reg") || (op.contains("r/m") && mode == 3) {
-                    // Operand is just a register
-                    // Get name based on size
-                    op_str = Decoder::format_reg(
-                        loc_index,
-                        // ADD r/m8, r8 => ["ADD r/m8", " r8"]
-                        // offset = operand index
-                        if rex_r != 1 {
-                            instruction.text.split(',').collect::<Vec<_>>()[offset]
+            match op.encoding {
+                OperandEncoding::Modrm => {
+                    // To prevent modRM double count
+                    if !has_modrm {
+                        size += 1;
+                        has_modrm = true;
+                        // Advance to potential SIB byte
+                        self.code.inc();
+                    }
+                    // Prepend a square bracket for effective address format, mod = 0b11 reassigns
+                    // op_str so this isn't present there
+                    op_str.push('[');
+                    if modrm.mode == 0b11 {
+                        // Explicit register
+                        op_str = Decoder::format_reg((modrm.rm | rex.b) as usize, real_size);
+                    } else if modrm.mode == 0 && modrm.rm == 0b101 {
+                        // Special case: immidiate offset
+                        if rex.w {
+                            op_str += &self.format_imm(8);
+                        } else if self.context.rex.is_none() && self.context.op_override {
+                            op_str += &self.format_imm(2);
                         } else {
-                            "r64"
-                        },
-                    );
-                } else {
-                    // Operand is memory
-                    // This is the proper way of formatting memory accesses
-                    // MASM can get bent
-                    op_str.insert(0, '[');
-                    // Special cases
-                    // Increment offset because we aren't accessing the
-                    // Literal displacement
-                    // 0x67 prefix and mod == 0b00 and rm == 0b101 -> Just a 32 bit displacement, zero
-                    // extended
-                    if (self.context.addr_override && mode == 0 && rm == 5) {
-                        // Next 4 bytes are displacements
-                        op_str = self.format_imm(4);
-                        // Add brackets
-                        op_str.insert(0, '[');
+                            op_str += &self.format_imm(4);
+                        };
                         op_str.push(']');
                     } else {
-                        // If mod != 0b11 and R/M == 100 then there is an SIB byte procededing the modrm byte
-                        // This is true independant of the REX prefix
-                        if mode != 3 && rm == 4 && op.contains("r/m") {
-                            // SIB Stuff
+                        if modrm.rm == 0b100 {
+                            //SIB
                             let sib = self.code.get();
                             self.code.inc();
-                            // SIB doesn't change the offset but it does change the size
                             size += 1;
                             let scale = (sib & 0b11000000) >> 6;
                             let index = (sib & 0b00111000) >> 3;
                             let base = sib & 0b00000111;
-                            if (rex_x | index) == 4 {
-                                // RSP is not to be used as an index
+                            // Index
+                            if (rex.x | index) == 0b100 {
                             } else {
-                                // Get index register
-                                op_str += &Decoder::format_reg((rex_x | index) as usize, "r64");
-                                // Apply scaling
+                                op_str += &Decoder::format_reg((index | rex.x) as usize, real_size);
                                 match scale {
                                     1 => {
                                         op_str.push('*');
@@ -1095,13 +1092,16 @@ impl Decoder {
                                     _ => op_str.push('+'),
                                 }
                             }
-                            // Add base register
-                            if base != 5 {
-                                op_str += &Decoder::format_reg(loc_index, "r64");
+                            // Base
+                            if base != 0b101 {
+                                op_str += &Decoder::format_reg(
+                                    (base | rex.b) as usize,
+                                    &OperandSize::Quad,
+                                );
                             } else {
                                 // When base is 0b101 it means either it's based on RBP or a
                                 // displacement, depending on mod
-                                match mode {
+                                match modrm.mode {
                                     // Just disp32
                                     0 => {
                                         op_str.push_str(&self.format_imm(4));
@@ -1129,86 +1129,84 @@ impl Decoder {
                                 }
                             }
                         } else {
-                            // This is where the normal ModR/M parsing begins
-                            // Get base register
-                            op_str +=
-                            // Base reg is determined by REX.B and R/M bits, and bc we're in 64 bit mode it
-                            // has to be 64 bit, hence passing "r64" literal rather than using anything
-                            // from the instruction
-                            &Decoder::format_reg(loc_index, "r64");
-                            // op_str = "[{reg}"
-                            // Now we find any displacement
-                            match mode {
-                                // No IMM displacement
-                                0 => {
-                                    op_str.push(']');
-                                }
-                                // 8 bit displacement
-                                1 => {
-                                    op_str.push('+');
-                                    op_str.push_str(&self.format_imm(1));
-                                    op_str.push(']');
-                                    size += 1;
-                                }
-                                // 32 bit displacement
-                                2 => {
-                                    op_str.push('+');
-                                    op_str.push_str(&self.format_imm(4));
-                                    op_str.push(']');
-                                    size += 4;
-                                }
-                                _ => {}
-                            }
+                            // Normal base reg
+                            op_str += &Decoder::format_reg((modrm.rm | rex.b) as usize, real_size);
                         }
+                        match modrm.mode {
+                            0b1 => {
+                                op_str.push_str(" + ");
+                                op_str += &self.format_imm(1);
+                            }
+                            0b10 => {
+                                op_str.push_str(" + ");
+                                op_str += &self.format_imm(4);
+                            }
+                            _ => {}
+                        }
+                        op_str.push(']');
                     }
                 }
-            } else if op.starts_with("imm")
-                || op.starts_with("disp")
-                || op.starts_with("rel")
-                || op == "Offset"
-            {
-                // Immediate
-                // We have to get the size from the instruction part not the operands
-                let imm_str = instruction.text.split(',').collect::<Vec<_>>()[offset];
-                if imm_str.ends_with("64") {
-                    op_str = self.format_imm(8);
-                    size += 8;
-                } else if imm_str.ends_with("32") {
-                    op_str = self.format_imm(4);
-                    size += 4;
-                } else if imm_str.ends_with("16") {
-                    op_str = self.format_imm(2);
-                    size += 2;
-                } else if imm_str.ends_with("8") {
-                    op_str = self.format_imm(1);
-                    size += 1;
+                OperandEncoding::Modreg => {
+                    op_str = Decoder::format_reg((modrm.reg | rex.r) as usize, real_size);
                 }
-            } else if op.starts_with("opcode") {
-                // Get last byte of instruction
-                let register = (self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex_b;
-                op_str = Decoder::format_reg(
-                    // Smallest name of reg, e.g. A or R13 or SP
-                    register as usize,
-                    // ADD r/m8, r8 => ["ADD r/m8", " r8"]
-                    // offset = operand index
-                    if rex_r != 1 {
-                        instruction.text.split(',').collect::<Vec<_>>()[offset]
-                    } else {
-                        "r64"
-                    },
-                );
+                OperandEncoding::Opcode => {
+                    op_str = Decoder::format_reg(
+                        // Get last byte of opcode, logical and to get last 3 bits, include REX
+                        // prefix, cast to usize for type jit
+                        ((self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex.b)
+                            as usize,
+                        real_size,
+                    );
+                }
+                OperandEncoding::Immediate => {
+                    op_str = match real_size {
+                        OperandSize::Byte => {
+                            size += 1;
+                            self.format_imm(1)
+                        }
+                        OperandSize::Word => {
+                            size += 2;
+                            self.format_imm(2)
+                        }
+                        OperandSize::Double => {
+                            size += 4;
+                            self.format_imm(4)
+                        }
+                        OperandSize::Quad => {
+                            size += 8;
+                            self.format_imm(8)
+                        }
+                        OperandSize::Penta => {
+                            size += 10;
+                            self.format_imm(10)
+                        }
+                        OperandSize::DoubleQuad => {
+                            size += 16;
+                            self.format_imm(16)
+                        }
+                        OperandSize::QuadQuad => {
+                            size += 32;
+                            self.format_imm(32)
+                        }
+                        OperandSize::DoubleQuadQuad => {
+                            size += 64;
+                            self.format_imm(64)
+                        }
+                        OperandSize::Any => {
+                            panic!("Immediate value size cannot be infered");
+                        }
+                    };
+                }
+                OperandEncoding::Bespoke => {
+                    println!("Instruction: {:#?}", instruction);
+                    panic!("Unknown bespoke");
+                }
             }
             op_strings.push(op_str);
-            offset += 1;
         }
-        if op_strings.is_empty() {
-            OperandResponse { val: None, size: 0 }
-        } else {
-            OperandResponse {
-                val: Some(op_strings),
-                size,
-            }
-        }
+        return OperandResponse {
+            ..Default::default()
+        };
     }
 
     fn format_imm(&mut self, count: usize) -> String {
@@ -1222,21 +1220,29 @@ impl Decoder {
         format!("0x{:02X}", val)
     }
 
-    fn format_reg(index: usize, ins_str: &str) -> String {
-        let base = BASE_REGS_REX_EXTENDED[index];
-        let mut result = base.to_string();
-        let mut size = 64;
-        if ins_str.contains("r8") || ins_str.contains("r/m8") {
-            size = 8;
-        } else if ins_str.contains("r16") || ins_str.contains("r/m16") {
-            size = 16;
-        } else if ins_str.contains("r32") || ins_str.contains("r/m32") {
-            size = 32;
-        } else if ins_str.contains("r64") || ins_str.contains("r/m64") {
-            size = 64;
-        }
+    fn format_reg(index: usize, size: &OperandSize) -> String {
+        let mut result = if *size >= OperandSize::DoubleQuad {
+            // 128+
+            String::from("MM")
+        } else {
+            String::from(BASE_REGS_REX_EXTENDED[index])
+        };
         match size {
-            64 => {
+            OperandSize::QuadQuad => {
+                // Append number to end
+                result += &index.to_string();
+                return result;
+            }
+            OperandSize::DoubleQuad => {
+                if index == 1 {
+                    return result;
+                } else {
+                    // Append number to end
+                    result += &index.to_string();
+                    return result;
+                }
+            }
+            OperandSize::Quad => {
                 if result.starts_with("R") {
                     return result;
                 } else if result.len() == 1 {
@@ -1247,7 +1253,7 @@ impl Decoder {
                     return result;
                 }
             }
-            32 => {
+            OperandSize::Double => {
                 if result.starts_with("R") {
                     return result + "D";
                 } else if result.len() == 1 {
@@ -1258,7 +1264,7 @@ impl Decoder {
                     return result;
                 }
             }
-            16 => {
+            OperandSize::Word => {
                 if result.starts_with("R") {
                     return result + "W";
                 } else if result.len() == 1 {
@@ -1267,7 +1273,7 @@ impl Decoder {
                     return result;
                 }
             }
-            8 => {
+            OperandSize::Byte => {
                 if result.starts_with("R") {
                     return result + "B";
                 } else {
@@ -1276,21 +1282,7 @@ impl Decoder {
             }
             _ => return result,
         }
-        return result;
-    }
-
-    fn calc_opcode_size(opcode: &String) -> usize {
-        let opperands = Regex::new("(/[r0-7])|(^[icr][bwdo])").unwrap();
-        let mut i = 0;
-        for byte in opcode.split(' ').into_iter() {
-            // If byte is /{digit} or /r etc, that describes an opperand, and everthing following
-            // must nessecarrily be an operand too
-            if opperands.is_match(byte) {
-                break;
-            }
-            i += 1;
-        }
-        return i;
+        result
     }
 
     pub fn parse_instruction(&mut self) -> InstructionResponse {
@@ -1398,21 +1390,21 @@ impl Decoder {
         while i < valids.len() {
             match self.context.size {
                 ArchSize::I16 => {
-                    if valids[i].legacy != "V" {
+                    if !valids[i].legacy || valids[i].size > OperandSize::Word {
                         valids.remove(i);
                     } else {
                         i += 1;
                     }
                 }
                 ArchSize::I32 => {
-                    if valids[i].legacy != "V" {
+                    if !valids[i].legacy || valids[i].size == OperandSize::Quad {
                         valids.remove(i);
                     } else {
                         i += 1;
                     }
                 }
                 ArchSize::I64 => {
-                    if valids[i].x64 != "V" {
+                    if !valids[i].x64 {
                         valids.remove(i);
                     } else {
                         i += 1;
@@ -1438,73 +1430,7 @@ impl Decoder {
                 val: Some(valids[0].clone()),
                 size,
             };
-        // Still may have multiple if entries rely on prefixes to infer size
-        } else {
-            i = 0;
-            while i < valids.len() {
-                //  Pull largest digit from name
-                // Or maybe just
-                match self.context.size {
-                    ArchSize::I16 => {
-                        if (self.context.op_override || self.context.addr_override)
-                            && valids[i].text.contains("8")
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        } else if (!self.context.op_override && !self.context.addr_override)
-                            && valids[i].text.contains("16")
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        }
-                    }
-                    ArchSize::I32 => {
-                        if (self.context.op_override || self.context.addr_override)
-                            && valids[i].text.contains("16")
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        } else if (!self.context.op_override && !self.context.addr_override)
-                            && valids[i].text.contains("32")
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        }
-                    }
-                    ArchSize::I64 => {
-                        if (self.context.op_override || self.context.addr_override)
-                            && valids[i].text.contains("16")
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        } else if (!self.context.op_override && !self.context.addr_override)
-                            && (valids[i].text.contains("32") || valids[i].text.contains("64"))
-                        {
-                            return InstructionResponse {
-                                val: Some(valids[i].clone()),
-                                size,
-                            };
-                        }
-                    }
-                };
-                i += 1;
-            }
-            // There are some jumps that are the same but have aliases
-            // so just return the first one i guess
-            return InstructionResponse {
-                val: Some(valids[0].clone()),
-                size,
-            };
+            // Still may have multiple if entries rely on prefixes to infer size
         }
 
         // What possibly can be here?

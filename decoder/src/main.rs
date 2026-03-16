@@ -57,6 +57,7 @@ impl Default for Options {
     }
 }
 
+//{
 const HELP_MSG: &str = "
     usage: decoder [OPTIONS]
 
@@ -90,9 +91,9 @@ const HELP_MSG: &str = "
         Format specifiers are not case sensitive
         Max and Offset are ignored in stdin mode
 ";
+//}
+
 fn main() {
-    //let mut tree = InstructionTree::from_json(&fs::read_to_string("reduced.json").unwrap());
-    //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
     // Parse CLI args
     let mut opts = Options {
         ..Default::default()

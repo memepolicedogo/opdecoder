@@ -221,39 +221,6 @@ const IGNORED_CODES: [&'static str; 13] = [
 const VEX_THREE_BYTE_FORM_REQS: [&'static str; 5] = ["W0", "W1", "0F", "0F38", "0F3A"];
 
 impl<'a> InstructionTree {
-    // VEX prefixes can have two valid encodings, a three byte form and a two byte form
-    // I am giving up on this
-    fn parse_vex(opcode: &String) -> (Vec<OpByte>, Option<Vec<OpByte>>) {
-        let mut three_byte = Vec::from([OpByte {
-            code: 0b11000100,
-            mask: 255,
-            ..Default::default()
-        }]);
-        let mut two_byte = Vec::from([OpByte {
-            code: 0b11000101,
-            mask: 255,
-            ..Default::default()
-        }]);
-        let mut prefix = opcode.clone();
-        let normal_bytes = prefix.split_off(prefix.find(' ').unwrap());
-        let vex_comps = prefix.split('.').collect::<Vec<&str>>();
-        // Does it require the three byte form?
-        for comp in vex_comps {
-            if VEX_THREE_BYTE_FORM_REQS.contains(&comp) {
-                two_byte = Vec::new();
-                break;
-            }
-        }
-        if two_byte.is_empty() {
-            // Build only for three byte
-
-            (three_byte, None)
-        } else {
-            // Build both
-            (three_byte, Some(two_byte))
-        }
-    }
-
     fn parse_opcode(opcode: &String) -> Vec<OpByte> {
         let mut result = Vec::new();
         let components = opcode.split(' ');
@@ -642,16 +609,6 @@ impl<'a> InstructionTree {
     }
 }
 
-pub enum OpType {
-    Reg, // Register
-    Mem, // Memory
-    Imm, // Immediate
-}
-
-pub struct Opperand {
-    pub kind: OpType,
-}
-
 #[derive(Debug)]
 pub enum ArchSize {
     I16,
@@ -744,7 +701,7 @@ impl ByteString {
 
     // Get the byte at the index relative to curr
     pub fn get_offset(&self, offset: isize) -> u8 {
-        let mut index = self.curr as isize + offset;
+        let index = self.curr as isize + offset;
         if index as usize >= self.code.len() {
             0
         } else {
@@ -978,9 +935,6 @@ impl Decoder {
                     ..Default::default()
                 };
             }
-        };
-        return OperandResponse {
-            ..Default::default()
         };
     }
 
@@ -1313,7 +1267,6 @@ impl Decoder {
             }
             _ => return result,
         }
-        result
     }
 
     pub fn parse_instruction(&mut self) -> InstructionResponse {
@@ -1335,9 +1288,9 @@ impl Decoder {
         let mut prefix_count = 0;
         let ins = 'parent: loop {
             self.tree.reset();
-            for i in (prefix_count..MAX_WIDTH) {
+            for i in prefix_count..MAX_WIDTH {
                 byte = self.code.get_offset(i as isize);
-                let mut rep = self.tree.step(byte);
+                let rep = self.tree.step(byte);
                 if rep.bottom && rep.val.is_empty() {
                     prefix_count += 1;
                     break;
@@ -1348,7 +1301,7 @@ impl Decoder {
                         prefix.push(self.code.get());
                         self.code.inc();
                     }
-                    size = ((i + 1) - prefix_count);
+                    size = (i + 1) - prefix_count;
                     for _ in 0..size {
                         opcode.push(self.code.get());
                         self.code.inc();
@@ -1482,9 +1435,6 @@ impl Decoder {
         // What possibly can be here?
         // ??
         println!("{:#?}", valids);
-        panic!("At the disco");
-
-        // If instruction is invalid
-        return InstructionResponse { val: None, size: 0 };
+        panic!("Multiple instructions found matching paramaters");
     }
 }

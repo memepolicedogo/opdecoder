@@ -11,8 +11,6 @@ use std::{
 
 use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder, InstructionTree};
 
-const REXW: u8 = 0b01001000;
-
 #[derive(Debug, PartialEq, PartialOrd)]
 enum OutputFormat {
     PlusBytes,
@@ -208,7 +206,7 @@ fn main() {
     }
     // Get write object for output
     let mut output = open_output(&opts.output);
-    let mut responses = dec.parse();
+    let responses = dec.parse();
     match opts.output_format {
         OutputFormat::JSON => {
             let json = serde_json::to_string(&responses);
@@ -217,17 +215,17 @@ fn main() {
                 println!("{}", &json.unwrap_err());
                 return;
             }
-            write!(output, "{}", json.unwrap());
+            let _ = write!(output, "{}", json.unwrap());
         }
         OutputFormat::PrettyPrint => {
             for rep in responses {
-                writeln!(output, "{}", rep);
+                let _ = writeln!(output, "{}", rep);
             }
         }
         OutputFormat::PlusBytes => {
             for rep in responses {
-                writeln!(output, "{}", rep.bytes_to_string());
-                writeln!(output, "{}", rep);
+                let _ = writeln!(output, "{}", rep.bytes_to_string());
+                let _ = writeln!(output, "{}", rep);
             }
         }
     }
@@ -242,7 +240,7 @@ fn open_output(path: &String) -> Box<dyn Write> {
 }
 
 fn load_from_stdin(dec: &mut Decoder, opts: &Options) {
-    let mut stdin = io::stdin();
+    let stdin = io::stdin();
     if io::Stdin::is_terminal(&stdin) {
         panic!("Can't be run interactivly, Specify a file or pipe data in");
     } else {
@@ -268,10 +266,10 @@ fn load_from_file(dec: &mut Decoder, opts: &mut Options) {
         }
     }
     // Seek to offset
-    file.seek(SeekFrom::Start(opts.input_offset));
+    let _ = file.seek(SeekFrom::Start(opts.input_offset));
     // Load code
     let mut code: Vec<u8> = Vec::new();
-    file.read_to_end(&mut code);
+    let _ = file.read_to_end(&mut code);
     if opts.read_max != 0 {
         code.drain((opts.read_max as usize)..);
     }

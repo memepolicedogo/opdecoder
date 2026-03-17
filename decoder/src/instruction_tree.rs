@@ -1343,8 +1343,6 @@ impl Decoder {
             OperandSize::Byte => {
                 if result.starts_with("R") {
                     result = result + "B";
-                } else {
-                    result = result + "L";
                 }
             }
             _ => {}

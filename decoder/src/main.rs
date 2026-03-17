@@ -47,13 +47,16 @@ struct Options {
     // What format, e.g. json if you want to parse the instructions with another program
     output_format: OutputFormat,
     output_format_static: bool,
+    // How many instructions to display
+    ins_max: usize,
+    ins_max_static: bool,
     //---------------------
 }
 
 impl Default for Options {
     fn default() -> Self {
         Self {
-            tree_path: String::from("./tree3.json"),
+            tree_path: String::from("./tree64.json"),
             tree_path_static: false,
             arch_size: ArchSize::I64,
             arch_size_static: false,
@@ -68,6 +71,8 @@ impl Default for Options {
             output_static: false,
             output_format: OutputFormat::PrettyPrint,
             output_format_static: false,
+            ins_max: 0,
+            ins_max_static: false,
         }
     }
 }
@@ -78,9 +83,9 @@ const HELP_MSG: &str = "
 
     Options:
         -t, --tree      Specify the JSON instruction tree to load
-                        Default: ./tree3.json
+                        Default: ./tree64.json
         -a, --arch      Specify the architecture size (16, 32, 64)
-                        Default: x84
+                        Default: x64
         -i, --input     Specify the input file or \"-\" for stdin 
                         Default: -
         --offset        Specify the offset in byte from the start of the file to start dissassembly
@@ -91,6 +96,8 @@ const HELP_MSG: &str = "
                         Default: -
         -f, --format    Specify the output format (PrettyPrint, PlusBytes, JSON)
                         Default: PrettyPrint
+        -l, --lines     Specify the number of lines to parse, or 0 for all
+                        Default: 0
         --no-infer      Do not attempt parse executable headers from the input when max and offset == 0
                         Default: false
         -h, --help      Display this help message and exit
@@ -103,7 +110,6 @@ const HELP_MSG: &str = "
     Notes:
         CLI args take precendent over infered values, e.g. \"decoder -i some.exe -m 100\" will infer the start of the 
             executable section and read the first 100 bytes regardless of the size of the section
-        Currently only x64 is supported
         Stdin cannot be used interactivly
         Format specifiers are not case sensitive
         Max and Offset are ignored in stdin mode
@@ -111,8 +117,6 @@ const HELP_MSG: &str = "
 //}
 
 fn main() {
-    //test();
-    //return;
     // Parse CLI args
     let mut opts = Options {
         ..Default::default()
@@ -182,6 +186,16 @@ fn main() {
                 opts.output_format = parse_format(args[i].as_str());
                 opts.output_format_static = true;
             }
+            "-l" | "--lines" => {
+                i += 1;
+                let max = usize::from_str_radix(args[i].as_str(), 10);
+                if max.is_err() {
+                    println!("Invalid line max");
+                    return;
+                }
+                opts.ins_max = max.unwrap();
+                opts.ins_max_static = true;
+            }
             "-h" | "--help" => {
                 println!("{}", HELP_MSG);
                 return;
@@ -228,7 +242,11 @@ fn main() {
     }
     // Get write object for output
     let mut output = open_output(&opts.output);
-    let responses = dec.parse();
+    let responses = if opts.ins_max == 0 {
+        dec.parse()
+    } else {
+        dec.parse_n(opts.ins_max)
+    };
     match opts.output_format {
         OutputFormat::JSON => {
             let json = serde_json::to_string(&responses);
@@ -303,8 +321,11 @@ const PE_SUPPORTED_MACHINES: [u16; 2] = [
     0x14c,  // x86_32
 ];
 fn opts_from_pe(pe: &PE, opts: &mut Options) {
-    if !ELF_SUPPORTED_MACHINES.contains(&pe.header.coff_header.machine) {
-        panic!("Unsupported machine type");
+    if !PE_SUPPORTED_MACHINES.contains(&pe.header.coff_header.machine) {
+        panic!(
+            "Unsupported machine type \"{}\"",
+            pe.header.coff_header.machine
+        );
     }
     if !opts.arch_size_static {
         if pe.is_64 {
@@ -423,7 +444,7 @@ fn test() {
 
 fn build_tree() {
     let mut tree =
-        InstructionTree::from_json(&fs::read_to_string("instructions/reduced.json").unwrap());
-    fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
+        InstructionTree::from_json(&fs::read_to_string("instructions/x86_reduced.json").unwrap());
+    fs::write("tree32.json", serde_json::to_string(&tree).unwrap());
     return;
 }

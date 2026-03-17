@@ -607,7 +607,7 @@ impl<'a> InstructionTree {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ArchSize {
     I16,
     I32,
@@ -896,6 +896,15 @@ impl Decoder {
         responses
     }
 
+    pub fn parse_n(&mut self, n: usize) -> Vec<ParseResponse> {
+        let mut responses = Vec::new();
+        while !self.code.is_end() && responses.len() < n {
+            let rep = self.parse_one();
+            responses.push(rep);
+        }
+        responses
+    }
+
     pub fn parse_one(&mut self) -> ParseResponse {
         // If no code is left return nothing
         if self.code.is_end() {
@@ -924,25 +933,7 @@ impl Decoder {
         }
     }
 
-    pub fn parse_operands(&mut self, ins: &InstructionResponse) -> OperandResponse {
-        match self.context.size {
-            ArchSize::I32 => return self.parse_operands_i32(ins),
-            ArchSize::I64 => return self.parse_operands_i64(ins),
-            _ => {
-                return OperandResponse {
-                    ..Default::default()
-                };
-            }
-        };
-    }
-
-    fn parse_operands_i32(&self, ins: &InstructionResponse) -> OperandResponse {
-        return OperandResponse {
-            ..Default::default()
-        };
-    }
-
-    fn parse_operands_i64(&mut self, ins: &InstructionResponse) -> OperandResponse {
+    fn parse_operands(&mut self, ins: &InstructionResponse) -> OperandResponse {
         let instruction = ins.val.as_ref().unwrap();
         if instruction.operands.is_none() {
             return OperandResponse {
@@ -1010,7 +1001,6 @@ impl Decoder {
                         } else {
                             op_str += &self.format_imm(4);
                         };
-                        op_str.push(']');
                     } else {
                         if modrm.rm == 0b100 {
                             //SIB
@@ -1174,8 +1164,10 @@ impl Decoder {
                     };
                 }
                 OperandEncoding::Bespoke => {
-                    if op.text.contains("EAX") {
-                        op_str = String::from("EAX");
+                    let is_reg = Regex::new("([ER]?[AC]X)|([AC][HL])").unwrap();
+                    // If register literal
+                    if is_reg.is_match(&op.text) {
+                        op_str = op.text.clone();
                     } else {
                         println!("Instruction: {:#?}", instruction);
                         panic!("Unknown bespoke");
@@ -1321,7 +1313,7 @@ impl Decoder {
         // Figure out the prefixes
         for byte in prefix {
             // If byte isn't in range to be a valid prefix then escape
-            if (byte & 0b11110000) == 0b01000000 {
+            if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
                 self.context.rex = Some(Rex::from(byte));
             } else if byte < 0x26 || byte > 0xf3 {
                 break;

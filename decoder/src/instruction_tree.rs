@@ -847,8 +847,62 @@ impl Default for OperandResponse {
     }
 }
 
+pub enum ImmFormat {
+    Hex,
+    Dec,
+    Bi,
+    Oct,
+}
+
+pub struct InstructionFormatting {
+    pub reg_uppercase: bool,
+    pub imm_uppercase: bool,
+    pub op_separator: String,
+    pub addr_open: String,
+    pub addr_close: String,
+    pub addr_add: String,
+    pub addr_mul: String,
+    pub addr_scale_two: String,
+    pub addr_scale_four: String,
+    pub addr_scale_eight: String,
+    pub addr_prefix: String,
+    pub addr_byte: String,
+    pub addr_word: String,
+    pub addr_dword: String,
+    pub addr_qword: String,
+    pub imm_prefix: String,
+    pub imm_suffix: String,
+    pub imm_fmt: ImmFormat,
+}
+
+impl Default for InstructionFormatting {
+    fn default() -> Self {
+        Self {
+            reg_uppercase: true,
+            imm_uppercase: true,
+            op_separator: String::from(", "),
+            addr_open: String::from("["),
+            addr_close: String::from("]"),
+            addr_add: String::from("+"),
+            addr_mul: String::from("*"),
+            addr_scale_two: String::from("2"),
+            addr_scale_four: String::from("4"),
+            addr_scale_eight: String::from("8"),
+            addr_prefix: String::from(""),
+            addr_byte: String::from("byte "),
+            addr_word: String::from("word "),
+            addr_dword: String::from("dword "),
+            addr_qword: String::from("qword "),
+            imm_prefix: String::from("0x"),
+            imm_suffix: String::from(""),
+            imm_fmt: ImmFormat::Hex,
+        }
+    }
+}
+
 pub struct Decoder {
     pub context: Context,
+    pub format: InstructionFormatting,
     pub tree: InstructionTree,
     pub code: ByteString,
 }
@@ -988,10 +1042,10 @@ impl Decoder {
                     }
                     // Prepend a square bracket for effective address format, mod = 0b11 reassigns
                     // op_str so this isn't present there
-                    op_str.push('[');
+                    op_str.push_str(&self.format.addr_open);
                     if modrm.mode == 0b11 {
                         // Explicit register
-                        op_str = Decoder::format_reg((modrm.rm | rex.b) as usize, real_size);
+                        op_str = self.format_reg((modrm.rm | rex.b) as usize, real_size);
                     } else if modrm.mode == 0 && modrm.rm == 0b101 {
                         // Special case: immidiate offset
                         if rex.w {
@@ -1013,35 +1067,31 @@ impl Decoder {
                             // Index
                             if (rex.x | index) == 0b100 {
                             } else {
-                                op_str += &Decoder::format_reg(
-                                    (index | rex.x) as usize,
-                                    &OperandSize::Quad,
-                                );
+                                op_str +=
+                                    &self.format_reg((index | rex.x) as usize, &OperandSize::Quad);
                                 match scale {
                                     1 => {
-                                        op_str.push('*');
-                                        op_str.push('2');
-                                        op_str.push('+');
+                                        op_str.push_str(&self.format.addr_mul);
+                                        op_str.push_str(&self.format.addr_scale_two);
+                                        op_str.push_str(&self.format.addr_add);
                                     }
                                     2 => {
-                                        op_str.push('*');
-                                        op_str.push('4');
-                                        op_str.push('+');
+                                        op_str.push_str(&self.format.addr_mul);
+                                        op_str.push_str(&self.format.addr_scale_four);
+                                        op_str.push_str(&self.format.addr_add);
                                     }
                                     3 => {
-                                        op_str.push('*');
-                                        op_str.push('8');
-                                        op_str.push('+');
+                                        op_str.push_str(&self.format.addr_mul);
+                                        op_str.push_str(&self.format.addr_scale_eight);
+                                        op_str.push_str(&self.format.addr_add);
                                     }
-                                    _ => op_str.push('+'),
+                                    _ => op_str.push_str(&self.format.addr_add),
                                 }
                             }
                             // Base
                             if base != 0b101 {
-                                op_str += &Decoder::format_reg(
-                                    (base | rex.b) as usize,
-                                    &OperandSize::Quad,
-                                );
+                                op_str +=
+                                    &self.format_reg((base | rex.b) as usize, &OperandSize::Quad);
                             } else {
                                 // When base is 0b101 it means either it's based on RBP or a
                                 // displacement, depending on mod
@@ -1060,63 +1110,71 @@ impl Decoder {
                                     1 => {
                                         op_str.push_str(&self.format_imm(1));
                                         size += 1;
-                                        op_str.push('+');
-                                        op_str.push_str("RBP");
+                                        op_str.push_str(&self.format.addr_add);
+                                        if self.format.reg_uppercase {
+                                            op_str.push_str("RBP");
+                                        } else {
+                                            op_str.push_str("rbp");
+                                        }
                                     }
                                     // disp32 + ebp
                                     // all this to enable C local variabes. Very cool
                                     2 => {
                                         op_str.push_str(&self.format_imm(4));
                                         size += 4;
-                                        op_str.push('+');
-                                        op_str.push_str("RBP");
+                                        op_str.push_str(&self.format.addr_add);
+                                        if self.format.reg_uppercase {
+                                            op_str.push_str("RBP");
+                                        } else {
+                                            op_str.push_str("rbp");
+                                        }
                                     }
                                     _ => {}
                                 }
                             }
                         } else {
                             // Normal base reg
-                            op_str += &Decoder::format_reg(
-                                (modrm.rm | rex.b) as usize,
-                                &OperandSize::Quad,
-                            );
+                            op_str +=
+                                &self.format_reg((modrm.rm | rex.b) as usize, &OperandSize::Quad);
                         }
                         match modrm.mode {
                             0b1 => {
-                                op_str.push_str(" + ");
+                                op_str.push_str(&self.format.addr_add);
                                 op_str += &self.format_imm(1);
                             }
                             0b10 => {
-                                op_str.push_str(" + ");
+                                op_str.push_str(&self.format.addr_add);
                                 op_str += &self.format_imm(4);
                             }
                             _ => {}
                         }
                     }
-                    if op_str.starts_with('[') {
-                        op_str.push(']');
+                    if op_str.starts_with(&self.format.addr_open) {
+                        op_str.push_str(&self.format.addr_close);
+                        // Add prefixes
                         match real_size {
                             &OperandSize::Byte => {
-                                op_str.insert_str(0, "byte ");
+                                op_str.insert_str(0, &self.format.addr_byte);
                             }
                             &OperandSize::Word => {
-                                op_str.insert_str(0, "word ");
+                                op_str.insert_str(0, &self.format.addr_word);
                             }
                             &OperandSize::Double => {
-                                op_str.insert_str(0, "dword ");
+                                op_str.insert_str(0, &self.format.addr_dword);
                             }
                             &OperandSize::Quad => {
-                                op_str.insert_str(0, "qword ");
+                                op_str.insert_str(0, &self.format.addr_qword);
                             }
                             _ => {}
                         }
+                        op_str.insert_str(0, &self.format.addr_prefix);
                     }
                 }
                 OperandEncoding::Modreg => {
-                    op_str = Decoder::format_reg((modrm.reg | rex.r) as usize, real_size);
+                    op_str = self.format_reg((modrm.reg | rex.r) as usize, real_size);
                 }
                 OperandEncoding::Opcode => {
-                    op_str = Decoder::format_reg(
+                    op_str = self.format_reg(
                         // Get last byte of opcode, logical and to get last 3 bits, include REX
                         // prefix, cast to usize for type jit
                         ((self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex.b)
@@ -1168,8 +1226,11 @@ impl Decoder {
                     // If register literal
                     if is_reg.is_match(&op.text) {
                         op_str = op.text.clone();
+                        if !self.format.reg_uppercase {
+                            op_str = op_str.to_lowercase();
+                        }
                     } else {
-                        println!("Instruction: {:#?}", instruction);
+                        println!("{:#?}", instruction);
                         panic!("Unknown bespoke");
                     }
                 }
@@ -1196,71 +1257,88 @@ impl Decoder {
             self.code.inc();
             i += 1;
         }
-        format!("0x{:02X}", val)
+        let mut out = match self.format.imm_fmt {
+            ImmFormat::Hex => {
+                format!("{:02X}", val)
+            }
+            ImmFormat::Dec => {
+                format!("{:02}", val)
+            }
+            ImmFormat::Oct => {
+                format!("{:02o}", val)
+            }
+            ImmFormat::Bi => {
+                format!("{:02b}", val)
+            }
+        };
+        if !self.format.imm_uppercase {
+            out = out.to_lowercase();
+        }
+        out.insert_str(0, &self.format.imm_prefix);
+        out.push_str(&self.format.imm_suffix);
+        out
     }
 
-    fn format_reg(index: usize, size: &OperandSize) -> String {
+    fn format_reg(&self, index: usize, size: &OperandSize) -> String {
         let mut result = if *size >= OperandSize::DoubleQuad {
             // 128+
             String::from("MM")
-        } else {
+        } else if self.context.rex.is_some() {
             String::from(BASE_REGS_REX_EXTENDED[index])
+        } else {
+            String::from(BASE_REGS[index])
         };
         match size {
             OperandSize::QuadQuad => {
                 // Append number to end
                 result += &index.to_string();
-                return result;
             }
             OperandSize::DoubleQuad => {
                 if index == 1 {
-                    return result;
                 } else {
                     // Append number to end
                     result += &index.to_string();
-                    return result;
                 }
             }
             OperandSize::Quad => {
                 if result.starts_with("R") {
-                    return result;
                 } else if result.len() == 1 {
                     result.insert(0, 'R');
-                    return result + "X";
+                    result = result + "X";
                 } else {
                     result.insert(0, 'R');
-                    return result;
                 }
             }
             OperandSize::Double => {
                 if result.starts_with("R") {
-                    return result + "D";
+                    result = result + "D";
                 } else if result.len() == 1 {
                     result.insert(0, 'E');
-                    return result + "X";
+                    result = result + "X";
                 } else {
                     result.insert(0, 'E');
-                    return result;
                 }
             }
             OperandSize::Word => {
                 if result.starts_with("R") {
-                    return result + "W";
+                    result = result + "W";
                 } else if result.len() == 1 {
-                    return result + "X";
-                } else {
-                    return result;
+                    result = result + "X";
                 }
             }
             OperandSize::Byte => {
                 if result.starts_with("R") {
-                    return result + "B";
+                    result = result + "B";
                 } else {
-                    return result + "L";
+                    result = result + "L";
                 }
             }
-            _ => return result,
+            _ => {}
         }
+        if !self.format.reg_uppercase {
+            result = result.to_lowercase();
+        }
+        result
     }
 
     pub fn parse_instruction(&mut self) -> InstructionResponse {

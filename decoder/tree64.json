@@ -4992,15 +4992,15 @@
             "instructions": [
                 {
                     "opcode": "80 /4 ib",
-                    "text": "1 AND r/m8 , imm8",
+                    "text": "AND r/m8 , imm8",
                     "x64": true,
                     "legacy": true,
                     "operands": [
                         {
-                            "size": "Any",
+                            "size": "Byte",
                             "encoding": "Modrm",
                             "reg": "GPReg",
-                            "text": "AND"
+                            "text": "r/m8"
                         },
                         {
                             "size": "Byte",
@@ -5183,15 +5183,15 @@
             "instructions": [
                 {
                     "opcode": "20 /r",
-                    "text": "1 1 AND r/m8 , r8",
+                    "text": "AND r/m8 , r8",
                     "x64": true,
                     "legacy": true,
                     "operands": [
                         {
-                            "size": "Any",
+                            "size": "Byte",
                             "encoding": "Modrm",
                             "reg": "GPReg",
-                            "text": "1"
+                            "text": "r/m8"
                         },
                         {
                             "size": "Byte",
@@ -5293,15 +5293,15 @@
             "instructions": [
                 {
                     "opcode": "22 /r",
-                    "text": "1 1 AND r8 , r/m8",
+                    "text": "AND r8 , r/m8",
                     "x64": true,
                     "legacy": true,
                     "operands": [
                         {
-                            "size": "Any",
+                            "size": "Byte",
                             "encoding": "Modreg",
                             "reg": "GPReg",
-                            "text": "1"
+                            "text": "r8"
                         },
                         {
                             "size": "Byte",
@@ -18103,15 +18103,15 @@
             "instructions": [
                 {
                     "opcode": "REX.W 0F 02 /r",
-                    "text": "1 LAR r32, r64/m16",
+                    "text": "LAR r32, r64/m16",
                     "x64": true,
                     "legacy": false,
                     "operands": [
                         {
-                            "size": "Any",
+                            "size": "Double",
                             "encoding": "Modreg",
                             "reg": "GPReg",
-                            "text": "LAR"
+                            "text": "r32"
                         },
                         {
                             "size": "Word",
@@ -20542,7 +20542,7 @@
                     ],
                     "size": "Quad",
                     "invalid_prefixes": [],
-                    "description": "1 Move r64 to extended CR8."
+                    "description": "Move r64 to extended CR8."
                 }
             ],
             "children": {}

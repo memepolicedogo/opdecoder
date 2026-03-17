@@ -9,7 +9,9 @@ use std::{
     io::{self, IsTerminal, Read, Seek, SeekFrom, Write},
 };
 
-use crate::instruction_tree::{ArchSize, ByteString, Context, Decoder, InstructionTree};
+use crate::instruction_tree::{
+    ArchSize, ByteString, Context, Decoder, InstructionFormatting, InstructionTree,
+};
 
 #[derive(Debug, PartialEq, PartialOrd)]
 enum OutputFormat {
@@ -223,6 +225,9 @@ fn main() {
             },
             ..Default::default()
         },
+        format: InstructionFormatting {
+            ..Default::default()
+        },
         tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
         code: ByteString {
             code: Vec::new(),
@@ -425,6 +430,9 @@ fn test() {
     let mut test_four = vec![0x80, 0x38, 0x00, 0x00];
     let mut dec = Decoder {
         context: Context {
+            ..Default::default()
+        },
+        format: InstructionFormatting {
             ..Default::default()
         },
         tree: serde_json::from_str(&fs::read_to_string("tree3.json").expect("AHH")).expect("AHHH"),

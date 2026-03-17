@@ -119,6 +119,8 @@ const HELP_MSG: &str = "
 //}
 
 fn main() {
+    test();
+    return;
     // Parse CLI args
     let mut opts = Options {
         ..Default::default()
@@ -435,9 +437,9 @@ fn test() {
         format: InstructionFormatting {
             ..Default::default()
         },
-        tree: serde_json::from_str(&fs::read_to_string("tree3.json").expect("AHH")).expect("AHHH"),
+        tree: serde_json::from_str(&fs::read_to_string("tree64.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
-            code: test_four,
+            code: test_three,
             curr: 0,
         },
     };

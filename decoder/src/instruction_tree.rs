@@ -847,7 +847,7 @@ impl Default for OperandResponse {
     }
 }
 
-pub enum ImmFormat {
+pub enum NumFormat {
     Hex,
     Dec,
     Bi,
@@ -855,9 +855,9 @@ pub enum ImmFormat {
 }
 
 pub struct InstructionFormatting {
+    // OPERAND
     pub reg_uppercase: bool,
     pub imm_uppercase: bool,
-    pub op_separator: String,
     pub addr_open: String,
     pub addr_close: String,
     pub addr_add: String,
@@ -872,15 +872,18 @@ pub struct InstructionFormatting {
     pub addr_qword: String,
     pub imm_prefix: String,
     pub imm_suffix: String,
-    pub imm_fmt: ImmFormat,
+    pub imm_fmt: NumFormat,
+    // INSTRUCTION
+    pub ins_uppercase: bool,
+    // CODE
+    pub code_fmt: NumFormat,
 }
 
 impl Default for InstructionFormatting {
     fn default() -> Self {
         Self {
-            reg_uppercase: true,
-            imm_uppercase: true,
-            op_separator: String::from(", "),
+            reg_uppercase: false,
+            imm_uppercase: false,
             addr_open: String::from("["),
             addr_close: String::from("]"),
             addr_add: String::from("+"),
@@ -895,7 +898,11 @@ impl Default for InstructionFormatting {
             addr_qword: String::from("qword "),
             imm_prefix: String::from("0x"),
             imm_suffix: String::from(""),
-            imm_fmt: ImmFormat::Hex,
+            imm_fmt: NumFormat::Hex,
+            //
+            ins_uppercase: false,
+            //
+            code_fmt: NumFormat::Hex,
         }
     }
 }
@@ -978,6 +985,7 @@ impl Decoder {
                 bytes: Some(vec![byte]),
             };
         }
+        // Format instruction
         let operands = self.parse_operands(&instruction);
         let start_offset = -((instruction.size + operands.size) as isize);
         ParseResponse {
@@ -1258,17 +1266,17 @@ impl Decoder {
             i += 1;
         }
         let mut out = match self.format.imm_fmt {
-            ImmFormat::Hex => {
+            NumFormat::Hex => {
                 format!("{:02X}", val)
             }
-            ImmFormat::Dec => {
-                format!("{:02}", val)
+            NumFormat::Dec => {
+                format!("{}", val)
             }
-            ImmFormat::Oct => {
-                format!("{:02o}", val)
+            NumFormat::Oct => {
+                format!("{:o}", val)
             }
-            ImmFormat::Bi => {
-                format!("{:02b}", val)
+            NumFormat::Bi => {
+                format!("{:08b}", val)
             }
         };
         if !self.format.imm_uppercase {
@@ -1491,8 +1499,12 @@ impl Decoder {
             }
         }
         if valids.len() == 1 {
+            let mut rep = valids[0].clone();
+            if !self.format.ins_uppercase {
+                rep.text = rep.text.to_lowercase();
+            }
             return InstructionResponse {
-                val: Some(valids[0].clone()),
+                val: Some(rep),
                 size,
             };
         } else if valids[0].description.starts_with("Jump")
@@ -1500,8 +1512,12 @@ impl Decoder {
         {
             // Jump instructions have multiple identical entries where the logical operation is
             // the same but can be refered to in differnt ways, i.e. JL == JNGE
+            let mut rep = valids[0].clone();
+            if !self.format.ins_uppercase {
+                rep.text = rep.text.to_lowercase();
+            }
             return InstructionResponse {
-                val: Some(valids[0].clone()),
+                val: Some(rep),
                 size,
             };
         }

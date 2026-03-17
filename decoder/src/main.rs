@@ -101,7 +101,8 @@ const HELP_MSG: &str = "
                         Default: -
         -f, --format    Specify the output format (PrettyPrint, PlusBytes, JSON)
                         Default: PrettyPrint
-        -c, --custom    Specify the path to a json file or a valid JSON string in plain text to load custom formatting
+        -c, --custom    Specify the path to a json file or a valid JSON string in plain text to load
+                        custom formatting
                         Default: None
         -l, --lines     Specify the number of lines to parse, or 0 for all
                         Default: 0
@@ -413,7 +414,7 @@ fn parse_arch(arch: &str) -> ArchSize {
 
 fn parse_format(format: &str) -> OutputFormat {
     match format.to_lowercase().as_str() {
-        "print" | "p" => OutputFormat::PrettyPrint,
+        "print" | "p" | "prettyprint" => OutputFormat::PrettyPrint,
         "json" | "j" => OutputFormat::JSON,
         "bytes" | "byte" | "b" | "plusbytes" => OutputFormat::PlusBytes,
         _ => {

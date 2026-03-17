@@ -750,6 +750,7 @@ impl ByteString {
 pub struct InstructionResponse {
     pub val: Option<Instruction>,
     pub size: usize,
+    pub pref_size: usize,
 }
 
 #[derive(Debug)]
@@ -991,7 +992,7 @@ impl Decoder {
         }
         // Format instruction
         let operands = self.parse_operands(&instruction);
-        let start_offset = -((instruction.size + operands.size) as isize);
+        let start_offset = -((instruction.size + instruction.pref_size + operands.size) as isize);
         ParseResponse {
             instruction: instruction.val,
             operands: operands.val,
@@ -1295,9 +1296,10 @@ impl Decoder {
         let mut result = if *size >= OperandSize::DoubleQuad {
             // 128+
             String::from("MM")
-        } else if self.context.rex.is_some() {
+        } else if self.context.rex.is_some() || *size != OperandSize::Byte {
             String::from(BASE_REGS_REX_EXTENDED[index])
         } else {
+            // These should only be used for byte operations
             String::from(BASE_REGS[index])
         };
         match size {
@@ -1398,7 +1400,11 @@ impl Decoder {
             }
         };
         if ins.is_empty() {
-            return InstructionResponse { val: None, size: 1 };
+            return InstructionResponse {
+                val: None,
+                size: 1,
+                pref_size: 0,
+            };
         }
         // Figure out the prefixes
         for byte in prefix {
@@ -1490,7 +1496,11 @@ impl Decoder {
             };
         }
         if valids.is_empty() {
-            return InstructionResponse { val: None, size: 0 };
+            return InstructionResponse {
+                val: None,
+                size: 0,
+                pref_size: 0,
+            };
         } else {
             // Adjust size
             // any /digit references a field in the ModR/M byte but based on the logic I have
@@ -1510,6 +1520,7 @@ impl Decoder {
             return InstructionResponse {
                 val: Some(rep),
                 size,
+                pref_size: prefix_count,
             };
         } else if valids[0].description.starts_with("Jump")
             || valids[0].description.starts_with("Mult")
@@ -1523,6 +1534,7 @@ impl Decoder {
             return InstructionResponse {
                 val: Some(rep),
                 size,
+                pref_size: prefix_count,
             };
         }
 

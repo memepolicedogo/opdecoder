@@ -415,7 +415,7 @@ fn parse_format(format: &str) -> OutputFormat {
     match format.to_lowercase().as_str() {
         "print" | "p" => OutputFormat::PrettyPrint,
         "json" | "j" => OutputFormat::JSON,
-        "bytes" | "byte" | "b" => OutputFormat::PlusBytes,
+        "bytes" | "byte" | "b" | "plusbytes" => OutputFormat::PlusBytes,
         _ => {
             panic!("Invalid output format");
         }

@@ -638,6 +638,7 @@ impl Rex {
     }
 }
 
+#[derive(Debug)]
 pub struct Context {
     pub size: ArchSize,
     pub one: u8,
@@ -885,8 +886,8 @@ pub struct InstructionFormatting {
 impl Default for InstructionFormatting {
     fn default() -> Self {
         Self {
-            reg_uppercase: false,
-            imm_uppercase: false,
+            reg_uppercase: true,
+            imm_uppercase: true,
             addr_open: String::from("["),
             addr_close: String::from("]"),
             addr_add: String::from("+"),
@@ -903,7 +904,7 @@ impl Default for InstructionFormatting {
             imm_suffix: String::from(""),
             imm_fmt: NumFormat::Hex,
             //
-            ins_uppercase: false,
+            ins_uppercase: true,
             //
             code_fmt: NumFormat::Hex,
         }
@@ -1473,14 +1474,14 @@ impl Decoder {
                     // Invalid for target arch
                     if !valids[i].x64 {
                         valids.remove(i);
-                    } else if valids[i].size < OperandSize::Quad
-                        // If the op's size is less than 64
-                        && (!self.context.addr_override || !self.context.op_override)
-                        // And ther isn't an overide prefix
-                        && ((self.context.rex.is_none() && valids[i].size != OperandSize::Double) || (self.context.rex.is_some() &&!self.context.rex.as_ref().unwrap().w))
-                    // And REX.W isn't set
+                    } else if valids[i].size == OperandSize::Double
+                        && (self.context.addr_override || self.context.op_override)
                     {
-                        // Remove
+                        // If there is an override prefix then it can't be a 32 bit instruction
+                        valids.remove(i);
+                    } else if valids[i].size < OperandSize::Quad
+                        && !(self.context.addr_override || self.context.op_override)
+                    {
                         valids.remove(i);
                     } else {
                         i += 1;
@@ -1528,6 +1529,7 @@ impl Decoder {
         // What possibly can be here?
         // ??
         println!("{:#?}", valids);
+        println!("Context: {:#?}", self.context);
         panic!("Multiple instructions found matching paramaters");
     }
 }

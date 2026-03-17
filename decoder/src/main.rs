@@ -49,6 +49,8 @@ struct Options {
     // What format, e.g. json if you want to parse the instructions with another program
     output_format: OutputFormat,
     output_format_static: bool,
+    // Path to JSON file containing detailed format info
+    format_details: Option<String>,
     // How many instructions to display
     ins_max: usize,
     ins_max_static: bool,
@@ -73,6 +75,7 @@ impl Default for Options {
             output_static: false,
             output_format: OutputFormat::PrettyPrint,
             output_format_static: false,
+            format_details: None,
             ins_max: 0,
             ins_max_static: false,
         }
@@ -98,6 +101,8 @@ const HELP_MSG: &str = "
                         Default: -
         -f, --format    Specify the output format (PrettyPrint, PlusBytes, JSON)
                         Default: PrettyPrint
+        -c, --custom    Specify the path to a json file or a valid JSON string in plain text to load custom formatting
+                        Default: None
         -l, --lines     Specify the number of lines to parse, or 0 for all
                         Default: 0
         --no-infer      Do not attempt parse executable headers from the input when max and offset == 0
@@ -119,8 +124,6 @@ const HELP_MSG: &str = "
 //}
 
 fn main() {
-    test();
-    return;
     // Parse CLI args
     let mut opts = Options {
         ..Default::default()
@@ -190,6 +193,10 @@ fn main() {
                 opts.output_format = parse_format(args[i].as_str());
                 opts.output_format_static = true;
             }
+            "-c" | "--custom" => {
+                i += 1;
+                opts.format_details = Some(args[i].clone());
+            }
             "-l" | "--lines" => {
                 i += 1;
                 let max = usize::from_str_radix(args[i].as_str(), 10);
@@ -218,6 +225,18 @@ fn main() {
         return;
     }
 
+    let formatting = if opts.format_details.is_none() {
+        InstructionFormatting {
+            ..Default::default()
+        }
+    } else if fs::exists(opts.format_details.as_ref().unwrap()).unwrap_or(false) {
+        serde_json::from_str(&fs::read_to_string(opts.format_details.as_ref().unwrap()).unwrap())
+            .expect("Invalid formatting file")
+    } else {
+        serde_json::from_str(opts.format_details.as_ref().unwrap())
+            .expect("Invalid formatting string")
+    };
+
     let mut dec = Decoder {
         context: Context {
             size: match opts.arch_size {
@@ -227,9 +246,7 @@ fn main() {
             },
             ..Default::default()
         },
-        format: InstructionFormatting {
-            ..Default::default()
-        },
+        format: formatting,
         tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
         code: ByteString {
             code: Vec::new(),

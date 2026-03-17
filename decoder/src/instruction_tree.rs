@@ -847,6 +847,7 @@ impl Default for OperandResponse {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub enum NumFormat {
     Hex,
     Dec,
@@ -854,6 +855,8 @@ pub enum NumFormat {
     Oct,
 }
 
+#[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct InstructionFormatting {
     // OPERAND
     pub reg_uppercase: bool,

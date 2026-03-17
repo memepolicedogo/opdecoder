@@ -5,7 +5,7 @@ The text below is a LIE that is only true if not an ELF executable, if you are t
 Currently it can't parse executable headers of any kind, I'm working on that, so you'll have to do some stupid annoying stuff.\
 The command you probably want is 
 ```
-{path to decoder} -t {path to tree2.json} -i {path to your executable} --offset {number of bytes before the text section} -m {length of text section in bytes}
+{path to decoder} -t {path to tree3.json} -i {path to your executable} --offset {number of bytes before the text section} -m {length of text section in bytes}
 ```
 This will print out each line as disassembled. Oh yeah also it only works for 64 bit code and no vector extension instructions.
 ## Parser

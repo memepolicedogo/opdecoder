@@ -1,11 +1,10 @@
 # Hi
 This repo is an awful mess. I'm gonna clean it up someday I promise. If you want to try the disassembler its in decoder/. Its a rust project so you'll need all the rust stuff to build it.
 ## Running the disassembler
-The text below is a LIE that is only true if not an ELF executable, if you are trying to disassembly an ELF then just pass the path with the `-i` flag and you'll be chill\
-Currently it can't parse executable headers of any kind, I'm working on that, so you'll have to do some stupid annoying stuff.\
+It will infer where the executable code is based on the headers of the file, though this only currently support ELF and PE files
 The command you probably want is 
 ```
-{path to decoder} -t {path to tree3.json} -i {path to your executable} --offset {number of bytes before the text section} -m {length of text section in bytes}
+decoder -t {path to tree3.json} -i {path to your executable} 
 ```
 This will print out each line as disassembled. Oh yeah also it only works for 64 bit code and no vector extension instructions.
 ## Parser

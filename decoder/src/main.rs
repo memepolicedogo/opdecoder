@@ -23,21 +23,30 @@ struct Options {
     //----INPUT OPTIONS----
     // Path to tree JSON
     tree_path: String,
+    tree_path_static: bool,
     // What arch size to instantiate the context with
     arch_size: ArchSize,
+    arch_size_static: bool,
     // Where to read input from ('-' for stdin)
     input: String,
+    input_static: bool,
     // How many bytes of input to ignore, meant for file where there are headers and data above the
     // the code
     input_offset: u64,
+    input_offset_static: bool,
     // How many bytes to read total, normally will just go till EOF
     read_max: u64,
+    read_max_static: bool,
+    // Should the program use file headers to find the executable section rather than cli args
+    no_infer: bool,
     //---------------------
     //---OUTPUT OPTIONS----
     // Where to output ('-' for stdout)
     output: String,
+    output_static: bool,
     // What format, e.g. json if you want to parse the instructions with another program
     output_format: OutputFormat,
+    output_format_static: bool,
     //---------------------
 }
 
@@ -45,12 +54,20 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             tree_path: String::from("./tree3.json"),
+            tree_path_static: false,
             arch_size: ArchSize::I64,
+            arch_size_static: false,
             input: String::from("-"),
+            input_static: false,
             input_offset: 0,
+            input_offset_static: false,
             read_max: 0,
+            read_max_static: false,
+            no_infer: false,
             output: String::from("-"),
+            output_static: false,
             output_format: OutputFormat::PrettyPrint,
+            output_format_static: false,
         }
     }
 }
@@ -84,6 +101,8 @@ const HELP_MSG: &str = "
             of the result to {file}.json
 
     Notes:
+        CLI args take precendent over infered values, e.g. \"decoder -i some.exe -m 100\" will infer the start of the 
+            executable section and read the first 100 bytes regardless of the size of the section
         Currently only x64 is supported
         Stdin cannot be used interactivly
         Format specifiers are not case sensitive
@@ -92,10 +111,6 @@ const HELP_MSG: &str = "
 //}
 
 fn main() {
-    //let mut tree =
-    //    InstructionTree::from_json(&fs::read_to_string("instructions/reduced.json").unwrap());
-    //fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
-    //return;
     //test();
     //return;
     // Parse CLI args
@@ -122,14 +137,17 @@ fn main() {
             "-t" | "--tree" => {
                 i += 1;
                 opts.tree_path = args[i].clone();
+                opts.tree_path_static = true;
             }
             "-a" | "--arch" => {
                 i += 1;
                 opts.arch_size = parse_arch(args[i].as_str());
+                opts.arch_size_static = true;
             }
             "-i" | "--input" => {
                 i += 1;
                 opts.input = args[i].clone();
+                opts.input_static = true;
             }
             "--offset" => {
                 i += 1;
@@ -139,6 +157,7 @@ fn main() {
                     return;
                 }
                 opts.input_offset = offset.unwrap();
+                opts.input_offset_static = true;
             }
             "-m" | "--max" => {
                 i += 1;
@@ -148,14 +167,20 @@ fn main() {
                     return;
                 }
                 opts.read_max = max.unwrap();
+                opts.read_max_static = true;
+            }
+            "--no-infer" => {
+                opts.no_infer = true;
             }
             "-o" | "--output" => {
                 i += 1;
                 opts.output = args[i].clone();
+                opts.output_static = true;
             }
             "-f" | "--format" => {
                 i += 1;
                 opts.output_format = parse_format(args[i].as_str());
+                opts.output_format_static = true;
             }
             "-h" | "--help" => {
                 println!("{}", HELP_MSG);
@@ -175,7 +200,6 @@ fn main() {
         return;
     }
 
-    // Initilize the bleep with no code
     let mut dec = Decoder {
         context: Context {
             size: match opts.arch_size {
@@ -199,8 +223,6 @@ fn main() {
         load_from_file(&mut dec, &mut opts);
     }
     if !dec.has_code() && opts.input == "-" {
-        // Read byte by byte from stdin
-        // actually fuck that
     } else if !dec.has_code() {
         panic!("No code was loaded, check your input options");
     }
@@ -252,8 +274,8 @@ fn load_from_stdin(dec: &mut Decoder, opts: &Options) {
 fn load_from_file(dec: &mut Decoder, opts: &mut Options) {
     // Get file
     let mut file = fs::File::open(&opts.input).expect("Invalid input file");
-    // If no offset/max then infer from file
-    if opts.input_offset == 0 && opts.read_max == 0 {
+    // Infer size as needed
+    if !opts.no_infer {
         let buf = fs::read(&opts.input).unwrap();
         match Object::parse(&buf).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
@@ -276,16 +298,58 @@ fn load_from_file(dec: &mut Decoder, opts: &mut Options) {
     dec.load_code(&code);
 }
 
+const PE_SUPPORTED_MACHINES: [u16; 2] = [
+    0x8664, // x86_64
+    0x14c,  // x86_32
+];
 fn opts_from_pe(pe: &PE, opts: &mut Options) {
-    println!("IDK how PEs work sorry twin");
+    if !ELF_SUPPORTED_MACHINES.contains(&pe.header.coff_header.machine) {
+        panic!("Unsupported machine type");
+    }
+    if !opts.arch_size_static {
+        if pe.is_64 {
+            opts.arch_size = ArchSize::I64;
+        } else {
+            opts.arch_size = ArchSize::I32;
+        }
+    }
+    for sec in &pe.sections {
+        if sec.name[1] == 116 {
+            // 't'
+            if !opts.input_offset_static {
+                opts.input_offset = sec.pointer_to_raw_data as u64
+            }
+            if !opts.read_max_static {
+                opts.read_max = sec.size_of_raw_data as u64 + 1;
+            }
+        }
+    }
 }
 
+const ELF_SUPPORTED_MACHINES: [u16; 2] = [
+    3,  // EM_386 - x86_32
+    62, // EM_X86_64 - x86_64
+];
 fn opts_from_elf(elf: &Elf, opts: &mut Options) {
+    if !ELF_SUPPORTED_MACHINES.contains(&elf.header.e_machine) {
+        panic!("Unsupported machine type");
+    }
+    if !opts.arch_size_static {
+        if elf.is_64 {
+            opts.arch_size = ArchSize::I64;
+        } else {
+            opts.arch_size = ArchSize::I32;
+        }
+    }
     for header in &elf.program_headers {
         // R_X
         if header.p_flags == 5 {
-            opts.input_offset = header.p_offset;
-            opts.read_max = header.p_filesz + 1;
+            if !opts.input_offset_static {
+                opts.input_offset = header.p_offset;
+            }
+            if !opts.read_max_static {
+                opts.read_max = header.p_filesz + 1;
+            }
             return;
         }
     }
@@ -355,4 +419,11 @@ fn test() {
         rep.pretty_print();
         rep.print_bytes();
     }
+}
+
+fn build_tree() {
+    let mut tree =
+        InstructionTree::from_json(&fs::read_to_string("instructions/reduced.json").unwrap());
+    fs::write("tree3.json", serde_json::to_string(&tree).unwrap());
+    return;
 }

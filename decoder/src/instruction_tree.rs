@@ -54,14 +54,6 @@ pub enum OperandEncoding {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub enum OperandType {
-    RM, // Register or memory
-    Reg,
-    Mem,
-    Imm,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum RegisterType {
     GPReg,
     SegReg,
@@ -75,7 +67,6 @@ pub enum RegisterType {
 pub struct Operand {
     pub size: OperandSize,         // Size of the value
     pub encoding: OperandEncoding, // How the value is encoded
-    pub value: OperandType,        // What sort of value is encoded
     pub reg: Option<RegisterType>, // If it's a register, what kind
     pub text: String, // The actual text of the operand for edge cases where the previous data
                       // isn't enough
@@ -401,7 +392,7 @@ impl<'a> InstructionTree {
 
     fn operands_from_instruction(instruction: &InstructionJSON) -> Option<Vec<Operand>> {
         let op_in_code = Regex::new("\\+[ir][bwdo]").unwrap();
-        if instruction.operands.is_none() && op_in_code.is_match(&instruction.opcode) {
+        if instruction.operands.is_none() && !op_in_code.is_match(&instruction.opcode) {
             return None;
         }
         let ops = if instruction.operands.is_none() {
@@ -413,7 +404,12 @@ impl<'a> InstructionTree {
         if ops[0] == "N/A" {
             return None;
         }
+        // ADD r/m64, imm8 -> ["ADD r/m64", " imm8"]
         let mut ins_ops: Vec<&str> = instruction.text.split(",").collect();
+        // ["ADD r/m64", " imm8"] -> ["r/m64", " imm8"]
+        if ins_ops.len() >= 1 && ins_ops[0].trim().contains(' ') {
+            ins_ops[0] = ins_ops[0].split(" ").collect::<Vec<&str>>()[1];
+        }
         let mut res = Vec::new();
         let mut i = 0;
         while i < ops.len() && ops[i] != "N/A" {
@@ -425,7 +421,6 @@ impl<'a> InstructionTree {
             let mut new = Operand {
                 size: OperandSize::Any,
                 encoding: OperandEncoding::Modrm,
-                value: OperandType::RM,
                 reg: None,
                 text: String::from(ins_ops[i]),
             };
@@ -455,7 +450,10 @@ impl<'a> InstructionTree {
                 OperandEncoding::Modreg
             } else if ops[i].contains("ModRM:r/m") {
                 OperandEncoding::Modrm
-            } else if ops[i].starts_with("imm") || ops[i].starts_with("Offset") {
+            } else if ops[i].starts_with("imm")
+                || ops[i].starts_with("Offset")
+                || ops[i].starts_with("Moffs")
+            {
                 OperandEncoding::Immediate
             } else if ops[i].contains("opcode") {
                 OperandEncoding::Opcode
@@ -1176,8 +1174,12 @@ impl Decoder {
                     };
                 }
                 OperandEncoding::Bespoke => {
-                    println!("Instruction: {:#?}", instruction);
-                    panic!("Unknown bespoke");
+                    if op.text.contains("EAX") {
+                        op_str = String::from("EAX");
+                    } else {
+                        println!("Instruction: {:#?}", instruction);
+                        panic!("Unknown bespoke");
+                    }
                 }
             }
             op_strings.push(op_str);
@@ -1423,7 +1425,9 @@ impl Decoder {
                 val: Some(valids[0].clone()),
                 size,
             };
-        } else if valids[0].description.starts_with("Jump") {
+        } else if valids[0].description.starts_with("Jump")
+            || valids[0].description.starts_with("Mult")
+        {
             // Jump instructions have multiple identical entries where the logical operation is
             // the same but can be refered to in differnt ways, i.e. JL == JNGE
             return InstructionResponse {

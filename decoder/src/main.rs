@@ -10,6 +10,7 @@ use std::{
     hash::Hash,
     io::{self, IsTerminal, Read, Seek, SeekFrom, Write},
 };
+use textwrap::fill;
 
 use crate::instruction_tree::{
     ArchSize, ByteString, Context, Decoder, InstructionFormatting, InstructionTree,
@@ -22,6 +23,7 @@ enum OutputFormat {
     JSON,
 }
 
+#[derive(Debug)]
 enum ArgValue {
     Text(String),
     Bool(bool),
@@ -36,14 +38,76 @@ impl fmt::Display for ArgValue {
     }
 }
 
+#[derive(Debug)]
 struct Argument {
     name: String,
     description: String,
+    help: String,
     default: ArgValue,
     flags: Vec<String>,
     value: Option<ArgValue>,
 }
 
+impl Argument {
+    fn get(&self) -> &ArgValue {
+        self.value.as_ref().unwrap_or(&self.default)
+    }
+
+    fn get_str(&self) -> &String {
+        match &self.value.as_ref().unwrap_or(&self.default) {
+            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
+            ArgValue::Text(x) => &x,
+        }
+    }
+
+    fn get_usize(&self) -> usize {
+        match &self.value.as_ref().unwrap_or(&self.default) {
+            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
+            ArgValue::Text(x) => usize::from_str_radix(x, 10).expect("Invalid argument"),
+        }
+    }
+
+    fn get_bool(&self) -> bool {
+        match &self.value.as_ref().unwrap_or(&self.default) {
+            ArgValue::Text(x) => panic!("Can't get a bool from a str argument"),
+            ArgValue::Bool(x) => x.clone(),
+        }
+    }
+
+    fn new(name: &str, description: &str, help: &str, default: ArgValue, flags: Vec<&str>) -> Self {
+        Self {
+            name: String::from(name),
+            description: String::from(description),
+            help: String::from(help),
+            default,
+            flags: flags.iter().map(|x| String::from(*x)).collect(),
+            value: None,
+        }
+    }
+}
+
+impl fmt::Display for Argument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut fmt_flags = String::from("");
+        for flag in &self.flags {
+            fmt_flags += flag;
+            fmt_flags += ", ";
+        }
+        fmt_flags = String::from(fmt_flags.strip_suffix(", ").unwrap_or(""));
+        let mut desc_options = textwrap::Options::new(80);
+        desc_options.subsequent_indent = "\t                     ";
+        write!(
+            f,
+            "\t{flags:<20} {description}
+\t                     Default: {default}\n",
+            flags = fmt_flags,
+            description = fill(&self.description, desc_options),
+            default = self.default,
+        )
+    }
+}
+
+#[derive(Debug)]
 struct Arguments {
     help_msg: String,
     raw_args: Vec<Argument>,
@@ -53,7 +117,7 @@ struct Arguments {
 
 impl Arguments {
     fn help(&self) {
-        println!("{}", self.help_msg);
+        println!("{}", fill(&self.help_msg, 100));
     }
     fn from(args: Vec<Argument>, header: &str, footer: &str) -> Self {
         let mut flags: HashMap<String, usize> = HashMap::new();
@@ -98,63 +162,6 @@ impl Arguments {
     }
 }
 
-impl fmt::Display for Argument {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut fmt_flags = String::from("");
-        for flag in &self.flags {
-            fmt_flags += flag;
-            fmt_flags += ", ";
-        }
-        fmt_flags = String::from(fmt_flags.strip_suffix(", ").unwrap_or(""));
-
-        write!(
-            f,
-            "\t{flags:<20} {description}
-\t                     Default: {default}\n",
-            flags = fmt_flags,
-            description = self.description,
-            default = self.default,
-        )
-    }
-}
-
-impl Argument {
-    fn get(&self) -> &ArgValue {
-        self.value.as_ref().unwrap_or(&self.default)
-    }
-
-    fn get_str(&self) -> &String {
-        match &self.default {
-            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
-            ArgValue::Text(x) => &x,
-        }
-    }
-
-    fn get_usize(&self) -> usize {
-        match &self.default {
-            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
-            ArgValue::Text(x) => usize::from_str_radix(x, 10).expect("Invalid argument"),
-        }
-    }
-
-    fn get_bool(&self) -> bool {
-        match &self.default {
-            ArgValue::Text(x) => panic!("Can't get a bool from a str argument"),
-            ArgValue::Bool(x) => x.clone(),
-        }
-    }
-
-    fn new(name: &str, description: &str, default: ArgValue, flags: Vec<&str>) -> Self {
-        Self {
-            name: String::from(name),
-            description: String::from(description),
-            default,
-            flags: flags.iter().map(|x| String::from(*x)).collect(),
-            value: None,
-        }
-    }
-}
-
 //{
 const HELP_HEADER: &str = "usage: decoder [OPTIONS]
 
@@ -164,15 +171,8 @@ Options:
 const HELP_FOOTER: &str = "
 Common commands:
     decoder -i {exe_path} -o {file}.json -f j
-        Decode the file at {exe_path}, infering executable sections from the headers, and write a JSON representation
-        of the result to {file}.json
-
-Notes:
-    CLI args take precendent over infered values, e.g. \"decoder -i some.exe -m 100\" will infer the start of the 
-        executable section and read the first 100 bytes regardless of the size of the section
-    Stdin cannot be used interactivly
-    Format specifiers are not case sensitive
-    Max and Offset are ignored in stdin mode
+        Decode the file at {exe_path}, infering executable sections from the headers, and write a 
+        JSON representation of the result to {file}.json
 ";
 //}
 
@@ -183,66 +183,133 @@ fn main() {
             Argument::new(
                 "tree",
                 "The path to a JSON instruction tree",
+                "The path to a file containing a JSON representation of the instruction tree. This tree is used for mapping an opcode to an instruction, after which the instruction data from the tree can be used to determine the operands of the instruction. It is the heart of this disassembler. The goal of saving this tree as a JSON file is to enhance flexability, though unfortuantly because of the complexity of the x86 ISA, it is unlikley if not impossible that this program could be used to disassemble a different ISA using only a different tree. The main value of this flexability is in the ability to use a smaller version of the tree for improved performance when it is known that the code being disassembled doesn't use some subset of the instruction set.",
                 ArgValue::Text(String::from("./tree64.json")),
                 vec!["-t", "--tree"],
             ),
             Argument::new(
                 "arch",
                 "The architecture size (16, 32, or 64 bit)",
+                "What version of the x86 architecture the code is written for. Can be either 16, 32, or 64 bit. Currently only 32 and 64 bit are supported.",
                 ArgValue::Text(String::from("x64")),
                 vec!["-a", "--arch"],
             ),
             Argument::new(
                 "input",
                 "The input file or \"-\" for stdin",
+                "Where the data to be decoded comes from, either a file path or \"-\" for stdin. You cannot use stdin interactivly, the data must be piped in.",
                 ArgValue::Text(String::from("-")),
                 vec!["-i", "--input"],
             ),
             Argument::new(
                 "offset",
                 "The number of bytes to ignore before parsing",
+                "The number of bytes that will be ignored and not loaded to be parsed into instructions. For file inputs this is achived by seeking within the file before the read, whereas for stdin it reads the skipped bytes into a buffer that is discarded.",
                 ArgValue::Text(String::from("0")),
                 vec!["--offset"],
             ),
             Argument::new(
                 "max",
                 "The maximum number of bytes to read while parsing, or 0 for no limit",
+                "The max bytes that will be read from the input and loaded for decoding. Note that this is not affected by the offset, e.g. --offset 100 --max 50 will load the 50 bytes following the offset. This differs from lines in that it is purely bytewise, making no attempt to align to the end of an instruction, and that it affects the number of bytes actually read from the file, and will result in lower memory usage for the same output if used carefully.",
                 ArgValue::Text(String::from("0")),
                 vec!["-m", "--max"],
             ),
             Argument::new(
                 "output",
                 "The path to an output file, or \"-\" for stdout",
+                "Where the data will be written, must be either a valid file path or \"-\" for stdout",
                 ArgValue::Text(String::from("-")),
                 vec!["-o", "--output"],
             ),
             Argument::new(
                 "format",
                 "How the decoded data should be presented (PrettyPrint, PlusBytes, JSON)",
+                "What format should the output be, one of PrettyPrint, PlusBytes, or JSON. This differs from custom in that it doesn't change the data produced by the decoder, only the actual output of the program. What each type represents is specified below.
+PrettyPrint: Outputs only the assembly instructions line by line
+PlusBytes: Same as PrettyPrint, but with the bytes associated with the instruction on the line above the instruction
+JSON: A JSON string containing all of the data generated by the decoder, with the following structure:
+[
+// If the decoder fails to find a valid instruction then instruction and operands in the following
+// structure will be null and the bytes array will have a single byte
+{
+    instrution: { // Generic data on the instruction, built from the Intel 64 and IA-32 Architectures Software Development Manual, or null 
+        opcode: \"\",
+        text: \"\",
+        x64: true,
+        legacy: false,
+        operands: [ 
+    {
+            size: 64, // In bits
+            encoding: \"\" // One of Opcode, Immediate, Modrm, Modreg, Bespoke
+            reg: \"\" // One of null, GPReg, SegReg, FPUReg, MMXReg, BoundReg, KReg
+            text: \"\"
+    },
+    ],
+        size: 64, // In bits
+        invalid_prefixes: [0x66],
+        description: \"\",
+    },
+    operands: [\"\"], // The specific operands for this instance of the instruction, or null
+    bytes: [0x00], // The bytes making up this instance of the instruction
+},
+]
+",
                 ArgValue::Text(String::from("PrettyPrint")),
                 vec!["-f", "--format"],
             ),
             Argument::new(
                 "custom",
                 "JSON (either a file or an inline JSON string) describing the formating of the instructions",
+                "This JSON data is used to determine the formatting of the text representation of the instructions. This differs from format in that it changes the data produced by the decoder, and only indirectly affects the actual output. If a field is not specified in the JSON the default is used. The fields and their defaults are specified below.
+{
+    reg_uppercase: true, // Should registers be uppercase
+    imm_uppercase: true, // Should letters in immediate values be uppercase
+    addr_open: \"[\", // String appended directly before a memory address
+    addr_close: \"]\", // String appended directly after a memory address
+    addr_add: \"+\", // String used to denote addition in effective address calculation
+    addr_mul: \"*\", // String used to denote multiplication in effective address calculation
+    addr_scale_two: \"2\", // String used to denote two in effective address calculation with SIB byte
+    addr_scale_four: \"4\", // String used to denote four in effective address calculation with SIB byte
+    addr_scale_eight: \"8\", // String used to denote eight in effective address calculation with SIB byte
+    addr_prefix: \"\", // String prepended to a memory address 
+    addr_byte: \"byte \", // String prepended to 8 bit memory accesses
+    addr_word: \"word \", // String prepended to 16 bit memory accesses
+    addr_dword: \"dword \", // String prepended to 32 bit memory accesses
+    addr_qword: \"qword \", // String prepended to 64 bit memory accesses
+    addr_tword: \"tword \", // String prepended to 80 bit memory accesses
+    addr_oword: \"oword \", // String prepended to 128 bit memory accesses
+    addr_yword: \"yword \", // String prepended to 256 bit memory accesses
+    addr_zword: \"zword \", // String prepended to 512 bit memory accesses
+    imm_prefix: \"0x\", // String prepended to an immediate value
+    imm_suffix: \"\", // String appended to an immediate value
+    imm_fmt: \"Hex\", // Format for immedate values, one of Hex, Dec, Bi, Oct (base 16, 10, 2, and 8 respectivly)
+    ins_uppercase: true, // Should the text of the instruction itself be uppercase
+    code_fmt: \"Hex\", // Format for opcode bytes, one of Hex, Dec, Bi, Oct (base 16, 10, 2, and 8 respectivly) 
+}
+The default values produce NASM-style assembly
+",
                 ArgValue::Text(String::from("")),
                 vec!["-c", "--custom"],
             ),
             Argument::new(
                 "lines",
                 "The maximum number of instructions to parse, or 0 for unlimited",
+                "This option provides a maximum number of instructions to parse. Setting it to any value other than 0 will cause the parser to decode instructions until either it reaches the end of the data or it has reached the limit. This differs from max in that it doesn't effect how many bytes are read from the file, it only acts as a logical check.",
                 ArgValue::Text(String::from("0")),
                 vec!["-l", "--lines"],
             ),
             Argument::new(
                 "no-infer",
                 "Do not parse executable headers to find code regions, use arguments/defaults",
+                "Enabling this option will skip the code that parses executable headers to find where the executable region of the code starts and how large it is. This code uses the same variables as the offset and max arguments, and checks if a value was passed as an argument, so if you specify values for max and offset this option is redundent.",
                 ArgValue::Bool(false),
                 vec!["--no-infer"],
             ),
             Argument::new(
                 "help",
-                "Print this help message and exit",
+                "Display a detailed help message about this program or about specific arguments",
+                "Display a detailed help message about this program or about specific arguments",
                 ArgValue::Text(String::from("")),
                 vec!["-h", "--help"],
             ),
@@ -271,8 +338,23 @@ fn main() {
         match opts.match_flag(&args[i]) {
             Some(x) => {
                 if x.name == "help" {
-                    opts.help();
-                    return;
+                    i += 1;
+                    if i == args.len() {
+                        opts.help();
+                        return;
+                    } else {
+                        let target = if opts.match_flag(&args[i]).is_some() {
+                            opts.match_flag(&args[i]).unwrap()
+                        } else {
+                            opts.get(&args[i])
+                        };
+                        println!(
+                            "{}\n{}\n",
+                            textwrap::dedent(&format!("{}", target)),
+                            fill(&target.help, 100)
+                        );
+                        return;
+                    }
                 }
                 match x.default {
                     ArgValue::Text(_) => {

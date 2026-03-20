@@ -346,19 +346,6 @@
     [
         {
             "opcode": "90+rw",
-            "instruction": "XCHG AX, r16",
-            "operands": [
-                "opcode + rd (r, w)",
-                "AX/EAX/RAX (r, w)",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Exchange r16 with AX."
-        },
-        {
-            "opcode": "90+rw",
             "instruction": "XCHG r16, AX",
             "operands": [
                 "opcode + rd (r, w)",
@@ -369,32 +356,6 @@
             "current_support": "V",
             "legacy_support": "V",
             "description": "Exchange AX with r16."
-        },
-        {
-            "opcode": "90+rd",
-            "instruction": "XCHG EAX, r32",
-            "operands": [
-                "opcode + rd (r, w)",
-                "AX/EAX/RAX (r, w)",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Exchange r32 with EAX."
-        },
-        {
-            "opcode": "REX.W 90+rd",
-            "instruction": "XCHG RAX, r64",
-            "operands": [
-                "opcode + rd (r, w)",
-                "AX/EAX/RAX (r, w)",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "N.E.",
-            "description": "Exchange r64 with RAX."
         },
         {
             "opcode": "90+rd",

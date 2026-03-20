@@ -507,7 +507,7 @@ const PE_SUPPORTED_MACHINES: [u16; 2] = [
 fn opts_from_pe(pe: &PE, opts: &mut Arguments) {
     if !PE_SUPPORTED_MACHINES.contains(&pe.header.coff_header.machine) {
         panic!(
-            "Unsupported machine type \"{}\"",
+            "Unsupported machine type: \"{}\"",
             pe.header.coff_header.machine
         );
     }
@@ -539,7 +539,7 @@ const ELF_SUPPORTED_MACHINES: [u16; 2] = [
 ];
 fn opts_from_elf(elf: &Elf, opts: &mut Arguments) {
     if !ELF_SUPPORTED_MACHINES.contains(&elf.header.e_machine) {
-        panic!("Unsupported machine type");
+        panic!("Unsupported machine type: \"{}\"", elf.header.e_machine);
     }
 
     if opts.get("arch").value.is_none() {

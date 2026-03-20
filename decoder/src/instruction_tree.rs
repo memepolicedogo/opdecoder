@@ -1719,6 +1719,7 @@ impl Decoder {
             };
         } else if valids[0].description.starts_with("Jump")
             || valids[0].description.starts_with("Mult")
+            || valids[0].description.starts_with("Exchange")
         {
             // Jump instructions have multiple identical entries where the logical operation is
             // the same but can be refered to in differnt ways, i.e. JL == JNGE

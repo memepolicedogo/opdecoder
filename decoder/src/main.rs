@@ -605,6 +605,7 @@ fn test() {
         0x22, 0x40, 0x00, 0x48, 0x8B, 0x04, 0x25, 0xD4, 0x22, 0x40, 0x00, 0x00,
     ];
     let mut test_four = vec![0x80, 0x38, 0x00, 0x00];
+    let mut test_five = vec![0x67, 0x8d, 0b00000000, 0x00];
     let mut dec = Decoder {
         context: Context {
             ..Default::default()
@@ -614,7 +615,7 @@ fn test() {
         },
         tree: serde_json::from_str(&fs::read_to_string("tree64.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
-            code: test_three,
+            code: test_five,
             curr: 0,
         },
     };

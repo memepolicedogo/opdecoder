@@ -1069,7 +1069,7 @@ impl Decoder {
         let mut has_modrm = false;
         for op in instruction.operands.as_ref().unwrap() {
             // Consider prefixes for ops of unspecified size
-            let real_size = if op.size != OperandSize::Any {
+            let mut real_size = if op.size != OperandSize::Any {
                 &op.size
             } else if rex.w {
                 &OperandSize::Quad
@@ -1219,6 +1219,9 @@ impl Decoder {
                     if op_str.starts_with(&self.format.addr_open) {
                         op_str.push_str(&self.format.addr_close);
                         // Add prefixes
+                        if instruction.text.starts_with("LEA") {
+                            real_size = &instruction.size;
+                        }
                         match real_size {
                             &OperandSize::Byte => {
                                 op_str.insert_str(0, &self.format.addr_byte);

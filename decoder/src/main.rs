@@ -177,6 +177,8 @@ Common commands:
 //}
 
 fn main() {
+    build_tree();
+    return;
     // Build options
     let mut opts = Arguments::from(
         vec![
@@ -638,5 +640,8 @@ fn build_tree() {
     let mut tree =
         InstructionTree::from_json(&fs::read_to_string("instructions/x86_reduced.json").unwrap());
     fs::write("tree32.json", serde_json::to_string(&tree).unwrap());
+    let mut tree64 =
+        InstructionTree::from_json(&fs::read_to_string("instructions/x64_reduced.json").unwrap());
+    fs::write("tree64.json", serde_json::to_string(&tree64).unwrap());
     return;
 }

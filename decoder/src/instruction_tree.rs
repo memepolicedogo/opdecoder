@@ -38,6 +38,7 @@ pub enum OperandSize {
     Word = 16,
     Double = 32,
     Quad = 64,
+    DoubleSeg = 48,
     Penta = 80,
     DoubleQuad = 128,
     QuadQuad = 256,
@@ -53,7 +54,7 @@ pub enum OperandEncoding {
     Bespoke, // Something evil and vile
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd)]
 pub enum RegisterType {
     GPReg,
     SegReg,
@@ -466,6 +467,13 @@ impl<'a> InstructionTree {
                 OperandEncoding::Modreg => {
                     if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
+                    } else {
+                        Some(RegisterType::GPReg)
+                    }
+                }
+                OperandEncoding::Modrm => {
+                    if ins_ops[i].contains("m16:") {
+                        Some(RegisterType::SegReg)
                     } else {
                         Some(RegisterType::GPReg)
                     }
@@ -899,6 +907,7 @@ pub struct InstructionFormatting {
     pub addr_scale_two: String,
     pub addr_scale_four: String,
     pub addr_scale_eight: String,
+    pub addr_seg_seperator: String,
     pub addr_prefix: String,
     pub addr_byte: String,
     pub addr_word: String,
@@ -929,6 +938,7 @@ impl Default for InstructionFormatting {
             addr_scale_two: String::from("2"),
             addr_scale_four: String::from("4"),
             addr_scale_eight: String::from("8"),
+            addr_seg_seperator: String::from(":"),
             addr_prefix: String::from(""),
             addr_byte: String::from("byte "),
             addr_word: String::from("word "),
@@ -1249,6 +1259,11 @@ impl Decoder {
                             }
                             _ => {}
                         }
+                        // Update operand size for segment loading instructions
+                        if op.reg == Some(RegisterType::SegReg) {
+                            op_str.insert_str(0, &self.format.addr_seg_seperator);
+                            op_str.insert_str(0, &self.format.addr_word);
+                        }
                         op_str.insert_str(0, &self.format.addr_prefix);
                     }
                 }
@@ -1289,6 +1304,10 @@ impl Decoder {
                         OperandSize::Double => {
                             size += 4;
                             self.format_imm(4)
+                        }
+                        OperandSize::DoubleSeg => {
+                            size += 6;
+                            self.format_imm(6)
                         }
                         OperandSize::Quad => {
                             size += 8;

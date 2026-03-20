@@ -62,7 +62,7 @@ impl Argument {
 
     fn get_usize(&self) -> usize {
         match &self.value.as_ref().unwrap_or(&self.default) {
-            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
+            ArgValue::Bool(x) => panic!("Can't get a uszie from a bool argument"),
             ArgValue::Text(x) => usize::from_str_radix(x, 10).expect("Invalid argument"),
         }
     }
@@ -405,7 +405,7 @@ The default values produce NASM-style assembly
 
     // Load data
     if opts.get("input").get_str() == "-" {
-        load_from_stdin(&mut dec, &opts);
+        load_from_stdin(&mut dec, &mut opts);
     } else {
         load_from_file(&mut dec, &mut opts);
     }
@@ -457,13 +457,19 @@ fn open_output(path: &String) -> Box<dyn Write> {
     }
 }
 
-fn load_from_stdin(dec: &mut Decoder, opts: &Arguments) {
+fn load_from_stdin(dec: &mut Decoder, opts: &mut Arguments) {
     let stdin = io::stdin();
     if io::Stdin::is_terminal(&stdin) {
         panic!("Can't be run interactivly, Specify a file or pipe data in");
     } else {
         // Load in stdin as code
-        dec.load_code(&stdin.bytes().map(|x| x.unwrap()).collect());
+        let mut stdin_bytes: Vec<u8> = stdin.bytes().map(|x| x.unwrap()).collect();
+        stdin_bytes.drain(0..opts.get("offset").get_usize());
+        if opts.get("max").get_usize() != 0 {
+            stdin_bytes.drain(opts.get("max").get_usize()..);
+        }
+        stdin_bytes.push(0);
+        dec.load_code(&stdin_bytes);
     }
 }
 

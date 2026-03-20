@@ -177,8 +177,6 @@ Common commands:
 //}
 
 fn main() {
-    build_tree();
-    return;
     // Build options
     let mut opts = Arguments::from(
         vec![

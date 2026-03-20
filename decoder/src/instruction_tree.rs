@@ -1112,10 +1112,13 @@ impl Decoder {
                         // Special case: immidiate offset
                         if rex.w {
                             op_str += &self.format_imm(8);
+                            size += 8;
                         } else if self.context.rex.is_none() && self.context.op_override {
                             op_str += &self.format_imm(2);
+                            size += 2;
                         } else {
                             op_str += &self.format_imm(4);
+                            size += 4;
                         };
                     } else {
                         if modrm.rm == 0b100 {
@@ -1217,10 +1220,12 @@ impl Decoder {
                         match modrm.mode {
                             0b1 => {
                                 op_str.push_str(&self.format.addr_add);
+                                size += 1;
                                 op_str += &self.format_imm(1);
                             }
                             0b10 => {
                                 op_str.push_str(&self.format.addr_add);
+                                size += 4;
                                 op_str += &self.format_imm(4);
                             }
                             _ => {}
@@ -1262,7 +1267,7 @@ impl Decoder {
                         // Update operand size for segment loading instructions
                         if op.reg == Some(RegisterType::SegReg) {
                             op_str.insert_str(0, &self.format.addr_seg_seperator);
-                            op_str.insert_str(0, &self.format.addr_word);
+                            op_str.insert_str(0, self.format.addr_word.trim());
                         }
                         op_str.insert_str(0, &self.format.addr_prefix);
                     }

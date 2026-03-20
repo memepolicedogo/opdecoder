@@ -1091,6 +1091,11 @@ impl Decoder {
             let mut op_str = String::new();
             match op.encoding {
                 OperandEncoding::Modrm => {
+                    let real_reg = if op.reg == Some(RegisterType::MMXReg) {
+                        &RegisterType::MMXReg
+                    } else {
+                        &RegisterType::GPReg
+                    };
                     // To prevent modRM double count
                     if !has_modrm {
                         size += 1;
@@ -1103,11 +1108,7 @@ impl Decoder {
                     op_str.push_str(&self.format.addr_open);
                     if modrm.mode == 0b11 {
                         // Explicit register
-                        op_str = self.format_reg(
-                            (modrm.rm | rex.b) as usize,
-                            real_size,
-                            &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
-                        );
+                        op_str = self.format_reg((modrm.rm | rex.b) as usize, real_size, real_reg);
                     } else if modrm.mode == 0 && modrm.rm == 0b101 {
                         // Special case: immidiate offset
                         if rex.w {
@@ -1135,7 +1136,7 @@ impl Decoder {
                                 op_str += &self.format_reg(
                                     (index | rex.x) as usize,
                                     &(self.context.addr_size()),
-                                    &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
+                                    real_reg,
                                 );
                                 match scale {
                                     1 => {
@@ -1161,17 +1162,14 @@ impl Decoder {
                                 op_str += &self.format_reg(
                                     (base | rex.b) as usize,
                                     &(self.context.addr_size()),
-                                    &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
+                                    real_reg,
                                 );
                             } else {
                                 // When base is 0b101 it means either it's based on RBP or a
                                 // displacement, depending on mod
                                 // Base reg based on arch size and prefixes
-                                let basereg = self.format_reg(
-                                    5,
-                                    &self.context.addr_size(),
-                                    &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
-                                );
+                                let basereg =
+                                    self.format_reg(5, &self.context.addr_size(), real_reg);
                                 match modrm.mode {
                                     // Just displacement
                                     0 => {
@@ -1214,7 +1212,7 @@ impl Decoder {
                             op_str += &self.format_reg(
                                 (modrm.rm | rex.b) as usize,
                                 &(self.context.addr_size()),
-                                &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
+                                real_reg,
                             );
                         }
                         match modrm.mode {

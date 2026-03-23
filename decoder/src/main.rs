@@ -587,7 +587,7 @@ fn parse_format(format: &str) -> OutputFormat {
 }
 
 fn test() {
-    let mut test_bytes = vec![0xff, 0b00101000, 0];
+    let mut test_bytes = vec![0x0f, 0x20, 0b11000000, 0];
     let mut dec = Decoder {
         context: Context {
             ..Default::default()

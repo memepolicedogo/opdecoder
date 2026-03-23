@@ -62,6 +62,8 @@ pub enum RegisterType {
     MMXReg,
     BoundReg,
     KReg,
+    CtrlReg,
+    DbgReg,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -465,7 +467,16 @@ impl<'a> InstructionTree {
             // Reg
             new.reg = match new.encoding {
                 OperandEncoding::Modreg => {
-                    if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
+                    if ins_ops[i].starts_with("CR") {
+                        // Decode size as arch size at runtime
+                        // CR0-7 will have this already but because CR8 ends with 8 previous code
+                        // assumes it's byte width
+                        new.size = OperandSize::Any;
+                        Some(RegisterType::CtrlReg)
+                    } else if ins_ops[i].starts_with("DR") {
+                        new.size == OperandSize::Any;
+                        Some(RegisterType::DbgReg)
+                    } else if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
                     } else {
                         Some(RegisterType::GPReg)
@@ -473,6 +484,7 @@ impl<'a> InstructionTree {
                 }
                 OperandEncoding::Modrm => {
                     if ins_ops[i].contains("m16:") {
+                        new.size = OperandSize::Word;
                         Some(RegisterType::SegReg)
                     } else {
                         Some(RegisterType::GPReg)
@@ -480,10 +492,13 @@ impl<'a> InstructionTree {
                 }
                 OperandEncoding::Bespoke => {
                     if ins_ops[i].contains("ST") {
+                        new.size = OperandSize::Penta;
                         Some(RegisterType::FPUReg)
                     } else if ins_ops[i].contains("bnd") {
+                        new.size = OperandSize::DoubleQuad;
                         Some(RegisterType::BoundReg)
                     } else if ins_ops[i].contains("k1") {
+                        new.size = OperandSize::Quad;
                         Some(RegisterType::KReg)
                     } else {
                         None
@@ -1564,7 +1579,20 @@ impl Decoder {
                 result.push(')');
             }
 
-            _ => result = String::from(""),
+            RegisterType::CtrlReg => {
+                result = String::from("CR");
+                // CR8 is only accessable when REX.R is set
+                if self.context.rex.is_some() && self.context.rex.as_ref().unwrap().r == 1 {
+                    result += "8"
+                } else {
+                    result += &index.to_string();
+                }
+            }
+
+            RegisterType::DbgReg => {
+                result = String::from("DR");
+                result += &index.to_string();
+            }
         }
         if !self.format.reg_uppercase {
             result = result.to_lowercase();

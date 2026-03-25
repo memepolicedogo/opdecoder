@@ -475,10 +475,12 @@ fn load_from_stdin(dec: &mut Decoder, opts: &mut Arguments) {
 
 fn load_from_file(dec: &mut Decoder, opts: &mut Arguments) {
     // Get file
-    let mut file = fs::File::open(opts.get("input").get_str()).expect("Invalid input file");
+    let mut file = fs::File::open(opts.get("input").get_str())
+        .unwrap_or(file_from_path(opts.get("input").get_str()));
     // Infer size as needed
     if !opts.get("no-infer").get_bool() {
-        let buf = fs::read(opts.get("input").get_str()).unwrap();
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf);
         match Object::parse(&buf).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
                 opts_from_elf(&elf, opts);
@@ -498,6 +500,38 @@ fn load_from_file(dec: &mut Decoder, opts: &mut Arguments) {
         code.drain((opts.get("max").get_usize())..);
     }
     dec.load_code(&code);
+}
+
+fn file_from_path(filename: &str) -> fs::File {
+    // Get string version of path
+    let path_str = match env::var("PATH") {
+        Ok(val) => val,
+        Err(e) => panic!("Failed to fetch PATH from environment"),
+    };
+    // Split into array of search directories
+    // Seperated by semicolons on windows, and colons on linux/macos
+    let mut dir_char = '/';
+    let paths = if env::consts::OS == "windows" {
+        dir_char = '\\';
+        path_str.split(';').collect::<Vec<&str>>()
+    } else {
+        path_str.split(':').collect::<Vec<&str>>()
+    };
+    for dir in paths {
+        // Get full path, adding / if needed
+        let full_path = if dir.ends_with(dir_char) {
+            String::from(dir) + filename
+        } else {
+            let mut tmp = String::from(dir);
+            tmp.push(dir_char);
+            tmp + filename
+        };
+        if fs::exists(&full_path).unwrap_or(false) {
+            println!("{:?}", full_path);
+            return fs::File::open(&full_path).unwrap();
+        }
+    }
+    panic!("No such input file");
 }
 
 const PE_SUPPORTED_MACHINES: [u16; 2] = [

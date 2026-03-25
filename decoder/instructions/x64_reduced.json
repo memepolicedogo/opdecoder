@@ -2073,7 +2073,7 @@
         },
         {
             "opcode": "80 /4 ib",
-            "instruction": "1 AND r/m8 , imm8",
+            "instruction": "AND r/m8 , imm8",
             "operands": [
                 "ModRM:r/m (r, w)",
                 "imm8/16/32",
@@ -2164,7 +2164,7 @@
         },
         {
             "opcode": "20 /r",
-            "instruction": "1 1 AND r/m8 , r8",
+            "instruction": "AND r/m8 , r8",
             "operands": [
                 "ModRM:r/m (r, w)",
                 "ModRM:reg (r)",
@@ -2216,7 +2216,7 @@
         },
         {
             "opcode": "22 /r",
-            "instruction": "1 1 AND r8 , r/m8",
+            "instruction": "AND r8 , r/m8",
             "operands": [
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
@@ -9676,7 +9676,7 @@
         },
         {
             "opcode": "REX.W 0F 02 /r",
-            "instruction": "1 LAR r32, r64/m16",
+            "instruction": "LAR r32, r64/m16",
             "operands": [
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
@@ -11058,7 +11058,7 @@
             ],
             "current_support": "V",
             "legacy_support": "N.E.",
-            "description": "1 Move r64 to extended CR8."
+            "description": "Move r64 to extended CR8."
         }
     ],
     [

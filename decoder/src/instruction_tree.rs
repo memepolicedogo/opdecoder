@@ -42,10 +42,11 @@ pub enum OperandSize {
     Penta = 80,
     DoubleQuad = 128,
     QuadQuad = 256,
+    Z = 384,
     DoubleQuadQuad = 512, // man
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub enum OperandEncoding {
     Opcode,    // In instruction opcode
     Immediate, // Immediate value, including offsets
@@ -358,7 +359,8 @@ impl<'a> InstructionTree {
     }
 
     pub fn from_legacy_json(json: &String) -> Vec<Vec<Instruction>> {
-        let tables: Vec<Vec<InstructionJSON>> = serde_json::from_str(json).expect("Bad JSON");
+        let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
+        let mut tables: Vec<Vec<InstructionJSON>> = serde_json::from_str(json).expect("Bad JSON");
         let mut updated: Vec<Vec<Instruction>> = Vec::new();
         for table in tables {
             let mut instructions: Vec<Instruction> = Vec::new();
@@ -431,6 +433,8 @@ impl<'a> InstructionTree {
             // Get size
             new.size = if ins_ops[i].ends_with("512") {
                 OperandSize::DoubleQuadQuad
+            } else if ins_ops[i].ends_with("384") {
+                OperandSize::Z
             } else if ins_ops[i].ends_with("256") {
                 OperandSize::QuadQuad
             } else if ins_ops[i].ends_with("128") {
@@ -453,7 +457,12 @@ impl<'a> InstructionTree {
             new.encoding = if ops[i].contains("ModRM:reg") {
                 OperandEncoding::Modreg
             } else if ops[i].contains("ModRM:r/m") {
-                OperandEncoding::Modrm
+                // Cases where seperate sizes are specified for register and memory moves
+                if new.size <= OperandSize::Quad && !ins_ops[i].contains("r/m") {
+                    OperandEncoding::Bespoke
+                } else {
+                    OperandEncoding::Modrm
+                }
             } else if ops[i].starts_with("imm")
                 || ops[i].starts_with("Offset")
                 || ops[i].starts_with("Moffs")
@@ -478,6 +487,9 @@ impl<'a> InstructionTree {
                         Some(RegisterType::DbgReg)
                     } else if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
+                    } else if ins_ops[i] == "Sreg" {
+                        new.size = OperandSize::Word;
+                        Some(RegisterType::SegReg)
                     } else {
                         Some(RegisterType::GPReg)
                     }
@@ -507,6 +519,22 @@ impl<'a> InstructionTree {
                 OperandEncoding::Immediate => None,
                 _ => Some(RegisterType::GPReg),
             };
+            if new.encoding == OperandEncoding::Bespoke {
+                // Handle special cases for bespokes
+                // Unique BS in Enter
+                if ops[i] == "iw" {
+                    new.encoding = OperandEncoding::Immediate;
+                    new.size = OperandSize::Word;
+                } else if ins_ops[i].starts_with("ptr") {
+                    new.encoding = OperandEncoding::Immediate;
+                    new.size = match new.size {
+                        OperandSize::Word => OperandSize::Double,
+                        OperandSize::Double => OperandSize::DoubleSeg,
+                        OperandSize::Quad => OperandSize::Penta,
+                        _ => panic!("Invalid size for far pointer: {:?}", new.size),
+                    };
+                }
+            }
             res.push(new);
             i += 1;
         }
@@ -1060,6 +1088,172 @@ impl Decoder {
         }
     }
 
+    fn parse_modrm(
+        &mut self,
+        reg: &RegisterType,
+        size: &OperandSize,
+        modrm: &Modrm,
+        rex: &Rex,
+        ins_size: &mut usize,
+    ) -> String {
+        let mut res = String::new();
+        // Prepend a square bracket for effective address format, mod = 0b11 reassigns
+        // res so this isn't present there
+        res.push_str(&self.format.addr_open);
+        if modrm.mode == 0b11 {
+            // Explicit register
+            res = self.format_reg((modrm.rm | rex.b) as usize, size, reg);
+        } else if modrm.mode == 0 && modrm.rm == 0b101 {
+            // Special case: immidiate offset
+            if rex.w {
+                res += &self.format_imm(8);
+                *ins_size += 8;
+            } else if self.context.rex.is_none() && self.context.op_override {
+                res += &self.format_imm(2);
+                *ins_size += 2;
+            } else {
+                res += &self.format_imm(4);
+                *ins_size += 4;
+            };
+        } else {
+            if modrm.rm == 0b100 {
+                //SIB
+                let sib = self.code.get();
+                self.code.inc();
+                *ins_size += 1;
+                let scale = (sib & 0b11000000) >> 6;
+                let index = (sib & 0b00111000) >> 3;
+                let base = sib & 0b00000111;
+                // Index
+                if (rex.x | index) == 0b100 {
+                } else {
+                    res += &self.format_reg(
+                        (index | rex.x) as usize,
+                        &(self.context.addr_size()),
+                        reg,
+                    );
+                    match scale {
+                        1 => {
+                            res.push_str(&self.format.addr_mul);
+                            res.push_str(&self.format.addr_scale_two);
+                            res.push_str(&self.format.addr_add);
+                        }
+                        2 => {
+                            res.push_str(&self.format.addr_mul);
+                            res.push_str(&self.format.addr_scale_four);
+                            res.push_str(&self.format.addr_add);
+                        }
+                        3 => {
+                            res.push_str(&self.format.addr_mul);
+                            res.push_str(&self.format.addr_scale_eight);
+                            res.push_str(&self.format.addr_add);
+                        }
+                        _ => res.push_str(&self.format.addr_add),
+                    }
+                }
+                // Base
+                if base != 0b101 {
+                    res +=
+                        &self.format_reg((base | rex.b) as usize, &(self.context.addr_size()), reg);
+                } else {
+                    // When base is 0b101 it means either it's based on RBP or a
+                    // displacement, depending on mod
+                    // Base reg based on arch size and prefixes
+                    let basereg = self.format_reg(5, &self.context.addr_size(), reg);
+                    match modrm.mode {
+                        // Just displacement
+                        0 => {
+                            if rex.w {
+                                res.push_str(&self.format_imm(4));
+                                *ins_size += 4;
+                            } else {
+                                res.push_str(&self.format_imm(4));
+                                *ins_size += 4;
+                            }
+                        }
+                        // disp8 + ebp
+                        1 => {
+                            res.push_str(&self.format_imm(1));
+                            *ins_size += 1;
+                            res.push_str(&self.format.addr_add);
+                            if self.format.reg_uppercase {
+                                res.push_str(&basereg);
+                            } else {
+                                res.push_str(&(basereg.to_lowercase()));
+                            }
+                        }
+                        // disp32 + ebp
+                        // all this to enable C local variabes. Very cool
+                        2 => {
+                            res.push_str(&self.format_imm(4));
+                            *ins_size += 4;
+                            res.push_str(&self.format.addr_add);
+                            if self.format.reg_uppercase {
+                                res.push_str(&basereg);
+                            } else {
+                                res.push_str(&(basereg.to_lowercase()));
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            } else {
+                // Normal base reg
+                res += &self.format_reg(
+                    (modrm.rm | rex.b) as usize,
+                    &(self.context.addr_size()),
+                    reg,
+                );
+            }
+            match modrm.mode {
+                0b1 => {
+                    res.push_str(&self.format.addr_add);
+                    *ins_size += 1;
+                    res += &self.format_imm(1);
+                }
+                0b10 => {
+                    res.push_str(&self.format.addr_add);
+                    *ins_size += 4;
+                    res += &self.format_imm(4);
+                }
+                _ => {}
+            }
+        }
+        if res.starts_with(&self.format.addr_open) {
+            res.push_str(&self.format.addr_close);
+            // Add prefixes
+            match size {
+                &OperandSize::Byte => {
+                    res.insert_str(0, &self.format.addr_byte);
+                }
+                &OperandSize::Word => {
+                    res.insert_str(0, &self.format.addr_word);
+                }
+                &OperandSize::Double => {
+                    res.insert_str(0, &self.format.addr_dword);
+                }
+                &OperandSize::Quad => {
+                    res.insert_str(0, &self.format.addr_qword);
+                }
+                &OperandSize::Penta => {
+                    res.insert_str(0, &self.format.addr_tword);
+                }
+                &OperandSize::DoubleQuad => {
+                    res.insert_str(0, &self.format.addr_oword);
+                }
+                &OperandSize::QuadQuad => {
+                    res.insert_str(0, &self.format.addr_yword);
+                }
+                &OperandSize::DoubleQuadQuad => {
+                    res.insert_str(0, &self.format.addr_zword);
+                }
+                _ => {}
+            }
+            res.insert_str(0, &self.format.addr_prefix);
+        }
+        res
+    }
+
     fn parse_operands(&mut self, ins: &InstructionResponse) -> OperandResponse {
         let instruction = ins.val.as_ref().unwrap();
         if instruction.operands.is_none() {
@@ -1118,172 +1312,7 @@ impl Decoder {
                         // Advance to potential SIB byte
                         self.code.inc();
                     }
-                    // Prepend a square bracket for effective address format, mod = 0b11 reassigns
-                    // op_str so this isn't present there
-                    op_str.push_str(&self.format.addr_open);
-                    if modrm.mode == 0b11 {
-                        // Explicit register
-                        op_str = self.format_reg((modrm.rm | rex.b) as usize, real_size, real_reg);
-                    } else if modrm.mode == 0 && modrm.rm == 0b101 {
-                        // Special case: immidiate offset
-                        if rex.w {
-                            op_str += &self.format_imm(8);
-                            size += 8;
-                        } else if self.context.rex.is_none() && self.context.op_override {
-                            op_str += &self.format_imm(2);
-                            size += 2;
-                        } else {
-                            op_str += &self.format_imm(4);
-                            size += 4;
-                        };
-                    } else {
-                        if modrm.rm == 0b100 {
-                            //SIB
-                            let sib = self.code.get();
-                            self.code.inc();
-                            size += 1;
-                            let scale = (sib & 0b11000000) >> 6;
-                            let index = (sib & 0b00111000) >> 3;
-                            let base = sib & 0b00000111;
-                            // Index
-                            if (rex.x | index) == 0b100 {
-                            } else {
-                                op_str += &self.format_reg(
-                                    (index | rex.x) as usize,
-                                    &(self.context.addr_size()),
-                                    real_reg,
-                                );
-                                match scale {
-                                    1 => {
-                                        op_str.push_str(&self.format.addr_mul);
-                                        op_str.push_str(&self.format.addr_scale_two);
-                                        op_str.push_str(&self.format.addr_add);
-                                    }
-                                    2 => {
-                                        op_str.push_str(&self.format.addr_mul);
-                                        op_str.push_str(&self.format.addr_scale_four);
-                                        op_str.push_str(&self.format.addr_add);
-                                    }
-                                    3 => {
-                                        op_str.push_str(&self.format.addr_mul);
-                                        op_str.push_str(&self.format.addr_scale_eight);
-                                        op_str.push_str(&self.format.addr_add);
-                                    }
-                                    _ => op_str.push_str(&self.format.addr_add),
-                                }
-                            }
-                            // Base
-                            if base != 0b101 {
-                                op_str += &self.format_reg(
-                                    (base | rex.b) as usize,
-                                    &(self.context.addr_size()),
-                                    real_reg,
-                                );
-                            } else {
-                                // When base is 0b101 it means either it's based on RBP or a
-                                // displacement, depending on mod
-                                // Base reg based on arch size and prefixes
-                                let basereg =
-                                    self.format_reg(5, &self.context.addr_size(), real_reg);
-                                match modrm.mode {
-                                    // Just displacement
-                                    0 => {
-                                        if rex.w {
-                                            op_str.push_str(&self.format_imm(4));
-                                            size += 4;
-                                        } else {
-                                            op_str.push_str(&self.format_imm(4));
-                                            size += 4;
-                                        }
-                                    }
-                                    // disp8 + ebp
-                                    1 => {
-                                        op_str.push_str(&self.format_imm(1));
-                                        size += 1;
-                                        op_str.push_str(&self.format.addr_add);
-                                        if self.format.reg_uppercase {
-                                            op_str.push_str(&basereg);
-                                        } else {
-                                            op_str.push_str(&(basereg.to_lowercase()));
-                                        }
-                                    }
-                                    // disp32 + ebp
-                                    // all this to enable C local variabes. Very cool
-                                    2 => {
-                                        op_str.push_str(&self.format_imm(4));
-                                        size += 4;
-                                        op_str.push_str(&self.format.addr_add);
-                                        if self.format.reg_uppercase {
-                                            op_str.push_str(&basereg);
-                                        } else {
-                                            op_str.push_str(&(basereg.to_lowercase()));
-                                        }
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        } else {
-                            // Normal base reg
-                            op_str += &self.format_reg(
-                                (modrm.rm | rex.b) as usize,
-                                &(self.context.addr_size()),
-                                real_reg,
-                            );
-                        }
-                        match modrm.mode {
-                            0b1 => {
-                                op_str.push_str(&self.format.addr_add);
-                                size += 1;
-                                op_str += &self.format_imm(1);
-                            }
-                            0b10 => {
-                                op_str.push_str(&self.format.addr_add);
-                                size += 4;
-                                op_str += &self.format_imm(4);
-                            }
-                            _ => {}
-                        }
-                    }
-                    if op_str.starts_with(&self.format.addr_open) {
-                        op_str.push_str(&self.format.addr_close);
-                        // Add prefixes
-                        if instruction.text.starts_with("LEA") {
-                            real_size = &instruction.size;
-                        }
-                        match real_size {
-                            &OperandSize::Byte => {
-                                op_str.insert_str(0, &self.format.addr_byte);
-                            }
-                            &OperandSize::Word => {
-                                op_str.insert_str(0, &self.format.addr_word);
-                            }
-                            &OperandSize::Double => {
-                                op_str.insert_str(0, &self.format.addr_dword);
-                            }
-                            &OperandSize::Quad => {
-                                op_str.insert_str(0, &self.format.addr_qword);
-                            }
-                            &OperandSize::Penta => {
-                                op_str.insert_str(0, &self.format.addr_tword);
-                            }
-                            &OperandSize::DoubleQuad => {
-                                op_str.insert_str(0, &self.format.addr_oword);
-                            }
-                            &OperandSize::QuadQuad => {
-                                op_str.insert_str(0, &self.format.addr_yword);
-                            }
-                            &OperandSize::DoubleQuadQuad => {
-                                op_str.insert_str(0, &self.format.addr_zword);
-                            }
-                            _ => {}
-                        }
-                        // Update operand size for segment loading instructions
-                        if op.reg == Some(RegisterType::SegReg) {
-                            op_str.insert_str(0, &self.format.addr_seg_seperator);
-                            op_str.insert_str(0, self.format.addr_word.trim());
-                        }
-                        op_str.insert_str(0, &self.format.addr_prefix);
-                    }
+                    op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
                 }
                 OperandEncoding::Modreg => {
                     // To prevent modRM double count
@@ -1343,6 +1372,10 @@ impl Decoder {
                             size += 32;
                             self.format_imm(32)
                         }
+                        OperandSize::Z => {
+                            size += 48;
+                            self.format_imm(48)
+                        }
                         OperandSize::DoubleQuadQuad => {
                             size += 64;
                             self.format_imm(64)
@@ -1354,6 +1387,7 @@ impl Decoder {
                 }
                 OperandEncoding::Bespoke => {
                     let is_reg = Regex::new("([ER]?[AC]X)|([AC][HL])").unwrap();
+                    let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
                     // If register literal
                     if is_reg.is_match(&op.text) {
                         op_str = op.text.clone();
@@ -1417,6 +1451,79 @@ impl Decoder {
                             );
                             op_str.push_str(&self.format.addr_close);
                         }
+                    } else if reg_mem_size_dif.is_match(&op.text) {
+                        // Missmatched sizes for register vs memory access
+                        // Treat as normal modrm mostly
+                        let real_reg = if op.reg == Some(RegisterType::MMXReg) {
+                            &RegisterType::MMXReg
+                        } else {
+                            &RegisterType::GPReg
+                        };
+                        // To prevent modRM double count
+                        if !has_modrm {
+                            size += 1;
+                            has_modrm = true;
+                            // Advance to potential SIB byte
+                            self.code.inc();
+                        }
+                        if modrm.mode == 0b11 {
+                            // Register literal, context based size
+                            op_str = self.parse_modrm(
+                                real_reg,
+                                if rex.w {
+                                    &OperandSize::Quad
+                                } else if self.context.rex.is_none() && self.context.op_override {
+                                    &OperandSize::Word
+                                } else {
+                                    &OperandSize::Double
+                                },
+                                &modrm,
+                                &rex,
+                                &mut size,
+                            );
+                        } else {
+                            // Memory, sized according to op
+                            op_str = self.parse_modrm(real_reg, &op.size, &modrm, &rex, &mut size);
+                        }
+                    } else if op.text.contains("16:") {
+                        // Far pointer
+                        let real_reg = if op.reg == Some(RegisterType::MMXReg) {
+                            &RegisterType::MMXReg
+                        } else {
+                            &RegisterType::GPReg
+                        };
+                        // To prevent modRM double count
+                        if !has_modrm {
+                            size += 1;
+                            has_modrm = true;
+                            // Advance to potential SIB byte
+                            self.code.inc();
+                        }
+                        op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
+                        op_str.insert_str(
+                            self.format.addr_prefix.len(),
+                            &self.format.addr_seg_seperator,
+                        );
+                        op_str.insert_str(
+                            self.format.addr_prefix.len(),
+                            self.format.addr_word.trim(),
+                        );
+                    } else if op.text == "m" {
+                        // LEA
+                        let real_reg = if op.reg == Some(RegisterType::MMXReg) {
+                            &RegisterType::MMXReg
+                        } else {
+                            &RegisterType::GPReg
+                        };
+                        // To prevent modRM double count
+                        if !has_modrm {
+                            size += 1;
+                            has_modrm = true;
+                            // Advance to potential SIB byte
+                            self.code.inc();
+                        }
+                        // TODO: improve LEA formatting
+                        op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
                     } else {
                         println!("{:#?}", instruction);
                         panic!("Unknown bespoke");
@@ -1783,6 +1890,23 @@ impl Decoder {
                 size,
                 pref_size: prefix_count,
             };
+        } else {
+            // Between size specified and unspecified we prefer unspecified because it's the same
+            // thing only dependant on prefixes or whatever
+            let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
+            for i in 0..valids.len() {
+                if reg_mem_size_dif.is_match(&valids[i].text) {
+                    let mut rep = valids[i].clone();
+                    if !self.format.ins_uppercase {
+                        rep.text = rep.text.to_lowercase();
+                    }
+                    return InstructionResponse {
+                        val: Some(rep),
+                        size,
+                        pref_size: prefix_count,
+                    };
+                }
+            }
         }
 
         // What possibly can be here?

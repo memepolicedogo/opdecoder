@@ -1,7 +1,12 @@
 #![allow(dead_code, unused)]
 mod instruction_tree;
 use core::panic;
-use goblin::{Object, elf::Elf, pe::PE};
+use goblin::{
+    Object,
+    elf::{Elf, SectionHeader},
+    pe::{PE, section_table::SectionTable},
+};
+use serde::Serialize;
 use serde_json;
 use std::{
     collections::HashMap,
@@ -13,7 +18,7 @@ use std::{
 use textwrap::fill;
 
 use crate::instruction_tree::{
-    ArchSize, ByteString, Context, Decoder, InstructionFormatting, InstructionTree,
+    ArchSize, ByteString, Context, Decoder, InstructionFormatting, InstructionTree, ParseResponse,
 };
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -23,7 +28,7 @@ enum OutputFormat {
     JSON,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum ArgValue {
     Text(String),
     Bool(bool),
@@ -49,6 +54,10 @@ struct Argument {
 }
 
 impl Argument {
+    fn is_default(&self) -> bool {
+        self.value.is_none()
+    }
+
     fn get(&self) -> &ArgValue {
         self.value.as_ref().unwrap_or(&self.default)
     }
@@ -176,7 +185,268 @@ Common commands:
 ";
 //}
 
+#[derive(Serialize)]
+struct Section {
+    name: String,
+    offset: usize,
+    size: usize,
+    addr: u64,
+    disassembled: Vec<ParseResponse>,
+}
+
+impl Section {
+    fn from_elf(elf: &SectionHeader, name: String) -> Self {
+        Self {
+            name,
+            offset: elf.sh_offset as usize,
+            size: elf.sh_size as usize,
+            addr: elf.sh_addr,
+            disassembled: Vec::new(),
+        }
+    }
+    fn from_pe(pe: &SectionTable, base: u64) -> Self {
+        Self {
+            name: pe.real_name.as_ref().unwrap().clone(),
+            offset: pe.size_of_raw_data as usize,
+            size: pe.pointer_to_raw_data as usize,
+            addr: (pe.virtual_address as u64 + base),
+            disassembled: Vec::new(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct Executable {
+    path: String,
+    #[serde(skip)]
+    file: File,
+    code: Vec<Section>,
+    entry: usize,
+    is_64: bool,
+}
+
+impl From<String> for Executable {
+    fn from(path: String) -> Self {
+        Executable::from(&path)
+    }
+}
+
+impl From<&String> for Executable {
+    fn from(path: &String) -> Self {
+        let mut exe = Self {
+            file: fs::File::open(path).unwrap(),
+            path: path.clone(),
+            code: Vec::new(),
+            entry: 0,
+            is_64: true,
+        };
+        let mut buff = Vec::new();
+        exe.file.read_to_end(&mut buff);
+        // Parse file headers to pull all executable sections
+        match Object::parse(&buff).unwrap_or(Object::Unknown(0)) {
+            Object::Elf(elf) => {
+                exe.is_64 = elf.is_64;
+                for sec in elf.section_headers {
+                    if sec.is_executable() {
+                        // If the entry point is contained within this section
+                        if elf.entry >= sec.sh_addr && elf.entry <= (sec.sh_addr + sec.sh_size) {
+                            exe.entry = exe.code.len();
+                        }
+                        exe.code.push(Section::from_elf(
+                            &sec,
+                            String::from(elf.shdr_strtab.get_at(sec.sh_name).unwrap()),
+                        ));
+                    }
+                }
+            }
+            Object::PE(pe) => {
+                exe.is_64 = pe.is_64;
+                for sec in pe.sections {
+                    if (sec.characteristics & 0x20) == 0x20 {
+                        // If the entry point is contained within this section
+                        if pe.entry >= sec.virtual_address as usize
+                            && pe.entry <= (sec.virtual_address + sec.virtual_size) as usize
+                        {
+                            exe.entry = exe.code.len();
+                        }
+                        exe.code.push(Section::from_pe(&sec, pe.image_base as u64))
+                    }
+                }
+            }
+            _ => exe.code.push(Section {
+                name: String::from("arbitrary"),
+                offset: 0,
+                size: 0,
+                addr: 0,
+                disassembled: Vec::new(),
+            }),
+        }
+        exe
+    }
+}
+
+impl Executable {
+    // Resolve differences between executable and passed CLI options
+    fn resolve_opts(&mut self, opts: &mut Arguments) {
+        // Use CLI options for raw files and when no-infer is set
+        if opts.get("no-infer").get_bool()
+            || (self.code.len() == 1 && self.code[0].name == "arbitrary")
+        {
+            self.code = vec![Section {
+                name: String::from("arbitrary"),
+                offset: opts.get("offset").get_usize(),
+                size: opts.get("max").get_usize(),
+                addr: 0,
+                disassembled: Vec::new(),
+            }];
+            self.is_64 = opts.get("size").get_usize() == 64;
+        }
+    }
+}
+
 fn main() {
+    let mut opts = match handle_args() {
+        Some(x) => x,
+        None => return,
+    };
+
+    let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
+    if tree_str.is_err() {
+        println!("Invalid tree path");
+        return;
+    }
+
+    let formatting = if opts.get("custom").get_str() == "" {
+        InstructionFormatting {
+            ..Default::default()
+        }
+    } else if fs::exists(opts.get("custom").get_str()).unwrap_or(false) {
+        serde_json::from_str(&fs::read_to_string(opts.get("custom").get_str()).unwrap())
+            .expect("Invalid formatting file")
+    } else {
+        serde_json::from_str(opts.get("custom").get_str()).expect("Invalid formatting string")
+    };
+
+    let mut dec = Decoder {
+        context: Context {
+            size: parse_arch(opts.get("arch").get_str()),
+            ..Default::default()
+        },
+        format: formatting,
+        tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
+        code: ByteString {
+            code: Vec::new(),
+            curr: 0,
+        },
+    };
+
+    let path = if fs::exists(opts.get("input").get_str()).unwrap_or(false) {
+        opts.get("input").get_str()
+    } else {
+        &file_from_path(&opts.get("input").get_str())
+    };
+    // Open file
+    let mut exe = Executable::from(path);
+    exe.resolve_opts(&mut opts);
+
+    if opts.get("interactive").get_bool() {
+        println!("Interactive mode is still in development. Sorry!");
+        return;
+        println!("Found {} executable sections in file", exe.code.len());
+        //----Interactive planning----
+    } else {
+        // Get write object for output
+        let mut output = open_output(opts.get("output").get_str());
+        let instruction_max = opts.get("lines").get_usize();
+        for mut section in &mut exe.code {
+            // Get code
+            exe.file.seek(SeekFrom::Start(section.offset as u64));
+            let mut buff = Vec::new();
+            let x = exe.file.read_to_end(&mut buff);
+            buff.drain(section.size..);
+            dec.load_code(&buff);
+            section.disassembled = if instruction_max == 0 {
+                dec.parse()
+            } else {
+                dec.parse_n(instruction_max)
+            };
+        }
+
+        let output_format = parse_format(opts.get("format").get_str());
+
+        match output_format {
+            OutputFormat::JSON => {
+                let json = serde_json::to_string(&exe);
+                if json.is_err() {
+                    println!("Failed to serialize response data:");
+                    println!("{}", &json.unwrap_err());
+                    return;
+                }
+                let _ = write!(output, "{}", json.unwrap());
+            }
+            OutputFormat::PrettyPrint => {
+                for mut sec in exe.code {
+                    let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
+                    for rep in sec.disassembled {
+                        let _ = writeln!(output, "{}", rep);
+                    }
+                    write!(output, "\n");
+                }
+            }
+            OutputFormat::PlusBytes => {
+                for mut sec in exe.code {
+                    let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
+                    for rep in sec.disassembled {
+                        let _ = writeln!(output, "{}", rep.bytes_to_string());
+                        let _ = writeln!(output, "{}", rep);
+                    }
+                    write!(output, "\n");
+                }
+            }
+        }
+    }
+}
+
+fn open_output(path: &String) -> Box<dyn Write> {
+    if path == "-" {
+        Box::new(io::stdout())
+    } else {
+        Box::new(File::create(path).expect("Bad output file"))
+    }
+}
+
+fn file_from_path(filename: &str) -> String {
+    // Get string version of path
+    let path_str = match env::var("PATH") {
+        Ok(val) => val,
+        Err(e) => panic!("Failed to fetch PATH from environment"),
+    };
+    // Split into array of search directories
+    // Seperated by semicolons on windows, and colons on linux/macos
+    let mut dir_char = '/';
+    let paths = if env::consts::OS == "windows" {
+        dir_char = '\\';
+        path_str.split(';').collect::<Vec<&str>>()
+    } else {
+        path_str.split(':').collect::<Vec<&str>>()
+    };
+    for dir in paths {
+        // Get full path, adding / if needed
+        let full_path = if dir.ends_with(dir_char) {
+            String::from(dir) + filename
+        } else {
+            let mut tmp = String::from(dir);
+            tmp.push(dir_char);
+            tmp + filename
+        };
+        if fs::exists(&full_path).unwrap_or(false) {
+            return full_path;
+        }
+    }
+    panic!("No such input file");
+}
+
+fn handle_args() -> Option<Arguments> {
     // Build options
     let mut opts = Arguments::from(
         vec![
@@ -189,22 +459,30 @@ fn main() {
             ),
             Argument::new(
                 "arch",
-                "The architecture size (16, 32, or 64 bit)",
-                "What version of the x86 architecture the code is written for. Can be either 16, 32, or 64 bit. Currently only 32 and 64 bit are supported.",
+                "The architecture size (32 or 64 bit)",
+                "What version of the x86 architecture the code is written for. Can be either 32, or 64 bit.",
                 ArgValue::Text(String::from("x64")),
                 vec!["-a", "--arch"],
             ),
             Argument::new(
                 "input",
-                "The input file or \"-\" for stdin",
-                "Where the data to be decoded comes from, either a file path or \"-\" for stdin. You cannot use stdin interactivly, the data must be piped in.",
-                ArgValue::Text(String::from("-")),
+                "The input file",
+                "Where the data to be decoded comes from, either a valid relative/absolue path or the name of a file on your $PATH.",
+                ArgValue::Text(String::from("")),
                 vec!["-i", "--input"],
+            ),
+            Argument::new(
+                "interactive",
+                "Activate interactive mode",
+                // TODO: Detailed help message on interactive commands
+                "Run the program in an interactive mode. In interactive mode the user directly instructs the program, and can modify options on the fly. Similar to nslookup's interactive mode (Currently not implemented, sorry).",
+                ArgValue::Bool(false),
+                vec!["-I", "--inter", "--interactive"],
             ),
             Argument::new(
                 "offset",
                 "The number of bytes to ignore before parsing",
-                "The number of bytes that will be ignored and not loaded to be parsed into instructions. For file inputs this is achived by seeking within the file before the read, whereas for stdin it reads the skipped bytes into a buffer that is discarded.",
+                "The number of bytes that will be ignored and not loaded to be parsed into instructions. For files with multiple executable sections this value will be ignored, unless no-infer is set.",
                 ArgValue::Text(String::from("0")),
                 vec!["--offset"],
             ),
@@ -322,7 +600,7 @@ The default values produce NASM-style assembly
     let mut args: Vec<String> = env::args().skip(1).collect();
     if args.len() == 0 {
         opts.help();
-        return;
+        return None;
     }
     let mut i = 0;
     // Iter by index so we can access the next val as needed
@@ -341,7 +619,7 @@ The default values produce NASM-style assembly
                     i += 1;
                     if i == args.len() {
                         opts.help();
-                        return;
+                        return None;
                     } else {
                         let target = if opts.match_flag(&args[i]).is_some() {
                             opts.match_flag(&args[i]).unwrap()
@@ -353,7 +631,7 @@ The default values produce NASM-style assembly
                             textwrap::dedent(&format!("{}", target)),
                             fill(&target.help, 100)
                         );
-                        return;
+                        return None;
                     }
                 }
                 match x.default {
@@ -372,230 +650,7 @@ The default values produce NASM-style assembly
         }
         i += 1;
     }
-
-    let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
-    if tree_str.is_err() {
-        println!("Invalid tree path");
-        return;
-    }
-
-    let formatting = if opts.get("custom").get_str() == "" {
-        InstructionFormatting {
-            ..Default::default()
-        }
-    } else if fs::exists(opts.get("custom").get_str()).unwrap_or(false) {
-        serde_json::from_str(&fs::read_to_string(opts.get("custom").get_str()).unwrap())
-            .expect("Invalid formatting file")
-    } else {
-        serde_json::from_str(opts.get("custom").get_str()).expect("Invalid formatting string")
-    };
-
-    let mut dec = Decoder {
-        context: Context {
-            size: parse_arch(opts.get("arch").get_str()),
-            ..Default::default()
-        },
-        format: formatting,
-        tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
-        code: ByteString {
-            code: Vec::new(),
-            curr: 0,
-        },
-    };
-
-    // Load data
-    if opts.get("input").get_str() == "-" {
-        load_from_stdin(&mut dec, &mut opts);
-    } else {
-        load_from_file(&mut dec, &mut opts);
-    }
-
-    if opts.get("input").get_str() == "-" {
-    } else if !dec.has_code() {
-        panic!("No code was loaded, check your input options");
-    }
-    // Get write object for output
-    let mut output = open_output(opts.get("output").get_str());
-    let instruction_max = opts.get("lines").get_usize();
-    let responses = if instruction_max == 0 {
-        dec.parse()
-    } else {
-        dec.parse_n(instruction_max)
-    };
-
-    let output_format = parse_format(opts.get("format").get_str());
-
-    match output_format {
-        OutputFormat::JSON => {
-            let json = serde_json::to_string(&responses);
-            if json.is_err() {
-                println!("Failed to serialize response data:");
-                println!("{}", &json.unwrap_err());
-                return;
-            }
-            let _ = write!(output, "{}", json.unwrap());
-        }
-        OutputFormat::PrettyPrint => {
-            for rep in responses {
-                let _ = writeln!(output, "{}", rep);
-            }
-        }
-        OutputFormat::PlusBytes => {
-            for rep in responses {
-                let _ = writeln!(output, "{}", rep.bytes_to_string());
-                let _ = writeln!(output, "{}", rep);
-            }
-        }
-    }
-}
-
-fn open_output(path: &String) -> Box<dyn Write> {
-    if path == "-" {
-        Box::new(io::stdout())
-    } else {
-        Box::new(File::create(path).expect("Bad output file"))
-    }
-}
-
-fn load_from_stdin(dec: &mut Decoder, opts: &mut Arguments) {
-    let stdin = io::stdin();
-    if io::Stdin::is_terminal(&stdin) {
-        panic!("Can't be run interactivly, Specify a file or pipe data in");
-    } else {
-        // Load in stdin as code
-        let mut stdin_bytes: Vec<u8> = stdin.bytes().map(|x| x.unwrap()).collect();
-        stdin_bytes.drain(0..opts.get("offset").get_usize());
-        if opts.get("max").get_usize() != 0 {
-            stdin_bytes.drain(opts.get("max").get_usize()..);
-        }
-        stdin_bytes.push(0);
-        dec.load_code(&stdin_bytes);
-    }
-}
-
-fn load_from_file(dec: &mut Decoder, opts: &mut Arguments) {
-    // Get file
-    let mut file = fs::File::open(opts.get("input").get_str())
-        .unwrap_or(file_from_path(opts.get("input").get_str()));
-    // Infer size as needed
-    if !opts.get("no-infer").get_bool() {
-        let mut buf = Vec::new();
-        file.read_to_end(&mut buf);
-        match Object::parse(&buf).unwrap_or(Object::Unknown(0)) {
-            Object::Elf(elf) => {
-                opts_from_elf(&elf, opts);
-            }
-            Object::PE(pe) => {
-                opts_from_pe(&pe, opts);
-            }
-            _ => {}
-        }
-    }
-    // Seek to offset
-    let _ = file.seek(SeekFrom::Start(opts.get("offset").get_usize() as u64));
-    // Load code
-    let mut code: Vec<u8> = Vec::new();
-    let _ = file.read_to_end(&mut code);
-    if opts.get("max").get_usize() != 0 {
-        code.drain((opts.get("max").get_usize())..);
-    }
-    dec.load_code(&code);
-}
-
-fn file_from_path(filename: &str) -> fs::File {
-    // Get string version of path
-    let path_str = match env::var("PATH") {
-        Ok(val) => val,
-        Err(e) => panic!("Failed to fetch PATH from environment"),
-    };
-    // Split into array of search directories
-    // Seperated by semicolons on windows, and colons on linux/macos
-    let mut dir_char = '/';
-    let paths = if env::consts::OS == "windows" {
-        dir_char = '\\';
-        path_str.split(';').collect::<Vec<&str>>()
-    } else {
-        path_str.split(':').collect::<Vec<&str>>()
-    };
-    for dir in paths {
-        // Get full path, adding / if needed
-        let full_path = if dir.ends_with(dir_char) {
-            String::from(dir) + filename
-        } else {
-            let mut tmp = String::from(dir);
-            tmp.push(dir_char);
-            tmp + filename
-        };
-        if fs::exists(&full_path).unwrap_or(false) {
-            println!("{:?}", full_path);
-            return fs::File::open(&full_path).unwrap();
-        }
-    }
-    panic!("No such input file");
-}
-
-const PE_SUPPORTED_MACHINES: [u16; 2] = [
-    0x8664, // x86_64
-    0x14c,  // x86_32
-];
-fn opts_from_pe(pe: &PE, opts: &mut Arguments) {
-    if !PE_SUPPORTED_MACHINES.contains(&pe.header.coff_header.machine) {
-        panic!(
-            "Unsupported machine type: \"{}\"",
-            pe.header.coff_header.machine
-        );
-    }
-    if opts.get("arch").value.is_none() {
-        if pe.is_64 {
-            opts.get("arch").value = Some(ArgValue::Text(String::from("64")));
-        } else {
-            opts.get("arch").value = Some(ArgValue::Text(String::from("32")));
-        }
-    }
-    for sec in &pe.sections {
-        if sec.name[1] == 116 {
-            // 't'
-            if opts.get("offset").value.is_none() {
-                opts.get("offset").value =
-                    Some(ArgValue::Text(sec.pointer_to_raw_data.to_string()));
-            }
-            if opts.get("max").value.is_none() {
-                opts.get("max").value =
-                    Some(ArgValue::Text((sec.pointer_to_raw_data + 1).to_string()));
-            }
-        }
-    }
-}
-
-const ELF_SUPPORTED_MACHINES: [u16; 2] = [
-    3,  // EM_386 - x86_32
-    62, // EM_X86_64 - x86_64
-];
-fn opts_from_elf(elf: &Elf, opts: &mut Arguments) {
-    if !ELF_SUPPORTED_MACHINES.contains(&elf.header.e_machine) {
-        panic!("Unsupported machine type: \"{}\"", elf.header.e_machine);
-    }
-
-    if opts.get("arch").value.is_none() {
-        if elf.is_64 {
-            opts.get("arch").value = Some(ArgValue::Text(String::from("64")));
-        } else {
-            opts.get("arch").value = Some(ArgValue::Text(String::from("32")));
-        }
-    }
-
-    for header in &elf.program_headers {
-        // R_X
-        if header.p_flags == 5 {
-            if opts.get("offset").value.is_none() {
-                opts.get("offset").value = Some(ArgValue::Text(header.p_offset.to_string()));
-            }
-            if opts.get("max").value.is_none() {
-                opts.get("max").value = Some(ArgValue::Text((header.p_filesz + 1).to_string()));
-            }
-            return;
-        }
-    }
+    Some(opts)
 }
 
 fn parse_arch(arch: &str) -> ArchSize {

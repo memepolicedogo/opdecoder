@@ -813,7 +813,7 @@ impl ByteString {
     }
 
     pub fn is_end(&mut self) -> bool {
-        self.curr >= (self.code.len() - 1)
+        self.code.len() == 0 || self.curr >= (self.code.len() - 1)
     }
 
     pub fn get_slice(&mut self, from: usize, to: usize) -> &[u8] {
@@ -967,6 +967,9 @@ pub struct InstructionFormatting {
     pub ins_uppercase: bool,
     // CODE
     pub code_fmt: NumFormat,
+    // NON-CODE
+    pub comment: String,
+    pub section: String,
 }
 
 impl Default for InstructionFormatting {
@@ -998,7 +1001,19 @@ impl Default for InstructionFormatting {
             ins_uppercase: true,
             //
             code_fmt: NumFormat::Hex,
+            //
+            comment: String::from(";"),
+            section: String::from("section "),
         }
+    }
+}
+
+impl InstructionFormatting {
+    pub fn as_comment(&self, text: &String) -> String {
+        return self.comment.clone() + text;
+    }
+    pub fn as_section(&self, text: &String) -> String {
+        return self.section.clone() + text;
     }
 }
 

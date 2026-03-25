@@ -1105,10 +1105,7 @@ impl Decoder {
             res = self.format_reg((modrm.rm | rex.b) as usize, size, reg);
         } else if modrm.mode == 0 && modrm.rm == 0b101 {
             // Special case: immidiate offset
-            if rex.w {
-                res += &self.format_imm(8);
-                *ins_size += 8;
-            } else if self.context.rex.is_none() && self.context.op_override {
+            if self.context.rex.is_none() && self.context.op_override {
                 res += &self.format_imm(2);
                 *ins_size += 2;
             } else {

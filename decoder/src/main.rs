@@ -435,88 +435,189 @@ fn main() {
                 }
                 InterCmd::Parse => {
                     // parse {name/index}
-                    let mut sects: Vec<&mut Section> = Vec::new();
-                    if args.is_none() || args.as_ref().unwrap() == "" {
-                        // Parse all
-                        for sec in &mut root.source.code {
-                            sects.push(sec);
-                        }
-                    } else if let Ok(i) = usize::from_str(args.as_ref().unwrap()) {
-                        // Parse index
-                        if i >= root.source.code.len() {
-                            println!("Invalid index");
-                            continue;
-                        }
-                        sects.push(&mut root.source.code[i]);
-                    } else {
-                        // Parse name
-                        for sec in &mut root.source.code {
-                            if sec.name == *args.as_ref().unwrap() {
-                                sects.push(sec);
-                                break;
-                            }
-                        }
-                    }
+                    println!("Preparing decoder...");
                     let mut output = open_output(&root.opts.output);
                     let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
                     if tree_str.is_err() {
                         println!("Invalid tree path");
                         continue;
                     }
+                    let tree = match serde_json::from_str(&tree_str.as_ref().unwrap()) {
+                        Ok(x) => x,
+                        Err(e) => {
+                            println!("Invalid tree JSON");
+                            continue;
+                        }
+                    };
                     let mut dec = Decoder {
                         context: Context {
                             size: parse_arch(&root.opts.arch),
                             ..Default::default()
                         },
-                        format: formatting.clone(),
-                        tree: serde_json::from_str(&tree_str.as_ref().unwrap())
-                            .expect("Invalid tree JSON"),
+                        format: root.format.clone(),
+                        tree,
                         code: ByteString {
                             code: Vec::new(),
                             curr: 0,
                         },
                     };
-                    for sec in &mut sects {
-                        file.seek(SeekFrom::Start(sec.offset as u64));
-                        let mut buff = Vec::new();
-                        let x = file.read_to_end(&mut buff);
-                        buff.drain(sec.size..);
-                        dec.load_code(&buff);
-                        sec.disassembled = dec.parse();
-                    }
-                    let output_format = parse_format(opts.get("format").get_str());
+                    let mut sects: Vec<usize> = Vec::new();
+                    println!("Decoder loaded");
+                    let mut parsing = true;
+                    while parsing {
+                        print!("Decoder> ");
+                        io::stdout().flush();
+                        input = String::new();
+                        io::stdin().read_line(&mut input).expect("Failed to read");
+                        let (cmd, mut args) = match parse_command(&input) {
+                            Some(tuple) => tuple,
+                            None => {
+                                println!("Unknown command");
+                                continue;
+                            }
+                        };
+                        match cmd {
+                            InterCmd::Exit => {
+                                println!("Exiting decoder");
+                                break;
+                            }
+                            InterCmd::Load => {
+                                // Load section
+                                if args.is_none() || args.as_ref().unwrap() == "" {
+                                    // Parse all
+                                    for i in 0..root.source.code.len() {
+                                        sects.push(i);
+                                        println!("Loaded section {}", root.source.code[i].name);
+                                    }
+                                } else if let Ok(i) = usize::from_str(args.as_ref().unwrap()) {
+                                    // Parse index
+                                    if i >= root.source.code.len() {
+                                        println!("Invalid index");
+                                        continue;
+                                    }
+                                    sects.push(i);
+                                    println!("Loaded section {}", root.source.code[i].name);
+                                } else {
+                                    // Parse name
+                                    for i in 0..root.source.code.len() {
+                                        if root.source.code[i].name == *args.as_ref().unwrap() {
+                                            sects.push(i);
+                                            println!("Loaded section {}", args.unwrap());
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            InterCmd::Step => {
+                                // Step through parsing process
+                                for index in &sects {
+                                    file.seek(SeekFrom::Start(
+                                        root.source.code[*index].offset as u64,
+                                    ));
+                                    let mut buff = Vec::new();
+                                    let x = file.read_to_end(&mut buff);
+                                    buff.drain(root.source.code[*index].size..);
+                                    dec.load_code(&buff);
+                                    let _ = writeln!(
+                                        output,
+                                        "{}",
+                                        dec.format.as_section(&root.source.code[*index].name)
+                                    );
+                                    let mut parsed = dec.parse_one();
+                                    while parsed.bytes.is_some() {
+                                        let output_format = parse_format(&root.opts.format);
+                                        if output_format == OutputFormat::JSON {
+                                            println!(
+                                                "Parsing into JSON is not supported in step-by-step mode"
+                                            );
+                                            break;
+                                        }
 
-                    match output_format {
-                        OutputFormat::JSON => {
-                            let json = serde_json::to_string(&sects);
-                            if json.is_err() {
-                                println!("Failed to serialize response data:");
-                                println!("{}", &json.unwrap_err());
-                                return;
-                            }
-                            let _ = write!(output, "{}", json.unwrap());
-                        }
-                        OutputFormat::PrettyPrint => {
-                            for mut sec in sects {
-                                let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
-                                for rep in &sec.disassembled {
-                                    let _ = writeln!(output, "{}", rep);
+                                        match output_format {
+                                            OutputFormat::JSON => {
+                                                println!("Invalid output for stepping");
+                                            }
+                                            OutputFormat::PrettyPrint => {
+                                                let _ = write!(output, "{}", parsed);
+                                                io::stdout().flush();
+                                            }
+                                            OutputFormat::PlusBytes => {
+                                                let _ = write!(
+                                                    output,
+                                                    "{}\n",
+                                                    parsed.bytes_to_string()
+                                                );
+                                                let _ = write!(output, "{}", parsed);
+                                                io::stdout().flush();
+                                            }
+                                        }
+                                        root.source.code[*index].disassembled.push(parsed);
+                                        io::stdin().read_line(&mut input).expect("Failed to read");
+                                        parsed = dec.parse_one();
+                                    }
                                 }
-                                write!(output, "\n");
                             }
-                        }
-                        OutputFormat::PlusBytes => {
-                            for mut sec in sects {
-                                let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
-                                for rep in &sec.disassembled {
-                                    let _ = writeln!(output, "{}", rep.bytes_to_string());
-                                    let _ = writeln!(output, "{}", rep);
+                            InterCmd::Parse => {
+                                // Start parsing
+                                for index in &sects {
+                                    file.seek(SeekFrom::Start(
+                                        root.source.code[*index].offset as u64,
+                                    ));
+                                    let mut buff = Vec::new();
+                                    let x = file.read_to_end(&mut buff);
+                                    buff.drain(root.source.code[*index].size..);
+                                    dec.load_code(&buff);
+                                    root.source.code[*index].disassembled = dec.parse();
                                 }
-                                write!(output, "\n");
+                                let output_format = parse_format(&root.opts.format);
+
+                                match output_format {
+                                    OutputFormat::JSON => {
+                                        let json = serde_json::to_string(&root.source);
+                                        if json.is_err() {
+                                            println!("Failed to serialize response data:");
+                                            println!("{}", &json.unwrap_err());
+                                            return;
+                                        }
+                                        let _ = write!(output, "{}", json.unwrap());
+                                    }
+                                    OutputFormat::PrettyPrint => {
+                                        for mut index in &sects {
+                                            let _ = writeln!(
+                                                output,
+                                                "{}",
+                                                dec.format
+                                                    .as_section(&root.source.code[*index].name)
+                                            );
+                                            for rep in &root.source.code[*index].disassembled {
+                                                let _ = writeln!(output, "{}", rep);
+                                            }
+                                            write!(output, "\n");
+                                        }
+                                    }
+                                    OutputFormat::PlusBytes => {
+                                        for mut index in &sects {
+                                            let _ = writeln!(
+                                                output,
+                                                "{}",
+                                                dec.format
+                                                    .as_section(&root.source.code[*index].name)
+                                            );
+                                            for rep in &root.source.code[*index].disassembled {
+                                                let _ =
+                                                    writeln!(output, "{}", rep.bytes_to_string());
+                                                let _ = writeln!(output, "{}", rep);
+                                            }
+                                            write!(output, "\n");
+                                        }
+                                    }
+                                }
                             }
+                            _ => println!("Command not valid in this context"),
                         }
                     }
                 }
+                _ => println!("Command not valid in this context"),
             }
         }
     } else {
@@ -614,7 +715,9 @@ fn set_reflect(val: &mut dyn PartialReflect, arg: &String) -> bool {
 enum InterCmd {
     Print,
     Set,
+    Load,
     Parse,
+    Step,
     Exit,
 }
 
@@ -633,6 +736,10 @@ fn parse_command(text: &String) -> Option<(InterCmd, Option<String>)> {
         return Some((InterCmd::Print, Some(arg)));
     } else if cmd == "parse" {
         return Some((InterCmd::Parse, Some(arg)));
+    } else if cmd == "load" {
+        return Some((InterCmd::Load, Some(arg)));
+    } else if cmd == "step" {
+        return Some((InterCmd::Step, Some(arg)));
     } else if cmd == "set" {
         return Some((InterCmd::Set, Some(arg)));
     }

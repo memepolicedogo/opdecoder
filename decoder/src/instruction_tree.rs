@@ -2,6 +2,7 @@ use core::panic;
 use std::usize;
 use std::{collections::HashMap, fmt};
 
+use bevy_reflect::Reflect;
 use regex::Regex;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -19,7 +20,7 @@ pub struct InstructionJSON {
     pub description: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
 pub struct Instruction {
     pub opcode: String,
     pub text: String,
@@ -31,7 +32,7 @@ pub struct Instruction {
     pub description: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Reflect)]
 pub enum OperandSize {
     Any = 0,
     Byte = 8,
@@ -46,7 +47,7 @@ pub enum OperandSize {
     DoubleQuadQuad = 512, // man
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Reflect)]
 pub enum OperandEncoding {
     Opcode,    // In instruction opcode
     Immediate, // Immediate value, including offsets
@@ -55,7 +56,7 @@ pub enum OperandEncoding {
     Bespoke, // Something evil and vile
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Reflect)]
 pub enum RegisterType {
     GPReg,
     SegReg,
@@ -67,7 +68,7 @@ pub enum RegisterType {
     DbgReg,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
 pub struct Operand {
     pub size: OperandSize,         // Size of the value
     pub encoding: OperandEncoding, // How the value is encoded
@@ -839,7 +840,7 @@ pub struct OperandResponse {
     pub size: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Reflect, Clone)]
 pub struct ParseResponse {
     pub instruction: Option<Instruction>,
     pub operands: Option<Vec<String>>,
@@ -929,15 +930,15 @@ impl Default for OperandResponse {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Reflect, Clone)]
 pub enum NumFormat {
-    Hex,
-    Dec,
-    Bi,
-    Oct,
+    Hex = 16,
+    Dec = 10,
+    Bi = 2,
+    Oct = 8,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Reflect, Clone)]
 #[serde(default)]
 pub struct InstructionFormatting {
     // OPERAND

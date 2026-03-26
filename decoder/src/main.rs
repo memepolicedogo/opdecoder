@@ -1,5 +1,8 @@
 #![allow(dead_code, unused)]
 mod instruction_tree;
+use bevy_reflect::{
+    DynamicStruct, GetPath, PartialReflect, Reflect, TypeRegistry, serde::ReflectSerializer,
+};
 use core::panic;
 use goblin::{
     Object,
@@ -7,13 +10,15 @@ use goblin::{
     pe::{PE, section_table::SectionTable},
 };
 use serde::Serialize;
-use serde_json;
+use serde_json::{self, to_string};
 use std::{
     collections::HashMap,
-    env, fmt,
+    env,
+    fmt::{self, Display},
     fs::{self, File},
     hash::Hash,
     io::{self, IsTerminal, Read, Seek, SeekFrom, Write},
+    str::FromStr,
 };
 use textwrap::fill;
 
@@ -185,7 +190,7 @@ Common commands:
 ";
 //}
 
-#[derive(Serialize)]
+#[derive(Serialize, Reflect, Clone)]
 struct Section {
     name: String,
     offset: usize,
@@ -215,11 +220,9 @@ impl Section {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Reflect, Clone)]
 struct Executable {
     path: String,
-    #[serde(skip)]
-    file: File,
     code: Vec<Section>,
     entry: usize,
     is_64: bool,
@@ -234,14 +237,14 @@ impl From<String> for Executable {
 impl From<&String> for Executable {
     fn from(path: &String) -> Self {
         let mut exe = Self {
-            file: fs::File::open(path).unwrap(),
             path: path.clone(),
             code: Vec::new(),
             entry: 0,
             is_64: true,
         };
+        let mut file = fs::File::open(path).unwrap();
         let mut buff = Vec::new();
-        exe.file.read_to_end(&mut buff);
+        file.read_to_end(&mut buff);
         // Parse file headers to pull all executable sections
         match Object::parse(&buff).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
@@ -304,17 +307,41 @@ impl Executable {
     }
 }
 
+#[derive(Reflect)]
+struct InterContext {
+    source: Executable,
+    opts: InterOptions,
+    format: InstructionFormatting,
+}
+
+#[derive(Reflect)]
+struct InterOptions {
+    tree: String,
+    output: String,
+    format: String,
+    arch: String,
+}
+
+impl InterContext {
+    fn build(exe: &Executable, opts: &mut Arguments, format: &InstructionFormatting) -> Self {
+        Self {
+            source: exe.clone(),
+            opts: InterOptions {
+                tree: opts.get("tree").get_str().clone(),
+                output: opts.get("output").get_str().clone(),
+                format: opts.get("format").get_str().clone(),
+                arch: opts.get("arch").get_str().clone(),
+            },
+            format: format.clone(),
+        }
+    }
+}
+
 fn main() {
     let mut opts = match handle_args() {
         Some(x) => x,
         None => return,
     };
-
-    let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
-    if tree_str.is_err() {
-        println!("Invalid tree path");
-        return;
-    }
 
     let formatting = if opts.get("custom").get_str() == "" {
         InstructionFormatting {
@@ -327,19 +354,6 @@ fn main() {
         serde_json::from_str(opts.get("custom").get_str()).expect("Invalid formatting string")
     };
 
-    let mut dec = Decoder {
-        context: Context {
-            size: parse_arch(opts.get("arch").get_str()),
-            ..Default::default()
-        },
-        format: formatting,
-        tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
-        code: ByteString {
-            code: Vec::new(),
-            curr: 0,
-        },
-    };
-
     let path = if fs::exists(opts.get("input").get_str()).unwrap_or(false) {
         opts.get("input").get_str()
     } else {
@@ -348,21 +362,189 @@ fn main() {
     // Open file
     let mut exe = Executable::from(path);
     exe.resolve_opts(&mut opts);
+    let mut file = fs::File::open(&exe.path).unwrap();
 
     if opts.get("interactive").get_bool() {
         println!("Interactive mode is still in development. Sorry!");
-        return;
-        println!("Found {} executable sections in file", exe.code.len());
+        // Set up environment
+        let mut root = InterContext::build(&exe, &mut opts, &formatting);
+        println!("Found {} executable section(s) in file", exe.code.len());
+
         //----Interactive planning----
+        //
+        // Commands:
+        // Set config stuff
+        // Display config stuff
+        // Display important data
+        // Step through parsing a la GDB
+        // Modify code on the fly
+        // Parse arbitrary hex strings
+        // Write to files (?)
+        // Simple queries on data structures?
+        let mut active = true;
+        while active {
+            // Print cursor
+            let mut input = String::new();
+            print!("> ");
+            io::stdout().flush();
+            io::stdin().read_line(&mut input).expect("Failed to read");
+            let (cmd, mut args) = match parse_command(&input) {
+                Some(tuple) => tuple,
+                None => {
+                    println!("Unknown command");
+                    continue;
+                }
+            };
+            match cmd {
+                InterCmd::Exit => {
+                    println!("Exiting");
+                    return;
+                }
+                InterCmd::Print => {
+                    let res = root.reflect_path(args.as_ref().unwrap().as_str());
+                    match res {
+                        Ok(x) => {
+                            println!("{:#?}", x);
+                        }
+                        Err(e) => println!("Invalid path"),
+                    }
+                }
+                InterCmd::Set => {
+                    if args.is_none() {
+                        println!("Set requires two arugments");
+                        continue;
+                    }
+                    let (dest, arg) = match args.as_ref().unwrap().split_once(" ") {
+                        Some(tuple) => tuple,
+                        None => {
+                            println!("Set requires two arugments");
+                            continue;
+                        }
+                    };
+                    let res = root.reflect_path_mut(dest);
+                    match res {
+                        Ok(x) => {
+                            if set_reflect(x, &arg.to_string()) {
+                                println!("Set");
+                            } else {
+                                println!("Invalid value");
+                            }
+                        }
+                        Err(e) => println!("Invalid path"),
+                    }
+                }
+                InterCmd::Parse => {
+                    // parse {name/index}
+                    let mut sects: Vec<&mut Section> = Vec::new();
+                    if args.is_none() || args.as_ref().unwrap() == "" {
+                        // Parse all
+                        for sec in &mut root.source.code {
+                            sects.push(sec);
+                        }
+                    } else if let Ok(i) = usize::from_str(args.as_ref().unwrap()) {
+                        // Parse index
+                        if i >= root.source.code.len() {
+                            println!("Invalid index");
+                            continue;
+                        }
+                        sects.push(&mut root.source.code[i]);
+                    } else {
+                        // Parse name
+                        for sec in &mut root.source.code {
+                            if sec.name == *args.as_ref().unwrap() {
+                                sects.push(sec);
+                                break;
+                            }
+                        }
+                    }
+                    let mut output = open_output(&root.opts.output);
+                    let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
+                    if tree_str.is_err() {
+                        println!("Invalid tree path");
+                        continue;
+                    }
+                    let mut dec = Decoder {
+                        context: Context {
+                            size: parse_arch(&root.opts.arch),
+                            ..Default::default()
+                        },
+                        format: formatting.clone(),
+                        tree: serde_json::from_str(&tree_str.as_ref().unwrap())
+                            .expect("Invalid tree JSON"),
+                        code: ByteString {
+                            code: Vec::new(),
+                            curr: 0,
+                        },
+                    };
+                    for sec in &mut sects {
+                        file.seek(SeekFrom::Start(sec.offset as u64));
+                        let mut buff = Vec::new();
+                        let x = file.read_to_end(&mut buff);
+                        buff.drain(sec.size..);
+                        dec.load_code(&buff);
+                        sec.disassembled = dec.parse();
+                    }
+                    let output_format = parse_format(opts.get("format").get_str());
+
+                    match output_format {
+                        OutputFormat::JSON => {
+                            let json = serde_json::to_string(&sects);
+                            if json.is_err() {
+                                println!("Failed to serialize response data:");
+                                println!("{}", &json.unwrap_err());
+                                return;
+                            }
+                            let _ = write!(output, "{}", json.unwrap());
+                        }
+                        OutputFormat::PrettyPrint => {
+                            for mut sec in sects {
+                                let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
+                                for rep in &sec.disassembled {
+                                    let _ = writeln!(output, "{}", rep);
+                                }
+                                write!(output, "\n");
+                            }
+                        }
+                        OutputFormat::PlusBytes => {
+                            for mut sec in sects {
+                                let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
+                                for rep in &sec.disassembled {
+                                    let _ = writeln!(output, "{}", rep.bytes_to_string());
+                                    let _ = writeln!(output, "{}", rep);
+                                }
+                                write!(output, "\n");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     } else {
+        let tree_str = &fs::read_to_string(&opts.get("tree").get_str());
+        if tree_str.is_err() {
+            println!("Invalid tree path");
+            return;
+        }
+        let mut dec = Decoder {
+            context: Context {
+                size: parse_arch(opts.get("arch").get_str()),
+                ..Default::default()
+            },
+            format: formatting.clone(),
+            tree: serde_json::from_str(&tree_str.as_ref().unwrap()).expect("Invalid tree JSON"),
+            code: ByteString {
+                code: Vec::new(),
+                curr: 0,
+            },
+        };
         // Get write object for output
         let mut output = open_output(opts.get("output").get_str());
         let instruction_max = opts.get("lines").get_usize();
         for mut section in &mut exe.code {
             // Get code
-            exe.file.seek(SeekFrom::Start(section.offset as u64));
+            file.seek(SeekFrom::Start(section.offset as u64));
             let mut buff = Vec::new();
-            let x = exe.file.read_to_end(&mut buff);
+            let x = file.read_to_end(&mut buff);
             buff.drain(section.size..);
             dec.load_code(&buff);
             section.disassembled = if instruction_max == 0 {
@@ -405,6 +587,56 @@ fn main() {
             }
         }
     }
+}
+
+fn set_reflect(val: &mut dyn PartialReflect, arg: &String) -> bool {
+    if let Some(x) = val.try_downcast_mut::<usize>() {
+        let y = usize::from_str(arg);
+        if y.is_ok() {
+            *x = y.unwrap();
+            return true;
+        }
+        return false;
+    } else if let Some(x) = val.try_downcast_mut::<u64>() {
+        let y = u64::from_str(arg);
+        if y.is_ok() {
+            *x = y.unwrap();
+            return true;
+        }
+        return false;
+    } else if let Some(x) = val.try_downcast_mut::<String>() {
+        *x = arg.clone();
+        return true;
+    }
+    false
+}
+
+enum InterCmd {
+    Print,
+    Set,
+    Parse,
+    Exit,
+}
+
+fn parse_command(text: &String) -> Option<(InterCmd, Option<String>)> {
+    let mut arg = String::new();
+    let cmd = match text.split_once(" ") {
+        Some(res) => {
+            arg = String::from(res.1.trim());
+            res.0
+        }
+        None => text.trim(),
+    };
+    if cmd == "exit" {
+        return Some((InterCmd::Exit, None));
+    } else if cmd == "print" {
+        return Some((InterCmd::Print, Some(arg)));
+    } else if cmd == "parse" {
+        return Some((InterCmd::Parse, Some(arg)));
+    } else if cmd == "set" {
+        return Some((InterCmd::Set, Some(arg)));
+    }
+    return None;
 }
 
 fn open_output(path: &String) -> Box<dyn Write> {

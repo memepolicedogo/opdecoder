@@ -226,9 +226,42 @@ impl Section {
 }
 
 #[derive(Serialize, Reflect, Clone)]
+struct Symbol {
+    name: String,
+    value: u64,
+}
+
+impl PartialEq for Symbol {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.value == other.value
+    }
+}
+
+impl PartialEq<&String> for Symbol {
+    fn eq(&self, other: &&String) -> bool {
+        if let Ok(o) = u64::from_str_radix(other, 16) {
+            self.value == o
+        } else {
+            false
+        }
+    }
+}
+
+impl PartialEq<String> for Symbol {
+    fn eq(&self, other: &String) -> bool {
+        if let Ok(o) = u64::from_str_radix(other, 16) {
+            self.value == o
+        } else {
+            false
+        }
+    }
+}
+
+#[derive(Serialize, Reflect, Clone)]
 struct Executable {
     path: String,
     code: Vec<Section>,
+    syms: Vec<Symbol>,
     entry: usize,
     is_64: bool,
 }
@@ -244,6 +277,7 @@ impl From<&String> for Executable {
         let mut exe = Self {
             path: path.clone(),
             code: Vec::new(),
+            syms: Vec::new(),
             entry: 0,
             is_64: true,
         };
@@ -254,6 +288,14 @@ impl From<&String> for Executable {
         match Object::parse(&buff).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
                 exe.is_64 = elf.is_64;
+                for sym in elf.syms.iter() {
+                    if sym.st_name != 0 {
+                        exe.syms.push(Symbol {
+                            name: String::from(elf.strtab.get_at(sym.st_name).unwrap_or("")),
+                            value: sym.st_value,
+                        });
+                    }
+                }
                 for sec in elf.section_headers {
                     if sec.is_executable() {
                         // If the entry point is contained within this section
@@ -294,6 +336,16 @@ impl From<&String> for Executable {
 }
 
 impl Executable {
+    fn replace_symbol(&self, val: String) -> String {
+        for sym in &self.syms {
+            let symstr = format!("{:X}", sym.value);
+            if val.contains(&symstr) {
+                return val.replace(&symstr, &sym.name);
+            }
+        }
+        return val;
+    }
+
     // Resolve differences between executable and passed CLI options
     fn resolve_opts(&mut self, opts: &mut Arguments) {
         // Use CLI options for raw files and when no-infer is set

@@ -497,37 +497,19 @@ fn main() {
                                     let mut parsed = dec.parse_one();
                                     let mut vaddr: u64 = 0;
                                     while parsed.bytes.is_some() {
-                                        let output_format = parse_format(&root.opts.format);
-                                        if output_format == OutputFormat::JSON {
-                                            println!(
-                                                "Parsing into JSON is not supported in step-by-step mode"
-                                            );
-                                            break;
-                                        }
-
-                                        match output_format {
-                                            OutputFormat::JSON => {
-                                                println!("Invalid output for stepping");
-                                            }
-                                            OutputFormat::PrettyPrint => {
-                                                let _ = write!(
-                                                    output,
-                                                    "0x{:X}\t",
-                                                    root.source.code[*index].abs_addr(vaddr)
-                                                );
-                                                let _ = write!(output, "{}", parsed);
-                                                output.flush();
-                                            }
-                                            OutputFormat::PlusBytes => {
-                                                let _ = write!(
-                                                    output,
-                                                    "{}\n",
-                                                    parsed.bytes_to_string()
-                                                );
-                                                let _ = write!(output, "{}", parsed);
-                                                output.flush();
-                                            }
-                                        }
+                                        // Addr
+                                        let _ = write!(
+                                            output,
+                                            "0x{:X}\t",
+                                            root.source.code[*index].abs_addr(vaddr)
+                                        );
+                                        // Code
+                                        output_one(
+                                            &parsed,
+                                            &mut output,
+                                            &parse_format(opts.get("format").get_str()),
+                                        );
+                                        // Increment addr
                                         if parsed.bytes.is_some() {
                                             vaddr += parsed.bytes.as_ref().unwrap().len() as u64;
                                         }
@@ -549,59 +531,12 @@ fn main() {
                                     dec.load_code(&buff);
                                     root.source.code[*index].disassembled = dec.parse();
                                 }
-                                let output_format = parse_format(&root.opts.format);
-
-                                match output_format {
-                                    OutputFormat::JSON => {
-                                        let json = serde_json::to_string(&root.source);
-                                        if json.is_err() {
-                                            println!("Failed to serialize response data:");
-                                            println!("{}", &json.unwrap_err());
-                                            return;
-                                        }
-                                        let _ = write!(output, "{}", json.unwrap());
-                                    }
-                                    OutputFormat::PrettyPrint => {
-                                        for mut index in &sects {
-                                            let _ = writeln!(
-                                                output,
-                                                "{}",
-                                                dec.format
-                                                    .as_section(&root.source.code[*index].name)
-                                            );
-                                            let mut vaddr: u64 = 0;
-                                            for rep in &root.source.code[*index].disassembled {
-                                                let _ = write!(
-                                                    output,
-                                                    "0x{:X}\t",
-                                                    root.source.code[*index].abs_addr(vaddr)
-                                                );
-                                                let _ = writeln!(output, "{}", rep);
-                                                if rep.bytes.is_some() {
-                                                    vaddr +=
-                                                        rep.bytes.as_ref().unwrap().len() as u64;
-                                                }
-                                            }
-                                            write!(output, "\n");
-                                        }
-                                    }
-                                    OutputFormat::PlusBytes => {
-                                        for mut index in &sects {
-                                            let _ = writeln!(
-                                                output,
-                                                "{}",
-                                                dec.format
-                                                    .as_section(&root.source.code[*index].name)
-                                            );
-                                            for rep in &root.source.code[*index].disassembled {
-                                                let _ =
-                                                    writeln!(output, "{}", rep.bytes_to_string());
-                                                let _ = writeln!(output, "{}", rep);
-                                            }
-                                            write!(output, "\n");
-                                        }
-                                    }
-                                }
+                                println!("Parsing");
+                                output_parsed(
+                                    &root.source,
+                                    &mut output,
+                                    &parse_format(opts.get("format").get_str()),
+                                );
                             }
                             _ => println!("Command not valid in this context"),
                         }
@@ -645,37 +580,67 @@ fn main() {
             };
         }
 
-        let output_format = parse_format(opts.get("format").get_str());
+        output_parsed(
+            &exe,
+            &mut output,
+            &parse_format(opts.get("format").get_str()),
+        );
+    }
+}
 
-        match output_format {
-            OutputFormat::JSON => {
-                let json = serde_json::to_string(&exe);
-                if json.is_err() {
-                    println!("Failed to serialize response data:");
-                    println!("{}", &json.unwrap_err());
-                    return;
-                }
-                let _ = write!(output, "{}", json.unwrap());
+fn output_parsed(exe: &Executable, output: &mut Box<dyn Write>, format: &OutputFormat) {
+    match format {
+        OutputFormat::JSON => {
+            let json = serde_json::to_string(&exe);
+            if json.is_err() {
+                println!("Failed to serialize response data:");
+                println!("{}", &json.unwrap_err());
+                return;
             }
-            OutputFormat::PrettyPrint => {
-                for mut sec in exe.code {
-                    let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
-                    for rep in sec.disassembled {
-                        let _ = writeln!(output, "{}", rep);
+            let _ = write!(output, "{}", json.unwrap());
+        }
+        OutputFormat::PrettyPrint => {
+            for mut sec in &exe.code {
+                let _ = writeln!(output, "section {}", sec.name);
+                let mut vaddr: u64 = 0;
+                for rep in &sec.disassembled {
+                    // Print address
+                    let _ = write!(output, "0x{:X}\t", sec.abs_addr(vaddr));
+                    // Print code
+                    output_one(rep, output, format);
+                    // Increment address
+                    if rep.bytes.is_some() {
+                        vaddr += rep.bytes.as_ref().unwrap().len() as u64;
                     }
-                    write!(output, "\n");
                 }
+                write!(output, "\n");
             }
-            OutputFormat::PlusBytes => {
-                for mut sec in exe.code {
-                    let _ = writeln!(output, "{}", dec.format.as_section(&sec.name));
-                    for rep in sec.disassembled {
-                        let _ = writeln!(output, "{}", rep.bytes_to_string());
-                        let _ = writeln!(output, "{}", rep);
-                    }
-                    write!(output, "\n");
+        }
+        OutputFormat::PlusBytes => {
+            for mut sec in &exe.code {
+                let _ = writeln!(output, "{}", sec.name);
+                for rep in &sec.disassembled {
+                    output_one(rep, output, format);
                 }
+                write!(output, "\n");
             }
+        }
+    }
+}
+
+fn output_one(response: &ParseResponse, output: &mut Box<dyn Write>, format: &OutputFormat) {
+    match format {
+        OutputFormat::JSON => {
+            println!("Invalid format for individual output");
+        }
+        OutputFormat::PrettyPrint => {
+            let _ = writeln!(output, "{}", response);
+            //output.flush();
+        }
+        OutputFormat::PlusBytes => {
+            let _ = writeln!(output, "{}", response.bytes_to_string());
+            let _ = writeln!(output, "{}", response);
+            output.flush();
         }
     }
 }
@@ -734,6 +699,13 @@ fn set_reflect(val: &mut dyn PartialReflect, arg: &String) -> bool {
             return true;
         }
         return false;
+    } else if let Some(x) = val.try_downcast_mut::<bool>() {
+        *x = match arg.to_lowercase().as_str() {
+            "true" | "t" | "yes" | "y" => true,
+            "false" | "f" | "no" | "n" => false,
+            _ => return false,
+        };
+        return true;
     } else if let Some(x) = val.try_downcast_mut::<String>() {
         *x = arg.clone();
         return true;

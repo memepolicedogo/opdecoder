@@ -400,39 +400,8 @@ fn main() {
                     println!("Exiting");
                     return;
                 }
-                InterCmd::Print => {
-                    let res = root.reflect_path(args.as_ref().unwrap().as_str());
-                    match res {
-                        Ok(x) => {
-                            println!("{:#?}", x);
-                        }
-                        Err(e) => println!("Invalid path"),
-                    }
-                }
-                InterCmd::Set => {
-                    if args.is_none() {
-                        println!("Set requires two arugments");
-                        continue;
-                    }
-                    let (dest, arg) = match args.as_ref().unwrap().split_once(" ") {
-                        Some(tuple) => tuple,
-                        None => {
-                            println!("Set requires two arugments");
-                            continue;
-                        }
-                    };
-                    let res = root.reflect_path_mut(dest);
-                    match res {
-                        Ok(x) => {
-                            if set_reflect(x, &arg.to_string()) {
-                                println!("Set");
-                            } else {
-                                println!("Invalid value");
-                            }
-                        }
-                        Err(e) => println!("Invalid path"),
-                    }
-                }
+                InterCmd::Print => intr_print(&mut root, args),
+                InterCmd::Set => intr_set(&mut root, args),
                 InterCmd::Parse => {
                     // parse {name/index}
                     println!("Preparing decoder...");
@@ -481,6 +450,8 @@ fn main() {
                                 println!("Exiting decoder");
                                 break;
                             }
+                            InterCmd::Print => intr_print(&mut root, args),
+                            InterCmd::Set => intr_set(&mut root, args),
                             InterCmd::Load => {
                                 // Load section
                                 if args.is_none() || args.as_ref().unwrap() == "" {
@@ -687,6 +658,45 @@ fn main() {
                 }
             }
         }
+    }
+}
+
+fn intr_set(root: &mut InterContext, args: Option<String>) {
+    if args.is_none() {
+        println!("Set requires two arugments");
+        return;
+    }
+    let (dest, arg) = match args.as_ref().unwrap().split_once(" ") {
+        Some(tuple) => tuple,
+        None => {
+            println!("Set requires two arugments");
+            return;
+        }
+    };
+    let res = root.reflect_path_mut(dest);
+    match res {
+        Ok(x) => {
+            if set_reflect(x, &arg.to_string()) {
+                println!("Set");
+            } else {
+                println!("Invalid value");
+            }
+        }
+        Err(e) => println!("Invalid path"),
+    }
+}
+
+fn intr_print(root: &mut InterContext, args: Option<String>) {
+    if let Some(path) = args {
+        let res = root.reflect_path(path.as_str());
+        match res {
+            Ok(x) => {
+                println!("{:#?}", x);
+            }
+            Err(e) => println!("Invalid path"),
+        }
+    } else {
+        println!("Invalid argument")
     }
 }
 

@@ -209,6 +209,7 @@ impl Section {
             disassembled: Vec::new(),
         }
     }
+
     fn from_pe(pe: &SectionTable, base: u64) -> Self {
         Self {
             name: pe.real_name.as_ref().unwrap().clone(),
@@ -217,6 +218,10 @@ impl Section {
             addr: (pe.virtual_address as u64 + base),
             disassembled: Vec::new(),
         }
+    }
+
+    fn abs_addr(&self, rvaddr: u64) -> u64 {
+        self.addr + rvaddr
     }
 }
 
@@ -373,14 +378,9 @@ fn main() {
         //----Interactive planning----
         //
         // Commands:
-        // Set config stuff
-        // Display config stuff
-        // Display important data
         // Step through parsing a la GDB
-        // Modify code on the fly
         // Parse arbitrary hex strings
         // Write to files (?)
-        // Simple queries on data structures?
         let mut active = true;
         while active {
             // Print cursor
@@ -495,6 +495,7 @@ fn main() {
                                         dec.format.as_section(&root.source.code[*index].name)
                                     );
                                     let mut parsed = dec.parse_one();
+                                    let mut vaddr: u64 = 0;
                                     while parsed.bytes.is_some() {
                                         let output_format = parse_format(&root.opts.format);
                                         if output_format == OutputFormat::JSON {
@@ -509,8 +510,13 @@ fn main() {
                                                 println!("Invalid output for stepping");
                                             }
                                             OutputFormat::PrettyPrint => {
+                                                let _ = write!(
+                                                    output,
+                                                    "0x{:X}\t",
+                                                    root.source.code[*index].abs_addr(vaddr)
+                                                );
                                                 let _ = write!(output, "{}", parsed);
-                                                io::stdout().flush();
+                                                output.flush();
                                             }
                                             OutputFormat::PlusBytes => {
                                                 let _ = write!(
@@ -519,8 +525,11 @@ fn main() {
                                                     parsed.bytes_to_string()
                                                 );
                                                 let _ = write!(output, "{}", parsed);
-                                                io::stdout().flush();
+                                                output.flush();
                                             }
+                                        }
+                                        if parsed.bytes.is_some() {
+                                            vaddr += parsed.bytes.as_ref().unwrap().len() as u64;
                                         }
                                         root.source.code[*index].disassembled.push(parsed);
                                         io::stdin().read_line(&mut input).expect("Failed to read");
@@ -560,8 +569,18 @@ fn main() {
                                                 dec.format
                                                     .as_section(&root.source.code[*index].name)
                                             );
+                                            let mut vaddr: u64 = 0;
                                             for rep in &root.source.code[*index].disassembled {
+                                                let _ = write!(
+                                                    output,
+                                                    "0x{:X}\t",
+                                                    root.source.code[*index].abs_addr(vaddr)
+                                                );
                                                 let _ = writeln!(output, "{}", rep);
+                                                if rep.bytes.is_some() {
+                                                    vaddr +=
+                                                        rep.bytes.as_ref().unwrap().len() as u64;
+                                                }
                                             }
                                             write!(output, "\n");
                                         }

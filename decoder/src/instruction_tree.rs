@@ -640,7 +640,9 @@ impl<'a> InstructionTree {
                 OperandEncoding::Modreg
             } else if ops[i].contains("ModRM:r/m") {
                 // Cases where seperate sizes are specified for register and memory moves
-                if new.size <= OperandSize::Quad && !ins_ops[i].contains("r/m") {
+                if new.size <= OperandSize::Quad
+                    && !(ins_ops[i].contains("r/m") || ins_ops[i].contains("16:32"))
+                {
                     OperandEncoding::Bespoke
                 } else {
                     OperandEncoding::Modrm
@@ -680,6 +682,17 @@ impl<'a> InstructionTree {
                     if ins_ops[i].contains("m16:") {
                         new.size = OperandSize::Word;
                         Some(RegisterType::SegReg)
+                    } else if ins_ops[i].starts_with("CR") {
+                        // Decode size as arch size at runtime
+                        // CR0-7 will have this already but because CR8 ends with 8 previous code
+                        // assumes it's byte width
+                        new.size = OperandSize::Any;
+                        Some(RegisterType::CtrlReg)
+                    } else if ins_ops[i].starts_with("DR") {
+                        new.size == OperandSize::Any;
+                        Some(RegisterType::DbgReg)
+                    } else if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
+                        Some(RegisterType::MMXReg)
                     } else {
                         Some(RegisterType::GPReg)
                     }
@@ -1275,7 +1288,8 @@ impl InstructionFormatting {
             }
 
             RegisterType::SegReg => {
-                result = String::from(match index {
+                // REX bits are ignored for seg regs
+                result = String::from(match (index & 0b0111) {
                     0 => "ES",
                     1 => "CS",
                     2 => "SS",

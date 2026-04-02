@@ -690,6 +690,16 @@ fn output_parsed(
                 let _ = writeln!(output, "section {}", sec.name);
                 let mut vaddr: u64 = 0;
                 for rep in &sec.disassembled {
+                    if rep.bytes.is_some() {
+                        let tmp = rep.bytes.as_ref().unwrap();
+                        if tmp.contains(&0xc6)
+                            && tmp.contains(&0x0f)
+                            && tmp.contains(&0x12)
+                            && tmp.len() == 4
+                        {
+                            println!("{:#?}", rep);
+                        }
+                    }
                     // Print address
                     let _ = write!(output, "0x{:X}\t", sec.abs_addr(vaddr));
                     // Print code

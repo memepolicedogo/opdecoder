@@ -619,7 +619,7 @@ impl<'a> InstructionTree {
                 OperandSize::Z
             } else if ins_ops[i].ends_with("256") {
                 OperandSize::QuadQuad
-            } else if ins_ops[i].ends_with("128") {
+            } else if (ins_ops[i].ends_with("128") || ins_ops[i].starts_with("xmm")) {
                 OperandSize::DoubleQuad
             } else if ins_ops[i].ends_with("80") {
                 OperandSize::Penta

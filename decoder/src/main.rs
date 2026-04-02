@@ -23,7 +23,8 @@ use std::{
 use textwrap::fill;
 
 use crate::instruction_tree::{
-    ArchSize, ByteString, Context, Decoder, InstructionFormatting, InstructionTree, ParseResponse,
+    ArchSize, ByteString, Context, CustomFormat, Decoder, InstructionFormatting, InstructionTree,
+    ParseResponse,
 };
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -560,6 +561,7 @@ fn main() {
                                             &parsed,
                                             &mut output,
                                             &parse_format(opts.get("format").get_str()),
+                                            &formatting,
                                         );
                                         // Increment addr
                                         if parsed.bytes.is_some() {
@@ -588,6 +590,7 @@ fn main() {
                                     &root.source,
                                     &mut output,
                                     &parse_format(opts.get("format").get_str()),
+                                    &formatting,
                                 );
                             }
                             _ => println!("Command not valid in this context"),
@@ -636,11 +639,17 @@ fn main() {
             &exe,
             &mut output,
             &parse_format(opts.get("format").get_str()),
+            &formatting,
         );
     }
 }
 
-fn output_parsed(exe: &Executable, output: &mut Box<dyn Write>, format: &OutputFormat) {
+fn output_parsed(
+    exe: &Executable,
+    output: &mut Box<dyn Write>,
+    format: &OutputFormat,
+    opts: &InstructionFormatting,
+) {
     match format {
         OutputFormat::JSON => {
             let json = serde_json::to_string(&exe);
@@ -659,7 +668,7 @@ fn output_parsed(exe: &Executable, output: &mut Box<dyn Write>, format: &OutputF
                     // Print address
                     let _ = write!(output, "0x{:X}\t", sec.abs_addr(vaddr));
                     // Print code
-                    output_one(rep, output, format);
+                    output_one(rep, output, format, opts);
                     // Increment address
                     if rep.bytes.is_some() {
                         vaddr += rep.bytes.as_ref().unwrap().len() as u64;
@@ -672,7 +681,7 @@ fn output_parsed(exe: &Executable, output: &mut Box<dyn Write>, format: &OutputF
             for mut sec in &exe.code {
                 let _ = writeln!(output, "{}", sec.name);
                 for rep in &sec.disassembled {
-                    output_one(rep, output, format);
+                    output_one(rep, output, format, opts);
                 }
                 write!(output, "\n");
             }
@@ -680,18 +689,23 @@ fn output_parsed(exe: &Executable, output: &mut Box<dyn Write>, format: &OutputF
     }
 }
 
-fn output_one(response: &ParseResponse, output: &mut Box<dyn Write>, format: &OutputFormat) {
+fn output_one(
+    response: &ParseResponse,
+    output: &mut Box<dyn Write>,
+    format: &OutputFormat,
+    opts: &InstructionFormatting,
+) {
     match format {
         OutputFormat::JSON => {
             println!("Invalid format for individual output");
         }
         OutputFormat::PrettyPrint => {
-            let _ = writeln!(output, "{}", response);
+            let _ = writeln!(output, "{}", response.custom_format(opts));
             //output.flush();
         }
         OutputFormat::PlusBytes => {
             let _ = writeln!(output, "{}", response.bytes_to_string());
-            let _ = writeln!(output, "{}", response);
+            let _ = writeln!(output, "{}", response.custom_format(opts));
             output.flush();
         }
     }
@@ -1069,13 +1083,14 @@ fn parse_format(format: &str) -> OutputFormat {
 
 fn test() {
     let mut test_bytes = vec![0x0f, 0x20, 0b11000000, 0];
+    let format = InstructionFormatting {
+        ..Default::default()
+    };
     let mut dec = Decoder {
         context: Context {
             ..Default::default()
         },
-        format: InstructionFormatting {
-            ..Default::default()
-        },
+        format: format.clone(),
         tree: serde_json::from_str(&fs::read_to_string("tree64.json").expect("AHH")).expect("AHHH"),
         code: ByteString {
             code: test_bytes,
@@ -1086,7 +1101,7 @@ fn test() {
     return;
     let mut reps = dec.parse();
     for rep in reps {
-        rep.pretty_print();
+        println!("{}", rep.custom_format(&format));
         rep.print_bytes();
     }
 }

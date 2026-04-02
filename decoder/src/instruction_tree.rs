@@ -26,13 +26,13 @@ pub struct Instruction {
     pub text: String,
     pub x64: bool,
     pub legacy: bool,
-    pub operands: Option<Vec<Operand>>,
+    pub operands: Option<Vec<GenericOperand>>,
     pub size: OperandSize,
     pub invalid_prefixes: Vec<u8>,
     pub description: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Reflect)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, PartialOrd, Reflect, Copy)]
 pub enum OperandSize {
     Any = 0,
     Byte = 8,
@@ -45,6 +45,29 @@ pub enum OperandSize {
     QuadQuad = 256,
     Z = 384,
     DoubleQuadQuad = 512, // man
+}
+
+impl CustomFormat for OperandSize {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        match self {
+            OperandSize::Any => String::new(),
+            OperandSize::Byte => opts.addr_byte.clone(),
+            OperandSize::Word => opts.addr_word.clone(),
+            OperandSize::Double => opts.addr_dword.clone(),
+            OperandSize::Quad => opts.addr_qword.clone(),
+            OperandSize::DoubleSeg => {
+                let mut res = opts.addr_word.clone();
+                res += &opts.addr_seg_seperator;
+                res += &opts.addr_dword;
+                res
+            }
+            OperandSize::Penta => opts.addr_tword.clone(),
+            OperandSize::DoubleQuad => opts.addr_oword.clone(),
+            OperandSize::QuadQuad => opts.addr_yword.clone(),
+            OperandSize::Z => opts.addr_zword.clone(),
+            OperandSize::DoubleQuadQuad => String::new(),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Reflect)]
@@ -69,12 +92,170 @@ pub enum RegisterType {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
-pub struct Operand {
+pub struct GenericOperand {
     pub size: OperandSize,         // Size of the value
     pub encoding: OperandEncoding, // How the value is encoded
     pub reg: Option<RegisterType>, // If it's a register, what kind
     pub text: String, // The actual text of the operand for edge cases where the previous data
                       // isn't enough
+}
+
+pub trait CustomFormat {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String;
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub enum SIBScale {
+    Zero,
+    Double,
+    Quad,
+    Octo,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub enum Operand {
+    Reg(Register),
+    Imm(Immediate),
+    Addr(Address),
+    Bes(Bespoke),
+}
+
+impl CustomFormat for Operand {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        match self {
+            Operand::Reg(reg) => reg.custom_format(opts),
+            Operand::Imm(imm) => imm.custom_format(opts),
+            Operand::Addr(addr) => addr.custom_format(opts),
+            Operand::Bes(bes) => bes.custom_format(opts),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub struct Bespoke {
+    pub value: String,
+}
+
+impl CustomFormat for Bespoke {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        self.value.clone()
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub struct Register {
+    pub index: usize,
+    pub size: OperandSize,
+    pub group: RegisterType,
+    pub rex: bool,
+}
+
+impl CustomFormat for Register {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        opts.format_reg(self.index, &self.size, &self.group, self.rex)
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub struct Immediate {
+    pub value: u64,
+}
+
+impl CustomFormat for Immediate {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        let mut res = String::from(&opts.imm_prefix);
+        res += &match opts.imm_fmt {
+            NumFormat::Bi => {
+                format!("{:b}", self.value)
+            }
+            NumFormat::Oct => {
+                format!("{:o}", self.value)
+            }
+            NumFormat::Dec => {
+                format!("{}", self.value)
+            }
+            NumFormat::Hex => {
+                format!("{:x}", self.value)
+            }
+        };
+        res.push_str(&opts.imm_suffix);
+        res
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, Reflect)]
+pub struct Address {
+    pub dest_size: OperandSize,
+    pub addr_size: OperandSize,
+    pub base: usize, // the REX.B + r/m (without sib) or REX.B + base (with sib)
+    pub index: Option<usize>, // REX.X + index with SIB or None without
+    pub scale: SIBScale, // Based on SS in SIB, only considered if index is set
+    pub rm_disp: Option<Immediate>, // Displacement specified by mod bits of modrm
+    pub sib_disp: Option<Immediate>, // Displacement specified by mod + base bits of SIB
+    pub no_base: bool,
+}
+
+impl CustomFormat for Address {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        let mut out = self.dest_size.custom_format(opts);
+        out.insert_str(0, &opts.addr_prefix);
+        out.push('[');
+        // Index & Scale
+        match self.index {
+            Some(index) => {
+                out.push_str(&opts.format_reg(index, &self.addr_size, &RegisterType::GPReg, true));
+                match self.scale {
+                    SIBScale::Double => {
+                        out.push_str(&opts.addr_mul);
+                        out.push_str(&opts.addr_scale_two);
+                    }
+                    SIBScale::Quad => {
+                        out.push_str(&opts.addr_mul);
+                        out.push_str(&opts.addr_scale_four);
+                    }
+                    SIBScale::Octo => {
+                        out.push_str(&opts.addr_mul);
+                        out.push_str(&opts.addr_scale_eight);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        // Base
+        // Check if other elements have been added
+        if !out.ends_with('[') {
+            out.push_str(&opts.addr_add);
+        }
+        // One encoding only uses a displacement
+        if !self.no_base {
+            out.push_str(&opts.format_reg(self.base, &self.addr_size, &RegisterType::GPReg, true));
+        }
+        // Disps
+        match &self.rm_disp {
+            Some(disp) => {
+                if !out.ends_with('+') && !out.ends_with('[') {
+                    out.push_str(&opts.addr_add);
+                }
+                out.push_str(&disp.custom_format(opts));
+            }
+            _ => {}
+        }
+        match &self.sib_disp {
+            Some(disp) => {
+                if !out.ends_with('+') {
+                    out.push_str(&opts.addr_add);
+                }
+                out.push_str(&disp.custom_format(opts));
+            }
+            _ => {}
+        }
+        if out.ends_with('+') {
+            out.pop();
+        }
+        out.push(']');
+        out
+    }
 }
 
 #[derive(Eq, Hash, Clone, Copy, Debug)]
@@ -397,7 +578,7 @@ impl<'a> InstructionTree {
         return updated;
     }
 
-    fn operands_from_instruction(instruction: &InstructionJSON) -> Option<Vec<Operand>> {
+    fn operands_from_instruction(instruction: &InstructionJSON) -> Option<Vec<GenericOperand>> {
         let op_in_code = Regex::new("\\+[ir][bwdo]").unwrap();
         if instruction.operands.is_none() && !op_in_code.is_match(&instruction.opcode) {
             return None;
@@ -425,7 +606,7 @@ impl<'a> InstructionTree {
                 break;
             }
             ins_ops[i] = ins_ops[i].trim();
-            let mut new = Operand {
+            let mut new = GenericOperand {
                 size: OperandSize::Any,
                 encoding: OperandEncoding::Modrm,
                 reg: None,
@@ -836,23 +1017,23 @@ pub struct InstructionResponse {
 
 #[derive(Debug)]
 pub struct OperandResponse {
-    pub val: Option<Vec<String>>,
+    pub val: Option<Vec<Operand>>,
     pub size: usize,
 }
 
 #[derive(Debug, Serialize, Reflect, Clone)]
 pub struct ParseResponse {
     pub instruction: Option<Instruction>,
-    pub operands: Option<Vec<String>>,
+    pub operands: Option<Vec<Operand>>,
     pub bytes: Option<Vec<u8>>,
 }
 
-impl fmt::Display for ParseResponse {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return if self.bytes.is_none() {
-            write!(f, "Failed to parse")
+impl CustomFormat for ParseResponse {
+    fn custom_format(&self, opts: &InstructionFormatting) -> String {
+        if self.bytes.is_none() {
+            format!("Failed to parse")
         } else if self.instruction.is_none() {
-            write!(f, "{:02X}", self.bytes.as_ref().unwrap()[0])
+            format!("{:02X}", self.bytes.as_ref().unwrap()[0])
         } else {
             let mut full_str = String::new();
             let ins = self.instruction.as_ref().unwrap();
@@ -862,14 +1043,14 @@ impl fmt::Display for ParseResponse {
                 for op in self.operands.as_ref().unwrap() {
                     // Leading space and trailing comma for each
                     full_str.push(' ');
-                    full_str.push_str(op);
+                    full_str.push_str(&op.custom_format(opts));
                     full_str.push(',');
                 }
                 // Remove trailing comma
                 full_str.pop();
             }
-            write!(f, "{}", full_str)
-        };
+            full_str
+        }
     }
 }
 
@@ -885,33 +1066,6 @@ impl ParseResponse {
             str
         };
     }
-    pub fn pretty_print(&self) {
-        if self.bytes.is_none() {
-            println!("Failed to parse");
-            return;
-        } else if self.instruction.is_none() {
-            self.print_bytes();
-            return;
-        }
-        let mut full_str = String::new();
-        let ins = self.instruction.as_ref().unwrap();
-        // Get the base instruction name sans ops
-        full_str.push_str(ins.text.split(' ').collect::<Vec<_>>()[0]);
-        if self.operands.is_none() {
-            println!("{}", full_str);
-            return;
-        }
-        for op in self.operands.as_ref().unwrap() {
-            // Leading space and trailing comma for each
-            full_str.push(' ');
-            full_str.push_str(op);
-            full_str.push(',');
-        }
-        // Remove trailing comma
-        full_str.pop();
-        println!("{}", full_str);
-    }
-
     pub fn print_bytes(&self) {
         if self.bytes.is_none() {
             return;
@@ -1016,6 +1170,145 @@ impl InstructionFormatting {
     pub fn as_section(&self, text: &String) -> String {
         return self.section.clone() + text;
     }
+
+    fn format_reg(
+        &self,
+        index: usize,
+        size: &OperandSize,
+        group: &RegisterType,
+        rex: bool,
+    ) -> String {
+        let mut result;
+        match group {
+            RegisterType::GPReg => {
+                result = if *size != OperandSize::Byte || rex {
+                    String::from(BASE_REGS_REX_EXTENDED[index])
+                } else {
+                    // These should only be used for byte operations
+                    String::from(BASE_REGS[index])
+                };
+
+                match size {
+                    OperandSize::Quad => {
+                        if result.starts_with("R") {
+                        } else if result.len() == 1 {
+                            result.insert(0, 'R');
+                            result = result + "X";
+                        } else {
+                            result.insert(0, 'R');
+                        }
+                    }
+                    OperandSize::Double => {
+                        if result.starts_with("R") {
+                            result = result + "D";
+                        } else if result.len() == 1 {
+                            result.insert(0, 'E');
+                            result = result + "X";
+                        } else {
+                            result.insert(0, 'E');
+                        }
+                    }
+                    OperandSize::Word => {
+                        if result.starts_with("R") {
+                            result = result + "W";
+                        } else if result.len() == 1 {
+                            result = result + "X";
+                        }
+                    }
+                    OperandSize::Byte => {
+                        if result.starts_with("R") {
+                            result = result + "B";
+                        }
+                    }
+                    _ => panic!("Invalid operand size for General Purpose Register"),
+                }
+            }
+
+            RegisterType::MMXReg => {
+                result = String::from("MM");
+                match size {
+                    // ZMM
+                    OperandSize::DoubleQuadQuad => {
+                        // Size prefix
+                        result.insert(0, 'Z');
+                        // Append number to end
+                        result += &index.to_string();
+                    }
+                    // YMM
+                    OperandSize::QuadQuad => {
+                        // Size prefix
+                        result.insert(0, 'Y');
+                        // Append number to end
+                        result += &index.to_string();
+                    }
+                    // XMM
+                    OperandSize::DoubleQuad => {
+                        // Size prefix
+                        result.insert(0, 'X');
+                        // Append number to end
+                        result += &index.to_string();
+                    }
+                    // MM
+                    OperandSize::Quad => {
+                        // Append number to end
+                        result += &index.to_string();
+                    }
+                    _ => panic!("Invalid operand size for MMX Register"),
+                }
+            }
+
+            RegisterType::KReg => {
+                result = String::from('K');
+                result += &index.to_string();
+            }
+
+            RegisterType::BoundReg => {
+                result = String::from("BND");
+                if index < 4 {
+                    result += &index.to_string();
+                } else {
+                    panic!("Invalid register index for bounds register");
+                }
+            }
+
+            RegisterType::SegReg => {
+                result = String::from(match index {
+                    0 => "ES",
+                    1 => "CS",
+                    2 => "SS",
+                    3 => "DS",
+                    4 => "FS",
+                    5 => "GS",
+                    _ => panic!("Invalid register index for segment register"),
+                });
+            }
+
+            RegisterType::FPUReg => {
+                result = String::from("ST(");
+                result += &index.to_string();
+                result.push(')');
+            }
+
+            RegisterType::CtrlReg => {
+                result = String::from("CR");
+                // CR8 is only accessable when REX.R is set
+                if size == &OperandSize::Quad {
+                    result += "8"
+                } else {
+                    result += &index.to_string();
+                }
+            }
+
+            RegisterType::DbgReg => {
+                result = String::from("DR");
+                result += &index.to_string();
+            }
+        }
+        if !self.reg_uppercase {
+            result = result.to_lowercase();
+        }
+        result
+    }
 }
 
 pub struct Decoder {
@@ -1052,7 +1345,7 @@ impl Decoder {
     pub fn parse_n_print(&mut self) {
         while !self.code.is_end() {
             let inc = self.parse_one();
-            inc.pretty_print();
+            println!("{}", inc.custom_format(&self.format));
         }
     }
 
@@ -1111,24 +1404,45 @@ impl Decoder {
         modrm: &Modrm,
         rex: &Rex,
         ins_size: &mut usize,
-    ) -> String {
-        let mut res = String::new();
-        // Prepend a square bracket for effective address format, mod = 0b11 reassigns
-        // res so this isn't present there
-        res.push_str(&self.format.addr_open);
+    ) -> Operand {
         if modrm.mode == 0b11 {
             // Explicit register
-            res = self.format_reg((modrm.rm | rex.b) as usize, size, reg);
+            return Operand::Reg(Register {
+                index: (modrm.rm | rex.b) as usize,
+                size: size.clone(),
+                group: reg.clone(),
+                rex: self.context.rex.is_some(),
+            });
         } else if modrm.mode == 0 && modrm.rm == 0b101 {
             // Special case: immidiate offset
-            if self.context.rex.is_none() && self.context.op_override {
-                res += &self.format_imm(2);
+            let disp = if self.context.rex.is_none() && self.context.op_override {
                 *ins_size += 2;
+                self.parse_imm(2)
             } else {
-                res += &self.format_imm(4);
                 *ins_size += 4;
+                self.parse_imm(4)
             };
+            return Operand::Addr(Address {
+                dest_size: size.clone(),
+                addr_size: self.context.addr_size(),
+                base: 0,
+                index: None,
+                scale: SIBScale::Zero,
+                rm_disp: Some(disp),
+                sib_disp: None,
+                no_base: true,
+            });
         } else {
+            let mut addr = Address {
+                dest_size: size.clone(),
+                addr_size: self.context.addr_size(),
+                base: 0,
+                index: None,
+                scale: SIBScale::Zero,
+                rm_disp: None,
+                sib_disp: None,
+                no_base: false,
+            };
             if modrm.rm == 0b100 {
                 //SIB
                 let sib = self.code.get();
@@ -1140,131 +1454,60 @@ impl Decoder {
                 // Index
                 if (rex.x | index) == 0b100 {
                 } else {
-                    res += &self.format_reg(
-                        (index | rex.x) as usize,
-                        &(self.context.addr_size()),
-                        reg,
-                    );
-                    match scale {
-                        1 => {
-                            res.push_str(&self.format.addr_mul);
-                            res.push_str(&self.format.addr_scale_two);
-                            res.push_str(&self.format.addr_add);
-                        }
-                        2 => {
-                            res.push_str(&self.format.addr_mul);
-                            res.push_str(&self.format.addr_scale_four);
-                            res.push_str(&self.format.addr_add);
-                        }
-                        3 => {
-                            res.push_str(&self.format.addr_mul);
-                            res.push_str(&self.format.addr_scale_eight);
-                            res.push_str(&self.format.addr_add);
-                        }
-                        _ => res.push_str(&self.format.addr_add),
+                    addr.index = Some((index | rex.x) as usize);
+                    addr.scale = match scale {
+                        1 => SIBScale::Double,
+                        2 => SIBScale::Quad,
+                        3 => SIBScale::Octo,
+                        _ => SIBScale::Zero,
                     }
                 }
                 // Base
                 if base != 0b101 {
-                    res +=
-                        &self.format_reg((base | rex.b) as usize, &(self.context.addr_size()), reg);
+                    addr.base = (base | rex.b) as usize;
                 } else {
                     // When base is 0b101 it means either it's based on RBP or a
                     // displacement, depending on mod
                     // Base reg based on arch size and prefixes
-                    let basereg = self.format_reg(5, &self.context.addr_size(), reg);
+                    addr.base = 5;
                     match modrm.mode {
                         // Just displacement
                         0 => {
-                            if rex.w {
-                                res.push_str(&self.format_imm(4));
-                                *ins_size += 4;
-                            } else {
-                                res.push_str(&self.format_imm(4));
-                                *ins_size += 4;
-                            }
+                            addr.no_base;
+                            addr.sib_disp = Some(self.parse_imm(4));
+                            *ins_size += 4;
                         }
                         // disp8 + ebp
                         1 => {
-                            res.push_str(&self.format_imm(1));
+                            addr.sib_disp = Some(self.parse_imm(1));
                             *ins_size += 1;
-                            res.push_str(&self.format.addr_add);
-                            if self.format.reg_uppercase {
-                                res.push_str(&basereg);
-                            } else {
-                                res.push_str(&(basereg.to_lowercase()));
-                            }
                         }
                         // disp32 + ebp
                         // all this to enable C local variabes. Very cool
                         2 => {
-                            res.push_str(&self.format_imm(4));
+                            addr.sib_disp = Some(self.parse_imm(4));
                             *ins_size += 4;
-                            res.push_str(&self.format.addr_add);
-                            if self.format.reg_uppercase {
-                                res.push_str(&basereg);
-                            } else {
-                                res.push_str(&(basereg.to_lowercase()));
-                            }
                         }
                         _ => {}
                     }
                 }
             } else {
                 // Normal base reg
-                res += &self.format_reg(
-                    (modrm.rm | rex.b) as usize,
-                    &(self.context.addr_size()),
-                    reg,
-                );
+                addr.base = (modrm.rm | rex.b) as usize;
             }
             match modrm.mode {
                 0b1 => {
-                    res.push_str(&self.format.addr_add);
                     *ins_size += 1;
-                    res += &self.format_imm(1);
+                    addr.rm_disp = Some(self.parse_imm(1));
                 }
                 0b10 => {
-                    res.push_str(&self.format.addr_add);
                     *ins_size += 4;
-                    res += &self.format_imm(4);
+                    addr.rm_disp = Some(self.parse_imm(4));
                 }
                 _ => {}
             }
+            return Operand::Addr(addr);
         }
-        if res.starts_with(&self.format.addr_open) {
-            res.push_str(&self.format.addr_close);
-            // Add prefixes
-            match size {
-                &OperandSize::Byte => {
-                    res.insert_str(0, &self.format.addr_byte);
-                }
-                &OperandSize::Word => {
-                    res.insert_str(0, &self.format.addr_word);
-                }
-                &OperandSize::Double => {
-                    res.insert_str(0, &self.format.addr_dword);
-                }
-                &OperandSize::Quad => {
-                    res.insert_str(0, &self.format.addr_qword);
-                }
-                &OperandSize::Penta => {
-                    res.insert_str(0, &self.format.addr_tword);
-                }
-                &OperandSize::DoubleQuad => {
-                    res.insert_str(0, &self.format.addr_oword);
-                }
-                &OperandSize::QuadQuad => {
-                    res.insert_str(0, &self.format.addr_yword);
-                }
-                &OperandSize::DoubleQuadQuad => {
-                    res.insert_str(0, &self.format.addr_zword);
-                }
-                _ => {}
-            }
-            res.insert_str(0, &self.format.addr_prefix);
-        }
-        res
     }
 
     fn parse_operands(&mut self, ins: &InstructionResponse) -> OperandResponse {
@@ -1288,7 +1531,7 @@ impl Decoder {
         let mut offset = 0;
         // # of bytes comprising the opperands
         let mut size = 0;
-        let mut op_strings = Vec::new();
+        let mut operands: Vec<Operand> = Vec::new();
         // We have to store this ahead of time because it encodes two values, modrm and modreg, and
         // the order of these operands isn't consistant, so modreg may be parsed before or after
         // modrm, which may advance the decoding to parse an SIB byte, ergo we can't rely on the
@@ -1310,7 +1553,6 @@ impl Decoder {
             } else {
                 &OperandSize::Double
             };
-            let mut op_str = String::new();
             match op.encoding {
                 OperandEncoding::Modrm => {
                     let real_reg = if op.reg == Some(RegisterType::MMXReg) {
@@ -1325,7 +1567,7 @@ impl Decoder {
                         // Advance to potential SIB byte
                         self.code.inc();
                     }
-                    op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
+                    operands.push(self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size));
                 }
                 OperandEncoding::Modreg => {
                     // To prevent modRM double count
@@ -1335,134 +1577,120 @@ impl Decoder {
                         // Advance to potential SIB byte
                         self.code.inc();
                     }
-                    op_str = self.format_reg(
-                        (modrm.reg | rex.r) as usize,
-                        real_size,
-                        &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
-                    );
+                    operands.push(Operand::Reg(Register {
+                        index: (modrm.reg | rex.r) as usize,
+                        size: *real_size,
+                        group: op.reg.as_ref().unwrap_or(&RegisterType::GPReg).clone(),
+                        rex: self.context.rex.is_some(),
+                    }));
                 }
                 OperandEncoding::Opcode => {
-                    op_str = self.format_reg(
+                    operands.push(Operand::Reg(Register {
                         // Get last byte of opcode, logical and to get last 3 bits, include REX
                         // prefix, cast to usize for type jit
-                        ((self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex.b)
+                        index: ((self.code.get_offset(-((size + 1) as isize)) & 0b00000111) | rex.b)
                             as usize,
-                        real_size,
-                        &op.reg.as_ref().unwrap_or(&RegisterType::GPReg),
-                    );
+                        size: *real_size,
+                        group: op.reg.as_ref().unwrap_or(&RegisterType::GPReg).clone(),
+                        rex: self.context.rex.is_some(),
+                    }));
                 }
                 OperandEncoding::Immediate => {
-                    op_str = match real_size {
+                    operands.push(Operand::Imm(match real_size {
                         OperandSize::Byte => {
                             size += 1;
-                            self.format_imm(1)
+                            self.parse_imm(1)
                         }
                         OperandSize::Word => {
                             size += 2;
-                            self.format_imm(2)
+                            self.parse_imm(2)
                         }
                         OperandSize::Double => {
                             size += 4;
-                            self.format_imm(4)
+                            self.parse_imm(4)
                         }
                         OperandSize::DoubleSeg => {
                             size += 6;
-                            self.format_imm(6)
+                            self.parse_imm(6)
                         }
                         OperandSize::Quad => {
                             size += 8;
-                            self.format_imm(8)
+                            self.parse_imm(8)
                         }
                         OperandSize::Penta => {
                             size += 10;
-                            self.format_imm(10)
+                            self.parse_imm(10)
                         }
                         OperandSize::DoubleQuad => {
                             size += 16;
-                            self.format_imm(16)
+                            self.parse_imm(16)
                         }
                         OperandSize::QuadQuad => {
                             size += 32;
-                            self.format_imm(32)
+                            self.parse_imm(32)
                         }
                         OperandSize::Z => {
                             size += 48;
-                            self.format_imm(48)
+                            self.parse_imm(48)
                         }
                         OperandSize::DoubleQuadQuad => {
                             size += 64;
-                            self.format_imm(64)
+                            self.parse_imm(64)
                         }
                         OperandSize::Any => {
                             panic!("Immediate value size cannot be infered");
                         }
-                    };
+                    }));
                 }
                 OperandEncoding::Bespoke => {
                     let is_reg = Regex::new("([ER]?[AC]X)|([AC][HL])").unwrap();
                     let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
                     // If register literal
                     if is_reg.is_match(&op.text) {
-                        op_str = op.text.clone();
+                        let mut op_str = op.text.clone();
                         if !self.format.reg_uppercase {
                             op_str = op_str.to_lowercase();
                         }
+                        operands.push(Operand::Bes(Bespoke { value: op_str }));
                     } else if op.text == "mib" {
                         // Some sort of evil subset of SIB addressing
                         let base = self.code.get() & 0b111;
                         self.code.inc();
                         size += 1;
+                        let mut addr = Address {
+                            dest_size: real_size.clone(),
+                            addr_size: self.context.addr_size(),
+                            base: 0,
+                            index: None,
+                            scale: SIBScale::Zero,
+                            rm_disp: None,
+                            sib_disp: None,
+                            no_base: false,
+                        };
                         if base == 0b101 {
                             // Displacment
-                            let basereg = if self.context.size == ArchSize::I64 {
-                                "RBP"
-                            } else {
-                                "EBP"
-                            };
+                            addr.base = 5; // Code for base pointer
                             match modrm.mode {
                                 // Just displacement
                                 0 => {
-                                    if rex.w {
-                                        op_str.push_str(&self.format_imm(4));
-                                        size += 4;
-                                    } else {
-                                        op_str.push_str(&self.format_imm(4));
-                                        size += 4;
-                                    }
+                                    addr.no_base = true;
+                                    addr.sib_disp = Some(self.parse_imm(4));
+                                    size += 4;
                                 }
                                 // disp8 + ebp
                                 1 => {
-                                    op_str.push_str(&self.format_imm(1));
+                                    addr.sib_disp = Some(self.parse_imm(1));
                                     size += 1;
-                                    op_str.push_str(&self.format.addr_add);
-                                    if self.format.reg_uppercase {
-                                        op_str.push_str(&basereg);
-                                    } else {
-                                        op_str.push_str(&(basereg.to_lowercase()));
-                                    }
                                 }
                                 // disp32 + ebp
-                                // all this to enable C local variabes. Very cool
                                 2 => {
-                                    op_str.push_str(&self.format_imm(4));
+                                    addr.sib_disp = Some(self.parse_imm(4));
                                     size += 4;
-                                    op_str.push_str(&self.format.addr_add);
-                                    if self.format.reg_uppercase {
-                                        op_str.push_str(&basereg);
-                                    } else {
-                                        op_str.push_str(&(basereg.to_lowercase()));
-                                    }
                                 }
                                 _ => {}
                             }
                         } else {
-                            op_str.push_str(&self.format.addr_open);
-                            op_str += &self.format_reg(
-                                (base | rex.b) as usize,
-                                &(self.context.addr_size()),
-                                &RegisterType::GPReg,
-                            );
-                            op_str.push_str(&self.format.addr_close);
+                            addr.base = (base | rex.b) as usize;
                         }
                     } else if reg_mem_size_dif.is_match(&op.text) {
                         // Missmatched sizes for register vs memory access
@@ -1481,7 +1709,7 @@ impl Decoder {
                         }
                         if modrm.mode == 0b11 {
                             // Register literal, context based size
-                            op_str = self.parse_modrm(
+                            operands.push(self.parse_modrm(
                                 real_reg,
                                 if rex.w {
                                     &OperandSize::Quad
@@ -1493,10 +1721,12 @@ impl Decoder {
                                 &modrm,
                                 &rex,
                                 &mut size,
-                            );
+                            ));
                         } else {
                             // Memory, sized according to op
-                            op_str = self.parse_modrm(real_reg, &op.size, &modrm, &rex, &mut size);
+                            operands.push(
+                                self.parse_modrm(real_reg, &op.size, &modrm, &rex, &mut size),
+                            );
                         }
                     } else if op.text.contains("16:") {
                         // Far pointer
@@ -1505,22 +1735,59 @@ impl Decoder {
                         } else {
                             &RegisterType::GPReg
                         };
-                        // To prevent modRM double count
-                        if !has_modrm {
-                            size += 1;
-                            has_modrm = true;
-                            // Advance to potential SIB byte
-                            self.code.inc();
+                        if op.text.starts_with("ptr") {
+                            // Full address is stored as immediate
+                            match self.context.addr_size() {
+                                OperandSize::Word => {
+                                    operands.push(Operand::Imm(self.parse_imm(6)));
+                                    size += 6
+                                }
+                                OperandSize::Double => {
+                                    operands.push(Operand::Imm(self.parse_imm(6)));
+                                    size += 6
+                                }
+                                // This encoding isn't valid in 64 bit mode
+                                _ => {}
+                            }
+                        } else {
+                            // Full address is read at given memory addr
+                            if !has_modrm {
+                                size += 1;
+                                has_modrm = true;
+                                // Advance to potential SIB byte
+                                self.code.inc();
+                            }
+                            match self.context.addr_size() {
+                                OperandSize::Word => {
+                                    operands.push(self.parse_modrm(
+                                        real_reg,
+                                        &OperandSize::Double,
+                                        &modrm,
+                                        &rex,
+                                        &mut size,
+                                    ));
+                                }
+                                OperandSize::Double => {
+                                    operands.push(self.parse_modrm(
+                                        real_reg,
+                                        &OperandSize::DoubleSeg,
+                                        &modrm,
+                                        &rex,
+                                        &mut size,
+                                    ));
+                                }
+                                OperandSize::Quad => {
+                                    operands.push(self.parse_modrm(
+                                        real_reg,
+                                        &OperandSize::Penta,
+                                        &modrm,
+                                        &rex,
+                                        &mut size,
+                                    ));
+                                }
+                                _ => {}
+                            }
                         }
-                        op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
-                        op_str.insert_str(
-                            self.format.addr_prefix.len(),
-                            &self.format.addr_seg_seperator,
-                        );
-                        op_str.insert_str(
-                            self.format.addr_prefix.len(),
-                            self.format.addr_word.trim(),
-                        );
                     } else if op.text == "m" {
                         // LEA
                         let real_reg = if op.reg == Some(RegisterType::MMXReg) {
@@ -1536,28 +1803,28 @@ impl Decoder {
                             self.code.inc();
                         }
                         // TODO: improve LEA formatting
-                        op_str = self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size);
+                        operands
+                            .push(self.parse_modrm(real_reg, real_size, &modrm, &rex, &mut size));
                     } else {
                         println!("{:#?}", instruction);
                         panic!("Unknown bespoke");
                     }
                 }
             }
-            op_strings.push(op_str);
         }
-        if op_strings.is_empty() {
+        if operands.is_empty() {
             OperandResponse {
                 ..Default::default()
             }
         } else {
             OperandResponse {
-                val: Some(op_strings),
+                val: Some(operands),
                 size,
             }
         }
     }
 
-    fn format_imm(&mut self, count: usize) -> String {
+    fn parse_imm(&mut self, count: usize) -> Immediate {
         let mut i = 0;
         let mut val: u64 = 0;
         while i < count {
@@ -1565,26 +1832,7 @@ impl Decoder {
             self.code.inc();
             i += 1;
         }
-        let mut out = match self.format.imm_fmt {
-            NumFormat::Hex => {
-                format!("{:02X}", val)
-            }
-            NumFormat::Dec => {
-                format!("{}", val)
-            }
-            NumFormat::Oct => {
-                format!("{:o}", val)
-            }
-            NumFormat::Bi => {
-                format!("{:08b}", val)
-            }
-        };
-        if !self.format.imm_uppercase {
-            out = out.to_lowercase();
-        }
-        out.insert_str(0, &self.format.imm_prefix);
-        out.push_str(&self.format.imm_suffix);
-        out
+        return Immediate { value: val };
     }
 
     fn format_reg(&self, index: usize, size: &OperandSize, group: &RegisterType) -> String {

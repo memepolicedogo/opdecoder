@@ -9,6 +9,7 @@ use goblin::{
     elf::{Elf, SectionHeader},
     pe::{PE, section_table::SectionTable},
 };
+use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
 use serde_json::{self, to_string};
 use std::{
@@ -623,16 +624,20 @@ fn main() {
         let instruction_max = opts.get("lines").get_usize();
         for mut section in &mut exe.code {
             // Get code
+            writeln!(io::stderr(), "Loading section {}", section.name);
             file.seek(SeekFrom::Start(section.offset as u64));
             let mut buff = Vec::new();
             let x = file.read_to_end(&mut buff);
             buff.drain(section.size..);
             dec.load_code(&buff);
+            writeln!(io::stderr(), "Loaded {} bytes", section.size);
+            writeln!(io::stderr(), "Disassembling...");
             section.disassembled = if instruction_max == 0 {
-                dec.parse()
+                parse_with_progress(&mut dec)
             } else {
                 dec.parse_n(instruction_max)
             };
+            writeln!(io::stderr(), "{} instructions", section.disassembled.len());
         }
 
         output_parsed(
@@ -642,6 +647,26 @@ fn main() {
             &formatting,
         );
     }
+}
+
+const INSTRUCTIONS_PER_UPDATE: usize = 5;
+fn parse_with_progress(dec: &mut Decoder) -> Vec<ParseResponse> {
+    // Create progress bar with max as the full size in bytes of the code
+    let mut bar = ProgressBar::new(dec.code.len() as u64);
+    bar.set_style(
+        ProgressStyle::with_template(
+            "{elapsed_precise} {bar:100.cyan} {bytes}/{total_bytes} \n{msg:110}{bytes_per_sec}",
+        )
+        .unwrap()
+        .progress_chars("#&-"),
+    );
+    let mut dis = Vec::new();
+    while !dec.code.is_end() {
+        dis.append(&mut dec.parse_n(INSTRUCTIONS_PER_UPDATE));
+        bar.set_position(dec.code.curr as u64);
+    }
+    bar.finish();
+    dis
 }
 
 fn output_parsed(

@@ -929,6 +929,9 @@ pub struct ByteString {
 }
 
 impl ByteString {
+    pub fn len(&self) -> usize {
+        self.code.len()
+    }
     // Advance the cursor by some number of bytes
     pub fn advance(&mut self, by: usize) -> bool {
         self.curr += by;

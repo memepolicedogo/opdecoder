@@ -286,7 +286,7 @@ impl From<&String> for Executable {
         let mut file = fs::File::open(path).unwrap();
         let mut buff = Vec::new();
         file.read_to_end(&mut buff);
-        // Parse file headers to pull all executable sections
+        // Parse file headers
         match Object::parse(&buff).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
                 exe.is_64 = elf.is_64;

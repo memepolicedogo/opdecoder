@@ -6432,45 +6432,6 @@
     [
         {
             "opcode": "6C",
-            "instruction": "INS m8, DX",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Input byte from I/O port specified in DX into memory location specified in ES:(E)DI or RDI."
-        },
-        {
-            "opcode": "6D",
-            "instruction": "INS m16, DX",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Input word from I/O port specified in DX into memory location specified in ES:(E)DI or RDI."
-        },
-        {
-            "opcode": "6D",
-            "instruction": "INS m32, DX",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Input doubleword from I/O port specified in DX into memory location specified in ES:(E)DI or RDI."
-        },
-        {
-            "opcode": "6C",
             "instruction": "INSB",
             "operands": [
                 "N/A",
@@ -8025,7 +7986,7 @@
     [
         {
             "opcode": "F2 0F F0 /r",
-            "instruction": "LDDQU xmm1, mem",
+            "instruction": "LDDQU xmm1, m128",
             "operands": [
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
@@ -8345,45 +8306,6 @@
         }
     ],
     [
-        {
-            "opcode": "AC",
-            "instruction": "LODS m8",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, Load byte at address DS:(E)SI into AL. For 64-bit mode load byte at address (R)SI into AL."
-        },
-        {
-            "opcode": "AD",
-            "instruction": "LODS m16",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, Load word at address DS:(E)SI into AX. For 64-bit mode load word at address (R)SI into AX."
-        },
-        {
-            "opcode": "AD",
-            "instruction": "LODS m32",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, Load dword at address DS:(E)SI into EAX. For 64-bit mode load dword at address (R)SI into EAX."
-        },
         {
             "opcode": "AC",
             "instruction": "LODSB",
@@ -10622,45 +10544,6 @@
         }
     ],
     [
-        {
-            "opcode": "6E",
-            "instruction": "OUTS DX, m8",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Output byte from memory location specified in DS:(E)SI or RSI to I/O port specified in DX ."
-        },
-        {
-            "opcode": "6F",
-            "instruction": "OUTS DX, m16",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Output word from memory location specified in DS:(E)SI or RSI to I/O port specified in DX ."
-        },
-        {
-            "opcode": "6F",
-            "instruction": "OUTS DX, m32",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Output doubleword from memory location specified in DS:(E)SI or RSI to I/O port specified in DX ."
-        },
         {
             "opcode": "6E",
             "instruction": "OUTSB",
@@ -16203,45 +16086,6 @@
     [
         {
             "opcode": "AE",
-            "instruction": "SCAS m8",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Compare AL with byte at ES:(E)DI or RDI, then set status flags."
-        },
-        {
-            "opcode": "AF",
-            "instruction": "SCAS m16",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Compare AX with word at ES:(E)DI or RDI, then set status flags."
-        },
-        {
-            "opcode": "AF",
-            "instruction": "SCAS m32",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Compare EAX with doubleword at ES(E)DI or RDI then set status flags."
-        },
-        {
-            "opcode": "AE",
             "instruction": "SCASB",
             "operands": [
                 "N/A",
@@ -17169,45 +17013,6 @@
         }
     ],
     [
-        {
-            "opcode": "AA",
-            "instruction": "STOS m8",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, store AL at address ES:(E)DI; For 64- bit mode store AL at address RDI or EDI."
-        },
-        {
-            "opcode": "AB",
-            "instruction": "STOS m16",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, store AX at address ES:(E)DI; For 64- bit mode store AX at address RDI or EDI."
-        },
-        {
-            "opcode": "AB",
-            "instruction": "STOS m32",
-            "operands": [
-                "N/A",
-                "N/A",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "For legacy mode, store EAX at address ES:(E)DI; For 64-bit mode store EAX at address RDI or EDI."
-        },
         {
             "opcode": "AA",
             "instruction": "STOSB",

@@ -601,8 +601,7 @@ impl<'a> InstructionTree {
         let mut res = Vec::new();
         let mut i = 0;
         while i < ops.len() && ops[i] != "N/A" {
-            // Evil bit shift endcoding
-            if ops[i] == "1" {
+            if ops[i] == "1" || ops[i].starts_with("Implicit") {
                 break;
             }
             ins_ops[i] = ins_ops[i].trim();
@@ -623,7 +622,7 @@ impl<'a> InstructionTree {
                 OperandSize::DoubleQuad
             } else if ins_ops[i].ends_with("80") {
                 OperandSize::Penta
-            } else if ins_ops[i].ends_with("64") {
+            } else if ins_ops[i].ends_with("64") || ins_ops[i].starts_with("mm") {
                 OperandSize::Quad
             } else if ins_ops[i].ends_with("32") {
                 OperandSize::Double
@@ -641,7 +640,11 @@ impl<'a> InstructionTree {
             } else if ops[i].contains("ModRM:r/m") {
                 // Cases where seperate sizes are specified for register and memory moves
                 if new.size <= OperandSize::Quad
-                    && !(ins_ops[i].contains("r/m") || ins_ops[i].contains("16:32"))
+                    && ins_ops[i].contains('m')
+                    && ins_ops[i].contains('r')
+                    && !(ins_ops[i].contains("r/m")
+                        || ins_ops[i].contains("16:32")
+                        || ins_ops[i].starts_with("mm"))
                 {
                     OperandEncoding::Bespoke
                 } else {
@@ -707,6 +710,18 @@ impl<'a> InstructionTree {
                     } else if ins_ops[i].contains("k1") {
                         new.size = OperandSize::Quad;
                         Some(RegisterType::KReg)
+                    } else if ins_ops[i].ends_with("32&32") {
+                        new.size = OperandSize::Quad;
+                        new.encoding = OperandEncoding::Modrm;
+                        None
+                    } else if ins_ops[i].ends_with("16&16") {
+                        new.size = OperandSize::Double;
+                        new.encoding = OperandEncoding::Modrm;
+                        None
+                    } else if ins_ops[i].ends_with("16&64") {
+                        new.size = OperandSize::Penta;
+                        new.encoding = OperandEncoding::Modrm;
+                        None
                     } else {
                         None
                     }
@@ -2119,6 +2134,10 @@ impl Decoder {
                         && !(self.context.addr_override || self.context.op_override)
                     {
                         valids.remove(i);
+                    } else if valids[i].size == OperandSize::Quad
+                        && (self.context.op_override || self.context.addr_override)
+                    {
+                        valids.remove(i);
                     } else {
                         i += 1;
                     }
@@ -2168,6 +2187,103 @@ impl Decoder {
                 size,
                 pref_size: prefix_count,
             };
+        } else if valids[0].text.starts_with("PUSH") {
+            // PUSHF vs PUSHF(QD) is evil
+            // If op size is non defualt use 16 bit
+            if self.context.op_override {
+                for i in 0..valids.len() {
+                    if valids[i].text.ends_with("F") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            } else {
+                for i in 0..valids.len() {
+                    if !valids[i].text.ends_with("F") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            }
+        } else if valids[0].text.starts_with("INS")
+            || valids[0].text.starts_with("OUTS")
+            || valids[0].text.starts_with("SCAS")
+            || valids[0].text.starts_with("LODS")
+            || (valids[0].text.starts_with("C") && valids[0].description.contains("sign-extend"))
+        {
+            if self.context.op_override {
+                for i in 0..valids.len() {
+                    if valids[i].text.ends_with("W") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            } else {
+                for i in 0..valids.len() {
+                    if valids[i].text.ends_with("D") || valids[i].text.ends_with("DE") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            }
+        } else if valids[0].text.starts_with("IN ") {
+            if self.context.op_override {
+                for i in 0..valids.len() {
+                    if valids[i].text.contains(" AX") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            } else {
+                for i in 0..valids.len() {
+                    if valids[i].text.contains("EAX") {
+                        let mut rep = valids[i].clone();
+                        if !self.format.ins_uppercase {
+                            rep.text = rep.text.to_lowercase();
+                        }
+                        return InstructionResponse {
+                            val: Some(rep),
+                            size,
+                            pref_size: prefix_count,
+                        };
+                    }
+                }
+            }
         } else {
             // Between size specified and unspecified we prefer unspecified because it's the same
             // thing only dependant on prefixes or whatever

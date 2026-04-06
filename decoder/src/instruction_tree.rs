@@ -1151,6 +1151,7 @@ pub struct InstructionFormatting {
     pub imm_fmt: NumFormat,
     // INSTRUCTION
     pub ins_uppercase: bool,
+    pub prefixes: HashMap<u8, String>,
     // CODE
     pub code_fmt: NumFormat,
     // REGISTERS
@@ -1170,6 +1171,11 @@ pub struct InstructionFormatting {
 
 impl Default for InstructionFormatting {
     fn default() -> Self {
+        let mut prefixes: HashMap<u8, String> = HashMap::new();
+        prefixes.insert(0xF0, String::from("LOCK "));
+        prefixes.insert(0xF2, String::from("REPNE "));
+        prefixes.insert(0xF3, String::from("REP "));
+
         Self {
             reg_uppercase: true,
             imm_uppercase: true,
@@ -1195,6 +1201,7 @@ impl Default for InstructionFormatting {
             imm_fmt: NumFormat::Hex,
             //
             ins_uppercase: true,
+            prefixes,
             //
             code_fmt: NumFormat::Hex,
             //
@@ -1255,6 +1262,17 @@ impl InstructionFormatting {
         return self.section.clone() + text;
     }
 
+    fn format_prefixes(&self, prefixes: Vec<u8>) -> String {
+        let mut result = String::new();
+        for pre in prefixes {
+            let s = self.prefixes.get(&pre);
+            if s.is_some() {
+                result.push_str(&s.unwrap());
+            }
+        }
+        result
+    }
+
     fn format_reg(
         &self,
         index: usize,
@@ -1266,10 +1284,10 @@ impl InstructionFormatting {
         match group {
             RegisterType::GPReg => {
                 result = if *size != OperandSize::Byte || rex {
-                    String::from(BASE_REGS_REX_EXTENDED[index])
+                    self.rex_gp_set[index].clone()
                 } else {
                     // These should only be used for byte operations
-                    String::from(BASE_REGS[index])
+                    self.gp_set[index].clone()
                 };
 
                 match size {
@@ -1309,7 +1327,7 @@ impl InstructionFormatting {
             }
 
             RegisterType::MMXReg => {
-                result = String::from("MM");
+                result = self.mm_base.clone();
                 match size {
                     // ZMM
                     OperandSize::DoubleQuadQuad => {
@@ -1342,12 +1360,12 @@ impl InstructionFormatting {
             }
 
             RegisterType::KReg => {
-                result = String::from('K');
+                result = self.k_base.clone();
                 result += &index.to_string();
             }
 
             RegisterType::BoundReg => {
-                result = String::from("BND");
+                result = self.bnd_base.clone();
                 if index < 4 {
                     result += &index.to_string();
                 } else {
@@ -1357,27 +1375,18 @@ impl InstructionFormatting {
 
             RegisterType::SegReg => {
                 // REX bits are ignored for seg regs
-                result = String::from(match (index & 0b0111) {
-                    0 => "ES",
-                    1 => "CS",
-                    2 => "SS",
-                    3 => "DS",
-                    4 => "FS",
-                    5 => "GS",
-                    _ => panic!("Invalid register index for segment register"),
-                });
+                result = self.seg_set[index & 0b0111].clone();
             }
 
             RegisterType::FPUReg => {
-                result = String::from("ST(");
+                result = self.fpu_base.clone();
                 result += &index.to_string();
-                result.push(')');
             }
 
             RegisterType::CtrlReg => {
-                result = String::from("CR");
+                result = self.ctrl_base.clone();
                 // CR8 is only accessable when REX.R is set
-                if size == &OperandSize::Quad {
+                if rex {
                     result += "8"
                 } else {
                     result += &index.to_string();
@@ -1385,7 +1394,7 @@ impl InstructionFormatting {
             }
 
             RegisterType::DbgReg => {
-                result = String::from("DR");
+                result = self.dbg_base.clone();
                 result += &index.to_string();
             }
         }

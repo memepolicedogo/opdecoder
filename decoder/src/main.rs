@@ -701,7 +701,7 @@ fn output_parsed(
                         }
                     }
                     // Print address
-                    let _ = write!(output, "0x{:X}\t", sec.abs_addr(vaddr));
+                    // let _ = write!(output, "0x{:X}\t", sec.abs_addr(vaddr));
                     // Print code
                     output_one(rep, output, format, opts);
                     // Increment address

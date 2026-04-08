@@ -669,6 +669,61 @@ fn parse_with_progress(dec: &mut Decoder) -> Vec<ParseResponse> {
     dis
 }
 
+#[derive(Serialize)]
+struct ExeJson {
+    code: Vec<SecJson>,
+}
+
+impl ExeJson {
+    fn from(exe: &Executable, format: &InstructionFormatting) -> Self {
+        let mut code = Vec::new();
+        for sec in &exe.code {
+            code.push(SecJson::from(&sec, format));
+        }
+        Self { code }
+    }
+}
+
+#[derive(Serialize)]
+struct SecJson {
+    name: String,
+    size: usize,
+    addr: u64,
+    code: Vec<CodeJson>,
+}
+
+impl SecJson {
+    fn from(sec: &Section, format: &InstructionFormatting) -> Self {
+        let mut code = Vec::new();
+        for ins in &sec.disassembled {
+            code.push(CodeJson::from(&ins, format));
+        }
+        Self {
+            name: sec.name.clone(),
+            size: sec.size,
+            addr: sec.addr,
+            code,
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct CodeJson {
+    instruction: instruction_tree::Instruction,
+    text: String,
+    bytes: Vec<u8>,
+}
+
+impl CodeJson {
+    fn from(ins: &ParseResponse, format: &InstructionFormatting) -> Self {
+        Self {
+            instruction: ins.instruction.as_ref().unwrap().clone(),
+            text: ins.custom_format(format),
+            bytes: ins.bytes.as_ref().unwrap().clone(),
+        }
+    }
+}
+
 fn output_parsed(
     exe: &Executable,
     output: &mut Box<dyn Write>,
@@ -677,7 +732,8 @@ fn output_parsed(
 ) {
     match format {
         OutputFormat::JSON => {
-            let json = serde_json::to_string(&exe);
+            let data = ExeJson::from(exe, opts);
+            let json = serde_json::to_string(&data);
             if json.is_err() {
                 println!("Failed to serialize response data:");
                 println!("{}", &json.unwrap_err());
@@ -735,7 +791,7 @@ fn output_one(
             println!("Invalid format for individual output");
         }
         OutputFormat::PrettyPrint => {
-            let _ = writeln!(output, "{}", response.custom_format(opts));
+            let _ = writeln!(output, "\t{}", response.custom_format(opts));
             //output.flush();
         }
         OutputFormat::PlusBytes => {

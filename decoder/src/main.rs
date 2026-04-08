@@ -717,7 +717,20 @@ struct CodeJson {
 impl CodeJson {
     fn from(ins: &ParseResponse, format: &InstructionFormatting) -> Self {
         Self {
-            instruction: ins.instruction.as_ref().unwrap().clone(),
+            instruction: ins
+                .instruction
+                .as_ref()
+                .unwrap_or(&instruction_tree::Instruction {
+                    opcode: String::new(),
+                    text: String::new(),
+                    x64: true,
+                    legacy: true,
+                    operands: None,
+                    size: instruction_tree::OperandSize::Any,
+                    invalid_prefixes: Vec::new(),
+                    description: String::new(),
+                })
+                .clone(),
             text: ins.custom_format(format),
             bytes: ins.bytes.as_ref().unwrap().clone(),
         }

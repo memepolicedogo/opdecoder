@@ -813,7 +813,6 @@
             "opcode": "66 0F 57 /r",
             "instruction": "XORPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -829,7 +828,6 @@
             "opcode": "NP 0F 57 /r",
             "instruction": "XORPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1687,7 +1685,6 @@
             "opcode": "66 0F 58 /r",
             "instruction": "ADDPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1703,7 +1700,6 @@
             "opcode": "NP 0F 58 /r",
             "instruction": "ADDPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1719,7 +1715,6 @@
             "opcode": "F2 0F 58 /r",
             "instruction": "ADDSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1735,7 +1730,6 @@
             "opcode": "F3 0F 58 /r",
             "instruction": "ADDSS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1809,7 +1803,6 @@
             "opcode": "66 0F 38 DE /r",
             "instruction": "AESDEC xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1825,7 +1818,6 @@
             "opcode": "F3 0F 38 DD !(11):rrr:bbb",
             "instruction": "AESDEC128KL xmm, m384",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1841,7 +1833,6 @@
             "opcode": "F3 0F 38 DF !(11):rrr:bbb",
             "instruction": "AESDEC256KL xmm, m512",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1857,7 +1848,6 @@
             "opcode": "66 0F 38 DF /r",
             "instruction": "AESDECLAST xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1873,7 +1863,6 @@
             "opcode": "F3 0F 38 D8 !(11):001:bbb",
             "instruction": "AESDECWIDE128KL m384, <XMM0-7>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "Implicit XMM0-7 (r, w)"
             ],
@@ -1887,7 +1876,6 @@
             "opcode": "F3 0F 38 D8 !(11):011:bbb",
             "instruction": "AESDECWIDE256KL m512, <XMM0-7>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "Implicit XMM0-7 (r, w)"
             ],
@@ -1901,7 +1889,6 @@
             "opcode": "66 0F 38 DC /r",
             "instruction": "AESENC xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1917,7 +1904,6 @@
             "opcode": "F3 0F 38 DC !(11):rrr:bbb",
             "instruction": "AESENC128KL xmm, m384",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1933,7 +1919,6 @@
             "opcode": "F3 0F 38 DE !(11):rrr:bbb",
             "instruction": "AESENC256KL xmm, m512",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1949,7 +1934,6 @@
             "opcode": "66 0F 38 DD /r",
             "instruction": "AESENCLAST xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -1965,7 +1949,6 @@
             "opcode": "F3 0F 38 D8 !(11):000:bbb",
             "instruction": "AESENCWIDE128KL m384, <XMM0-7>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "Implicit XMM0-7 (r, w)"
             ],
@@ -1979,7 +1962,6 @@
             "opcode": "F3 0F 38 D8 !(11):010:bbb",
             "instruction": "AESENCWIDE256KL m512, <XMM0-7>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "Implicit XMM0-7 (r, w)"
             ],
@@ -2272,7 +2254,6 @@
             "opcode": "66 0F 55 /r",
             "instruction": "ANDNPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -2288,7 +2269,6 @@
             "opcode": "NP 0F 55 /r",
             "instruction": "ANDNPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -2304,7 +2284,6 @@
             "opcode": "66 0F 54 /r",
             "instruction": "ANDPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -2320,7 +2299,6 @@
             "opcode": "NP 0F 54 /r",
             "instruction": "ANDPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -3327,7 +3305,6 @@
             "opcode": "F3 0F AE /6",
             "instruction": "CLRSSBSY m64",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "N/A",
                 "N/A",
@@ -4825,7 +4802,6 @@
             "opcode": "66 0F C2 /r ib",
             "instruction": "CMPPD xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -4841,7 +4817,6 @@
             "opcode": "NP 0F C2 /r ib",
             "instruction": "CMPPS xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -4963,7 +4938,6 @@
             "opcode": "F2 0F C2 /r ib",
             "instruction": "CMPSD xmm1, xmm2/m64, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -4979,7 +4953,6 @@
             "opcode": "F3 0F C2 /r ib",
             "instruction": "CMPSS xmm1, xmm2/m32, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -5077,7 +5050,6 @@
             "opcode": "66 0F 2F /r",
             "instruction": "COMISD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5093,7 +5065,6 @@
             "opcode": "NP 0F 2F /r",
             "instruction": "COMISS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5166,7 +5137,6 @@
             "opcode": "F3 0F E6 /r",
             "instruction": "CVTDQ2PD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5182,7 +5152,6 @@
             "opcode": "NP 0F 5B /r",
             "instruction": "CVTDQ2PS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5198,7 +5167,6 @@
             "opcode": "F2 0F E6 /r",
             "instruction": "CVTPD2DQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5229,7 +5197,6 @@
             "opcode": "66 0F 5A /r",
             "instruction": "CVTPD2PS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5275,7 +5242,6 @@
             "opcode": "66 0F 5B /r",
             "instruction": "CVTPS2DQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5291,7 +5257,6 @@
             "opcode": "NP 0F 5A /r",
             "instruction": "CVTPS2PD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5322,7 +5287,6 @@
             "opcode": "F2 0F 2D /r",
             "instruction": "CVTSD2SI r32, xmm1/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5336,7 +5300,6 @@
             "opcode": "F2 REX.W 0F 2D /r",
             "instruction": "CVTSD2SI r64, xmm1/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5352,7 +5315,6 @@
             "opcode": "F2 0F 5A /r",
             "instruction": "CVTSD2SS xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5368,7 +5330,6 @@
             "opcode": "F2 0F 2A /r",
             "instruction": "CVTSI2SD xmm1, r32/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5382,7 +5343,6 @@
             "opcode": "F2 REX.W 0F 2A /r",
             "instruction": "CVTSI2SD xmm1, r/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5398,7 +5358,6 @@
             "opcode": "F3 0F 2A /r",
             "instruction": "CVTSI2SS xmm1, r/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5412,7 +5371,6 @@
             "opcode": "F3 REX.W 0F 2A /r",
             "instruction": "CVTSI2SS xmm1, r/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5428,7 +5386,6 @@
             "opcode": "F3 0F 5A /r",
             "instruction": "CVTSS2SD xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5444,7 +5401,6 @@
             "opcode": "F3 0F 2D /r",
             "instruction": "CVTSS2SI r32, xmm1/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5458,7 +5414,6 @@
             "opcode": "F3 REX.W 0F 2D /r",
             "instruction": "CVTSS2SI r64, xmm1/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5474,7 +5429,6 @@
             "opcode": "66 0F E6 /r",
             "instruction": "CVTTPD2DQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5505,7 +5459,6 @@
             "opcode": "F3 0F 5B /r",
             "instruction": "CVTTPS2DQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5536,7 +5489,6 @@
             "opcode": "F2 0F 2C /r",
             "instruction": "CVTTSD2SI r32, xmm1/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5550,7 +5502,6 @@
             "opcode": "F2 REX.W 0F 2C /r",
             "instruction": "CVTTSD2SI r64, xmm1/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5566,7 +5517,6 @@
             "opcode": "F3 0F 2C /r",
             "instruction": "CVTTSS2SI r32, xmm1/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5580,7 +5530,6 @@
             "opcode": "F3 REX.W 0F 2C /r",
             "instruction": "CVTTSS2SI r64, xmm1/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5801,7 +5750,6 @@
             "opcode": "66 0F 5E /r",
             "instruction": "DIVPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5817,7 +5765,6 @@
             "opcode": "NP 0F 5E /r",
             "instruction": "DIVPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5833,7 +5780,6 @@
             "opcode": "F2 0F 5E /r",
             "instruction": "DIVSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5849,7 +5795,6 @@
             "opcode": "F3 0F 5E /r",
             "instruction": "DIVSS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5910,7 +5855,6 @@
             "opcode": "F3 0F 38 FA 11:rrr:bbb",
             "instruction": "ENCODEKEY128 r32, r32, <XMM0-2>,<XMM4-6>",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "Implicit XMM0 (r, w)",
@@ -5927,7 +5871,6 @@
             "opcode": "F3 0F 38 FB 11:rrr:bbb",
             "instruction": "ENCODEKEY256 r32, r32 <XMM0-6>",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "Implicit XMM0\u20141 (r, w)",
@@ -5975,7 +5918,6 @@
             "opcode": "F2 0F 38 F8 !(11):rrr:bbb",
             "instruction": "ENQCMD r32/r64, m512",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -5991,7 +5933,6 @@
             "opcode": "F3 0F 38 F8 !(11):rrr:bbb",
             "instruction": "ENQCMDS r32/r64, m512",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -6078,7 +6019,6 @@
             "opcode": "66 0F 3A 17 /r ib",
             "instruction": "EXTRACTPS reg/m32, xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "imm8",
@@ -7452,7 +7392,6 @@
             "opcode": "66 0F 3A CF /r ib",
             "instruction": "GF2P8AFFINEINVQB xmm1,xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8 (r)",
@@ -7468,7 +7407,6 @@
             "opcode": "66 0F 3A CE /r ib",
             "instruction": "GF2P8AFFINEQB xmm1,xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8 (r)",
@@ -7484,7 +7422,6 @@
             "opcode": "66 0F 38 CF /r",
             "instruction": "GF2P8MULB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -7545,7 +7482,6 @@
             "opcode": "F3 0F 3A F0 C0 ib",
             "instruction": "HRESET imm8, <EAX>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -7976,7 +7912,6 @@
             "opcode": "F3 0F AE /5",
             "instruction": "INCSSPD r32",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -7990,7 +7925,6 @@
             "opcode": "F3 REX.W 0F AE /5",
             "instruction": "INCSSPQ r64",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -8006,7 +7940,6 @@
             "opcode": "66 0F 3A 21 /r ib",
             "instruction": "INSERTPS xmm1, xmm2/m32, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -10051,7 +9984,6 @@
             "opcode": "F3 0F 38 DC 11:rrr:bbb",
             "instruction": "LOADIWKEY xmm1, xmm2, <EAX>, <XMM0>",
             "operands": [
-                "N/A",
                 "ModRM:reg (r)",
                 "ModRM:r/m (r)",
                 "Implicit EAX (r)",
@@ -10332,7 +10264,6 @@
             "opcode": "66 0F 5F /r",
             "instruction": "MAXPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10348,7 +10279,6 @@
             "opcode": "NP 0F 5F /r",
             "instruction": "MAXPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10364,7 +10294,6 @@
             "opcode": "F2 0F 5F /r",
             "instruction": "MAXSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10380,7 +10309,6 @@
             "opcode": "F3 0F 5F /r",
             "instruction": "MAXSS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10411,7 +10339,6 @@
             "opcode": "66 0F 5D /r",
             "instruction": "MINPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10427,7 +10354,6 @@
             "opcode": "NP 0F 5D /r",
             "instruction": "MINPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10443,7 +10369,6 @@
             "opcode": "F2 0F 5D /r",
             "instruction": "MINSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -10459,7 +10384,6 @@
             "opcode": "F3 0F 5D /r",
             "instruction": "MINSS xmm1,xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11029,7 +10953,6 @@
             "opcode": "66 0F 28 /r",
             "instruction": "MOVAPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11043,7 +10966,6 @@
             "opcode": "66 0F 29 /r",
             "instruction": "MOVAPD xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11059,7 +10981,6 @@
             "opcode": "NP 0F 28 /r",
             "instruction": "MOVAPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11073,7 +10994,6 @@
             "opcode": "NP 0F 29 /r",
             "instruction": "MOVAPS xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11169,7 +11089,6 @@
             "opcode": "F2 0F 12 /r",
             "instruction": "MOVDDUP xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11185,7 +11104,6 @@
             "opcode": "66 0F 38 F8 /r",
             "instruction": "MOVDIR64B r16/r32/r64, m512",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11201,7 +11119,6 @@
             "opcode": "NP 0F 38 F9 /r",
             "instruction": "MOVDIRI m32, r32",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11215,7 +11132,6 @@
             "opcode": "NP REX.W 0F 38 F9 /r",
             "instruction": "MOVDIRI m64, r64",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11231,7 +11147,6 @@
             "opcode": "NP 0F 6E /r",
             "instruction": "MOVD mm, r/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11245,7 +11160,6 @@
             "opcode": "NP REX.W 0F 6E /r",
             "instruction": "MOVQ mm, r/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11259,7 +11173,6 @@
             "opcode": "NP 0F 7E /r",
             "instruction": "MOVD r/m32, mm",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11273,7 +11186,6 @@
             "opcode": "NP REX.W 0F 7E /r",
             "instruction": "MOVQ r/m64, mm",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11287,7 +11199,6 @@
             "opcode": "66 0F 6E /r",
             "instruction": "MOVD xmm, r/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11301,7 +11212,6 @@
             "opcode": "66 REX.W 0F 6E /r",
             "instruction": "MOVQ xmm, r/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11315,7 +11225,6 @@
             "opcode": "66 0F 7E /r",
             "instruction": "MOVD r/m32, xmm",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11329,7 +11238,6 @@
             "opcode": "66 REX.W 0F 7E /r",
             "instruction": "MOVQ r/m64, xmm",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11360,7 +11268,6 @@
             "opcode": "66 0F 6F /r",
             "instruction": "MOVDQA xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11374,7 +11281,6 @@
             "opcode": "66 0F 7F /r",
             "instruction": "MOVDQA xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11390,7 +11296,6 @@
             "opcode": "F3 0F 6F /r",
             "instruction": "MOVDQU xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11404,7 +11309,6 @@
             "opcode": "F3 0F 7F /r",
             "instruction": "MOVDQU xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11435,7 +11339,6 @@
             "opcode": "66 0F 16 /r",
             "instruction": "MOVHPD xmm1, m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11449,7 +11352,6 @@
             "opcode": "66 0F 17 /r",
             "instruction": "MOVHPD m64, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11465,7 +11367,6 @@
             "opcode": "NP 0F 16 /r",
             "instruction": "MOVHPS xmm1, m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11479,7 +11380,6 @@
             "opcode": "NP 0F 17 /r",
             "instruction": "MOVHPS m64, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11510,7 +11410,6 @@
             "opcode": "66 0F 12 /r",
             "instruction": "MOVLPD xmm1, m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11524,7 +11423,6 @@
             "opcode": "66 0F 13 /r",
             "instruction": "MOVLPD m64, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11540,7 +11438,6 @@
             "opcode": "NP 0F 12 /r",
             "instruction": "MOVLPS xmm1, m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11554,7 +11451,6 @@
             "opcode": "0F 13 /r",
             "instruction": "MOVLPS m64, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11600,7 +11496,6 @@
             "opcode": "66 0F E7 /r",
             "instruction": "MOVNTDQ m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11616,7 +11511,6 @@
             "opcode": "66 0F 38 2A /r",
             "instruction": "MOVNTDQA xmm1, m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11660,7 +11554,6 @@
             "opcode": "66 0F 2B /r",
             "instruction": "MOVNTPD m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11676,7 +11569,6 @@
             "opcode": "NP 0F 2B /r",
             "instruction": "MOVNTPS m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11707,7 +11599,6 @@
             "opcode": "NP 0F 6F /r",
             "instruction": "MOVQ mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11721,7 +11612,6 @@
             "opcode": "NP 0F 7F /r",
             "instruction": "MOVQ mm/m64, mm",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11735,7 +11625,6 @@
             "opcode": "F3 0F 7E /r",
             "instruction": "MOVQ xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11749,7 +11638,6 @@
             "opcode": "66 0F D6 /r",
             "instruction": "MOVQ xmm2/m64, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11884,23 +11772,8 @@
     [
         {
             "opcode": "F2 0F 10 /r",
-            "instruction": "MOVSD xmm1, xmm2",
+            "instruction": "MOVSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
-                "ModRM:reg (r, w)",
-                "ModRM:r/m (r)",
-                "N/A",
-                "N/A"
-            ],
-            "current_support": "V",
-            "legacy_support": "V",
-            "description": "Move scalar double precision floating-point value from xmm2 to xmm1 register."
-        },
-        {
-            "opcode": "F2 0F 10 /r",
-            "instruction": "MOVSD xmm1, m64",
-            "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11914,7 +11787,6 @@
             "opcode": "F2 0F 11 /r",
             "instruction": "MOVSD xmm1/m64, xmm2",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -11930,7 +11802,6 @@
             "opcode": "F3 0F 16 /r",
             "instruction": "MOVSHDUP xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11946,7 +11817,6 @@
             "opcode": "F3 0F 12 /r",
             "instruction": "MOVSLDUP xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11962,7 +11832,6 @@
             "opcode": "F3 0F 10 /r",
             "instruction": "MOVSS xmm1, xmm2",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11976,7 +11845,6 @@
             "opcode": "F3 0F 10 /r",
             "instruction": "MOVSS xmm1, m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -11990,7 +11858,6 @@
             "opcode": "F3 0F 11 /r",
             "instruction": "MOVSS xmm2/m32, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -12112,7 +11979,6 @@
             "opcode": "66 0F 10 /r",
             "instruction": "MOVUPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12126,7 +11992,6 @@
             "opcode": "66 0F 11 /r",
             "instruction": "MOVUPD xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -12142,7 +12007,6 @@
             "opcode": "NP 0F 10 /r",
             "instruction": "MOVUPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12156,7 +12020,6 @@
             "opcode": "NP 0F 11 /r",
             "instruction": "MOVUPS xmm2/m128, xmm1",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "N/A",
@@ -12308,7 +12171,6 @@
             "opcode": "66 0F 59 /r",
             "instruction": "MULPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12324,7 +12186,6 @@
             "opcode": "NP 0F 59 /r",
             "instruction": "MULPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12340,7 +12201,6 @@
             "opcode": "F2 0F 59 /r",
             "instruction": "MULSD xmm1,xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12356,7 +12216,6 @@
             "opcode": "F3 0F 59 /r",
             "instruction": "MULSS xmm1,xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12785,7 +12644,6 @@
             "opcode": "66 0F 56 /r",
             "instruction": "ORPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12801,7 +12659,6 @@
             "opcode": "NP 0F 56 /r",
             "instruction": "ORPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12938,7 +12795,6 @@
             "opcode": "NP 0F 38 1C /r",
             "instruction": "PABSB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12952,7 +12808,6 @@
             "opcode": "66 0F 38 1C /r",
             "instruction": "PABSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12966,7 +12821,6 @@
             "opcode": "NP 0F 38 1D /r",
             "instruction": "PABSW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12980,7 +12834,6 @@
             "opcode": "66 0F 38 1D /r",
             "instruction": "PABSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -12994,7 +12847,6 @@
             "opcode": "NP 0F 38 1E /r",
             "instruction": "PABSD mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13008,7 +12860,6 @@
             "opcode": "66 0F 38 1E /r",
             "instruction": "PABSD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13024,7 +12875,6 @@
             "opcode": "NP 0F 63 /r",
             "instruction": "PACKSSWB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13038,7 +12888,6 @@
             "opcode": "66 0F 63 /r",
             "instruction": "PACKSSWB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13052,7 +12901,6 @@
             "opcode": "NP 0F 6B /r",
             "instruction": "PACKSSDW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13066,7 +12914,6 @@
             "opcode": "66 0F 6B /r",
             "instruction": "PACKSSDW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13082,7 +12929,6 @@
             "opcode": "66 0F 38 2B /r",
             "instruction": "PACKUSDW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13098,7 +12944,6 @@
             "opcode": "NP 0F 67 /r",
             "instruction": "PACKUSWB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13112,7 +12957,6 @@
             "opcode": "66 0F 67 /r",
             "instruction": "PACKUSWB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13128,7 +12972,6 @@
             "opcode": "NP 0F FC /r",
             "instruction": "PADDB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13142,7 +12985,6 @@
             "opcode": "NP 0F FD /r",
             "instruction": "PADDW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13156,7 +12998,6 @@
             "opcode": "NP 0F FE /r",
             "instruction": "PADDD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13170,7 +13011,6 @@
             "opcode": "NP 0F D4 /r",
             "instruction": "PADDQ mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13184,7 +13024,6 @@
             "opcode": "66 0F FC /r",
             "instruction": "PADDB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13198,7 +13037,6 @@
             "opcode": "66 0F FD /r",
             "instruction": "PADDW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13212,7 +13050,6 @@
             "opcode": "66 0F FE /r",
             "instruction": "PADDD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13226,7 +13063,6 @@
             "opcode": "66 0F D4 /r",
             "instruction": "PADDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13242,7 +13078,6 @@
             "opcode": "NP 0F EC /r",
             "instruction": "PADDSB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13256,7 +13091,6 @@
             "opcode": "66 0F EC /r",
             "instruction": "PADDSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13270,7 +13104,6 @@
             "opcode": "NP 0F ED /r",
             "instruction": "PADDSW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13284,7 +13117,6 @@
             "opcode": "66 0F ED /r",
             "instruction": "PADDSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13300,7 +13132,6 @@
             "opcode": "NP 0F DC /r",
             "instruction": "PADDUSB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13314,7 +13145,6 @@
             "opcode": "66 0F DC /r",
             "instruction": "PADDUSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13328,7 +13158,6 @@
             "opcode": "NP 0F DD /r",
             "instruction": "PADDUSW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13342,7 +13171,6 @@
             "opcode": "66 0F DD /r",
             "instruction": "PADDUSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13358,7 +13186,6 @@
             "opcode": "NP 0F 3A 0F /r ib",
             "instruction": "PALIGNR mm1, mm2/m64, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -13372,7 +13199,6 @@
             "opcode": "66 0F 3A 0F /r ib",
             "instruction": "PALIGNR xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -13388,7 +13214,6 @@
             "opcode": "NP 0F DB /r",
             "instruction": "PAND mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13402,7 +13227,6 @@
             "opcode": "66 0F DB /r",
             "instruction": "PAND xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13418,7 +13242,6 @@
             "opcode": "NP 0F DF /r",
             "instruction": "PANDN mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13432,7 +13255,6 @@
             "opcode": "66 0F DF /r",
             "instruction": "PANDN xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13463,7 +13285,6 @@
             "opcode": "NP 0F E0 /r",
             "instruction": "PAVGB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13477,7 +13298,6 @@
             "opcode": "66 0F E0 /r",
             "instruction": "PAVGB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13491,7 +13311,6 @@
             "opcode": "NP 0F E3 /r",
             "instruction": "PAVGW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13505,7 +13324,6 @@
             "opcode": "66 0F E3 /r",
             "instruction": "PAVGW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13566,7 +13384,6 @@
             "opcode": "66 0F 3A 44 /r ib",
             "instruction": "PCLMULQDQ xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -13582,7 +13399,6 @@
             "opcode": "NP 0F 74 /r",
             "instruction": "PCMPEQB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13596,7 +13412,6 @@
             "opcode": "66 0F 74 /r",
             "instruction": "PCMPEQB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13610,7 +13425,6 @@
             "opcode": "NP 0F 75 /r",
             "instruction": "PCMPEQW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13624,7 +13438,6 @@
             "opcode": "66 0F 75 /r",
             "instruction": "PCMPEQW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13638,7 +13451,6 @@
             "opcode": "NP 0F 76 /r",
             "instruction": "PCMPEQD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13652,7 +13464,6 @@
             "opcode": "66 0F 76 /r",
             "instruction": "PCMPEQD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13668,7 +13479,6 @@
             "opcode": "66 0F 38 29 /r",
             "instruction": "PCMPEQQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13714,7 +13524,6 @@
             "opcode": "NP 0F 64 /r",
             "instruction": "PCMPGTB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13728,7 +13537,6 @@
             "opcode": "66 0F 64 /r",
             "instruction": "PCMPGTB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13742,7 +13550,6 @@
             "opcode": "NP 0F 65 /r",
             "instruction": "PCMPGTW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13756,7 +13563,6 @@
             "opcode": "66 0F 65 /r",
             "instruction": "PCMPGTW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13770,7 +13576,6 @@
             "opcode": "NP 0F 66 /r",
             "instruction": "PCMPGTD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13784,7 +13589,6 @@
             "opcode": "66 0F 66 /r",
             "instruction": "PCMPGTD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13800,7 +13604,6 @@
             "opcode": "66 0F 38 37 /r",
             "instruction": "PCMPGTQ xmm1,xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -13862,7 +13665,6 @@
             "opcode": "66 0F 3A 14 /r ib",
             "instruction": "PEXTRB reg/m8, xmm2, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "imm8",
@@ -13876,7 +13678,6 @@
             "opcode": "66 0F 3A 16 /r ib",
             "instruction": "PEXTRD r/m32, xmm2, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "imm8",
@@ -13890,7 +13691,6 @@
             "opcode": "66 REX.W 0F 3A 16 /r ib",
             "instruction": "PEXTRQ r/m64, xmm2, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "imm8",
@@ -13906,7 +13706,6 @@
             "opcode": "NP 0F C5 /r ib",
             "instruction": "PEXTRW reg, mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -13920,7 +13719,6 @@
             "opcode": "66 0F C5 /r ib",
             "instruction": "PEXTRW reg, xmm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -13934,7 +13732,6 @@
             "opcode": "66 0F 3A 15 /r ib",
             "instruction": "PEXTRW reg/m16, xmm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (w)",
                 "ModRM:reg (r)",
                 "imm8",
@@ -14129,7 +13926,6 @@
             "opcode": "66 0F 3A 20 /r ib",
             "instruction": "PINSRB xmm1, r32/m8, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -14143,7 +13939,6 @@
             "opcode": "66 0F 3A 22 /r ib",
             "instruction": "PINSRD xmm1, r/m32, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -14157,7 +13952,6 @@
             "opcode": "66 REX.W 0F 3A 22 /r ib",
             "instruction": "PINSRQ xmm1, r/m64, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -14173,7 +13967,6 @@
             "opcode": "NP 0F C4 /r ib",
             "instruction": "PINSRW mm, r32/m16, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -14187,7 +13980,6 @@
             "opcode": "66 0F C4 /r ib",
             "instruction": "PINSRW xmm, r32/m16, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -14203,7 +13995,6 @@
             "opcode": "NP 0F 38 04 /r",
             "instruction": "PMADDUBSW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14217,7 +14008,6 @@
             "opcode": "66 0F 38 04 /r",
             "instruction": "PMADDUBSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14233,7 +14023,6 @@
             "opcode": "NP 0F F5 /r",
             "instruction": "PMADDWD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14247,7 +14036,6 @@
             "opcode": "66 0F F5 /r",
             "instruction": "PMADDWD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14263,7 +14051,6 @@
             "opcode": "NP 0F EE /r",
             "instruction": "PMAXSW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14277,7 +14064,6 @@
             "opcode": "66 0F 38 3C /r",
             "instruction": "PMAXSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14291,7 +14077,6 @@
             "opcode": "66 0F EE /r",
             "instruction": "PMAXSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14305,7 +14090,6 @@
             "opcode": "66 0F 38 3D /r",
             "instruction": "PMAXSD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14321,7 +14105,6 @@
             "opcode": "NP 0F DE /r",
             "instruction": "PMAXUB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14335,7 +14118,6 @@
             "opcode": "66 0F DE /r",
             "instruction": "PMAXUB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14349,7 +14131,6 @@
             "opcode": "66 0F 38 3E /r",
             "instruction": "PMAXUW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14365,7 +14146,6 @@
             "opcode": "66 0F 38 3F /r",
             "instruction": "PMAXUD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14381,7 +14161,6 @@
             "opcode": "NP 0F EA /r",
             "instruction": "PMINSW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14395,7 +14174,6 @@
             "opcode": "66 0F 38 38 /r",
             "instruction": "PMINSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14409,7 +14187,6 @@
             "opcode": "66 0F EA /r",
             "instruction": "PMINSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14425,7 +14202,6 @@
             "opcode": "66 0F 38 39 /r",
             "instruction": "PMINSD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14441,7 +14217,6 @@
             "opcode": "NP 0F DA /r",
             "instruction": "PMINUB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14455,7 +14230,6 @@
             "opcode": "66 0F DA /r",
             "instruction": "PMINUB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14469,7 +14243,6 @@
             "opcode": "66 0F 38 3A /r",
             "instruction": "PMINUW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14485,7 +14258,6 @@
             "opcode": "66 0F 38 3B /r",
             "instruction": "PMINUD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14529,7 +14301,6 @@
             "opcode": "66 0f 38 20 /r",
             "instruction": "PMOVSXBW xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14543,7 +14314,6 @@
             "opcode": "66 0f 38 21 /r",
             "instruction": "PMOVSXBD xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14557,7 +14327,6 @@
             "opcode": "66 0f 38 22 /r",
             "instruction": "PMOVSXBQ xmm1, xmm2/m16",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14571,7 +14340,6 @@
             "opcode": "66 0f 38 23 /r",
             "instruction": "PMOVSXWD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14585,7 +14353,6 @@
             "opcode": "66 0f 38 24 /r",
             "instruction": "PMOVSXWQ xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14599,7 +14366,6 @@
             "opcode": "66 0f 38 25 /r",
             "instruction": "PMOVSXDQ xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14615,7 +14381,6 @@
             "opcode": "66 0f 38 30 /r",
             "instruction": "PMOVZXBW xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14629,7 +14394,6 @@
             "opcode": "66 0f 38 31 /r",
             "instruction": "PMOVZXBD xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14643,7 +14407,6 @@
             "opcode": "66 0f 38 32 /r",
             "instruction": "PMOVZXBQ xmm1, xmm2/m16",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14657,7 +14420,6 @@
             "opcode": "66 0f 38 33 /r",
             "instruction": "PMOVZXWD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14671,7 +14433,6 @@
             "opcode": "66 0f 38 34 /r",
             "instruction": "PMOVZXWQ xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14685,7 +14446,6 @@
             "opcode": "66 0f 38 35 /r",
             "instruction": "PMOVZXDQ xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14701,7 +14461,6 @@
             "opcode": "66 0F 38 28 /r",
             "instruction": "PMULDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14717,7 +14476,6 @@
             "opcode": "NP 0F 38 0B /r",
             "instruction": "PMULHRSW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14731,7 +14489,6 @@
             "opcode": "66 0F 38 0B /r",
             "instruction": "PMULHRSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14747,7 +14504,6 @@
             "opcode": "NP 0F E4 /r",
             "instruction": "PMULHUW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14761,7 +14517,6 @@
             "opcode": "66 0F E4 /r",
             "instruction": "PMULHUW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14777,7 +14532,6 @@
             "opcode": "NP 0F E5 /r",
             "instruction": "PMULHW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14791,7 +14545,6 @@
             "opcode": "66 0F E5 /r",
             "instruction": "PMULHW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14807,7 +14560,6 @@
             "opcode": "66 0F 38 40 /r",
             "instruction": "PMULLD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14823,7 +14575,6 @@
             "opcode": "NP 0F D5 /r",
             "instruction": "PMULLW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14837,7 +14588,6 @@
             "opcode": "66 0F D5 /r",
             "instruction": "PMULLW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14853,7 +14603,6 @@
             "opcode": "NP 0F F4 /r",
             "instruction": "PMULUDQ mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -14867,7 +14616,6 @@
             "opcode": "66 0F F4 /r",
             "instruction": "PMULUDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15190,7 +14938,6 @@
             "opcode": "NP 0F EB /r",
             "instruction": "POR mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15204,7 +14951,6 @@
             "opcode": "66 0F EB /r",
             "instruction": "POR xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15315,7 +15061,6 @@
             "opcode": "NP 0F F6 /r",
             "instruction": "PSADBW mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15329,7 +15074,6 @@
             "opcode": "66 0F F6 /r",
             "instruction": "PSADBW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15345,7 +15089,6 @@
             "opcode": "NP 0F 38 00 /r",
             "instruction": "PSHUFB mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15359,7 +15102,6 @@
             "opcode": "66 0F 38 00 /r",
             "instruction": "PSHUFB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15375,7 +15117,6 @@
             "opcode": "66 0F 70 /r ib",
             "instruction": "PSHUFD xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -15391,7 +15132,6 @@
             "opcode": "F3 0F 70 /r ib",
             "instruction": "PSHUFHW xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -15407,7 +15147,6 @@
             "opcode": "F2 0F 70 /r ib",
             "instruction": "PSHUFLW xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -15518,7 +15257,6 @@
             "opcode": "66 0F 73 /7 ib",
             "instruction": "PSLLDQ xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15534,7 +15272,6 @@
             "opcode": "NP 0F F1 /r",
             "instruction": "PSLLW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15548,7 +15285,6 @@
             "opcode": "66 0F F1 /r",
             "instruction": "PSLLW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15562,7 +15298,6 @@
             "opcode": "NP 0F 71 /6 ib",
             "instruction": "PSLLW mm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15576,7 +15311,6 @@
             "opcode": "66 0F 71 /6 ib",
             "instruction": "PSLLW xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15590,7 +15324,6 @@
             "opcode": "NP 0F F2 /r",
             "instruction": "PSLLD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15604,7 +15337,6 @@
             "opcode": "66 0F F2 /r",
             "instruction": "PSLLD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15618,7 +15350,6 @@
             "opcode": "NP 0F 72 /6 ib",
             "instruction": "PSLLD mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15632,7 +15363,6 @@
             "opcode": "66 0F 72 /6 ib",
             "instruction": "PSLLD xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15646,7 +15376,6 @@
             "opcode": "NP 0F F3 /r",
             "instruction": "PSLLQ mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15660,7 +15389,6 @@
             "opcode": "66 0F F3 /r",
             "instruction": "PSLLQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15674,7 +15402,6 @@
             "opcode": "NP 0F 73 /6 ib",
             "instruction": "PSLLQ mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15688,7 +15415,6 @@
             "opcode": "66 0F 73 /6 ib",
             "instruction": "PSLLQ xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15704,7 +15430,6 @@
             "opcode": "NP 0F E1 /r",
             "instruction": "PSRAW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15718,7 +15443,6 @@
             "opcode": "66 0F E1 /r",
             "instruction": "PSRAW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15732,7 +15456,6 @@
             "opcode": "NP 0F 71 /4 ib",
             "instruction": "PSRAW mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15746,7 +15469,6 @@
             "opcode": "66 0F 71 /4 ib",
             "instruction": "PSRAW xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15760,7 +15482,6 @@
             "opcode": "NP 0F E2 /r",
             "instruction": "PSRAD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15774,7 +15495,6 @@
             "opcode": "66 0F E2 /r",
             "instruction": "PSRAD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15788,7 +15508,6 @@
             "opcode": "NP 0F 72 /4 ib",
             "instruction": "PSRAD mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15802,7 +15521,6 @@
             "opcode": "66 0F 72 /4 ib",
             "instruction": "PSRAD xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15818,7 +15536,6 @@
             "opcode": "66 0F 73 /3 ib",
             "instruction": "PSRLDQ xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15834,7 +15551,6 @@
             "opcode": "NP 0F D1 /r",
             "instruction": "PSRLW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15848,7 +15564,6 @@
             "opcode": "66 0F D1 /r",
             "instruction": "PSRLW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15862,7 +15577,6 @@
             "opcode": "NP 0F 71 /2 ib",
             "instruction": "PSRLW mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15876,7 +15590,6 @@
             "opcode": "66 0F 71 /2 ib",
             "instruction": "PSRLW xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15890,7 +15603,6 @@
             "opcode": "NP 0F D2 /r",
             "instruction": "PSRLD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15904,7 +15616,6 @@
             "opcode": "66 0F D2 /r",
             "instruction": "PSRLD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15918,7 +15629,6 @@
             "opcode": "NP 0F 72 /2 ib",
             "instruction": "PSRLD mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15932,7 +15642,6 @@
             "opcode": "66 0F 72 /2 ib",
             "instruction": "PSRLD xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15946,7 +15655,6 @@
             "opcode": "NP 0F D3 /r",
             "instruction": "PSRLQ mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15960,7 +15668,6 @@
             "opcode": "66 0F D3 /r",
             "instruction": "PSRLQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -15974,7 +15681,6 @@
             "opcode": "NP 0F 73 /2 ib",
             "instruction": "PSRLQ mm, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -15988,7 +15694,6 @@
             "opcode": "66 0F 73 /2 ib",
             "instruction": "PSRLQ xmm1, imm8",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r, w)",
                 "imm8",
                 "N/A",
@@ -16004,7 +15709,6 @@
             "opcode": "NP 0F F8 /r",
             "instruction": "PSUBB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16018,7 +15722,6 @@
             "opcode": "66 0F F8 /r",
             "instruction": "PSUBB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16032,7 +15735,6 @@
             "opcode": "NP 0F F9 /r",
             "instruction": "PSUBW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16046,7 +15748,6 @@
             "opcode": "66 0F F9 /r",
             "instruction": "PSUBW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16060,7 +15761,6 @@
             "opcode": "NP 0F FA /r",
             "instruction": "PSUBD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16074,7 +15774,6 @@
             "opcode": "66 0F FA /r",
             "instruction": "PSUBD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16090,7 +15789,6 @@
             "opcode": "NP 0F FB /r",
             "instruction": "PSUBQ mm1, mm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16104,7 +15802,6 @@
             "opcode": "66 0F FB /r",
             "instruction": "PSUBQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16120,7 +15817,6 @@
             "opcode": "NP 0F E8 /r",
             "instruction": "PSUBSB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16134,7 +15830,6 @@
             "opcode": "66 0F E8 /r",
             "instruction": "PSUBSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16148,7 +15843,6 @@
             "opcode": "NP 0F E9 /r",
             "instruction": "PSUBSW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16162,7 +15856,6 @@
             "opcode": "66 0F E9 /r",
             "instruction": "PSUBSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16178,7 +15871,6 @@
             "opcode": "NP 0F D8 /r",
             "instruction": "PSUBUSB mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16192,7 +15884,6 @@
             "opcode": "66 0F D8 /r",
             "instruction": "PSUBUSB xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16206,7 +15897,6 @@
             "opcode": "NP 0F D9 /r",
             "instruction": "PSUBUSW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16220,7 +15910,6 @@
             "opcode": "66 0F D9 /r",
             "instruction": "PSUBUSW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16279,7 +15968,6 @@
             "opcode": "NP 0F 68 /r",
             "instruction": "PUNPCKHBW mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16293,7 +15981,6 @@
             "opcode": "66 0F 68 /r",
             "instruction": "PUNPCKHBW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16307,7 +15994,6 @@
             "opcode": "NP 0F 69 /r",
             "instruction": "PUNPCKHWD mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16321,7 +16007,6 @@
             "opcode": "66 0F 69 /r",
             "instruction": "PUNPCKHWD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16335,7 +16020,6 @@
             "opcode": "NP 0F 6A /r",
             "instruction": "PUNPCKHDQ mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16349,7 +16033,6 @@
             "opcode": "66 0F 6A /r",
             "instruction": "PUNPCKHDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16363,7 +16046,6 @@
             "opcode": "66 0F 6D /r",
             "instruction": "PUNPCKHQDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16379,7 +16061,6 @@
             "opcode": "NP 0F 60 /r",
             "instruction": "PUNPCKLBW mm, mm/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16393,7 +16074,6 @@
             "opcode": "66 0F 60 /r",
             "instruction": "PUNPCKLBW xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16407,7 +16087,6 @@
             "opcode": "NP 0F 61 /r",
             "instruction": "PUNPCKLWD mm, mm/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16421,7 +16100,6 @@
             "opcode": "66 0F 61 /r",
             "instruction": "PUNPCKLWD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16435,7 +16113,6 @@
             "opcode": "NP 0F 62 /r",
             "instruction": "PUNPCKLDQ mm, mm/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16449,7 +16126,6 @@
             "opcode": "66 0F 62 /r",
             "instruction": "PUNPCKLDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16463,7 +16139,6 @@
             "opcode": "66 0F 6C /r",
             "instruction": "PUNPCKLQDQ xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16745,7 +16420,6 @@
             "opcode": "NP 0F EF /r",
             "instruction": "PXOR mm, mm/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -16759,7 +16433,6 @@
             "opcode": "66 0F EF /r",
             "instruction": "PXOR xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -18846,7 +18519,6 @@
             "opcode": "F3 0F C7 /6",
             "instruction": "SENDUIPI reg",
             "operands": [
-                "N/A",
                 "ModRM:reg (r)",
                 "N/A",
                 "N/A",
@@ -19573,7 +19245,6 @@
             "opcode": "66 0F C6 /r ib",
             "instruction": "SHUFPD xmm1, xmm2/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -19589,7 +19260,6 @@
             "opcode": "NP 0F C6 /r ib",
             "instruction": "SHUFPS xmm1, xmm3/m128, imm8",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "imm8",
@@ -19676,7 +19346,6 @@
             "opcode": "66 0F 51 /r",
             "instruction": "SQRTPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -19692,7 +19361,6 @@
             "opcode": "NP 0F 51 /r",
             "instruction": "SQRTPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -19708,7 +19376,6 @@
             "opcode": "F2 0F 51 /r",
             "instruction": "SQRTSD xmm1,xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -19724,7 +19391,6 @@
             "opcode": "F3 0F 51 /r",
             "instruction": "SQRTSS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20149,7 +19815,6 @@
             "opcode": "66 0F 5C /r",
             "instruction": "SUBPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20165,7 +19830,6 @@
             "opcode": "NP 0F 5C /r",
             "instruction": "SUBPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20181,7 +19845,6 @@
             "opcode": "F2 0F 5C /r",
             "instruction": "SUBSD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20197,7 +19860,6 @@
             "opcode": "F3 0F 5C /r",
             "instruction": "SUBSS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20488,7 +20150,6 @@
             "opcode": "66 0F AE /6",
             "instruction": "TPAUSE r32, <edx>, <eax>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -20545,7 +20206,6 @@
             "opcode": "66 0F 2E /r",
             "instruction": "UCOMISD xmm1, xmm2/m64",
             "operands": [
-                "N/A",
                 "ModRM:reg (r)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20561,7 +20221,6 @@
             "opcode": "NP 0F 2E /r",
             "instruction": "UCOMISS xmm1, xmm2/m32",
             "operands": [
-                "N/A",
                 "ModRM:reg (r)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20642,7 +20301,6 @@
             "opcode": "F3 0F AE /6",
             "instruction": "UMONITOR r16/r32/r64",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -20658,7 +20316,6 @@
             "opcode": "F2 0F AE /6",
             "instruction": "UMWAIT r32, <edx>, <eax>",
             "operands": [
-                "N/A",
                 "ModRM:r/m (r)",
                 "N/A",
                 "N/A",
@@ -20674,7 +20331,6 @@
             "opcode": "66 0F 15 /r",
             "instruction": "UNPCKHPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20690,7 +20346,6 @@
             "opcode": "NP 0F 15 /r",
             "instruction": "UNPCKHPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20706,7 +20361,6 @@
             "opcode": "66 0F 14 /r",
             "instruction": "UNPCKLPD xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",
@@ -20722,7 +20376,6 @@
             "opcode": "NP 0F 14 /r",
             "instruction": "UNPCKLPS xmm1, xmm2/m128",
             "operands": [
-                "N/A",
                 "ModRM:reg (r, w)",
                 "ModRM:r/m (r)",
                 "N/A",

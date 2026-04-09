@@ -1008,6 +1008,9 @@ impl ByteString {
 
     // Increase curr and get next byte
     pub fn step(&mut self) -> u8 {
+        if self.is_end() {
+            return self.code[self.curr];
+        }
         self.curr += 1;
         self.code[self.curr]
     }
@@ -1375,7 +1378,12 @@ impl InstructionFormatting {
 
             RegisterType::SegReg => {
                 // REX bits are ignored for seg regs
-                result = self.seg_set[index & 0b0111].clone();
+                if index > 0b101 {
+                    // Assume 2 bit encoding for reserved segment accesses
+                    result = self.seg_set[index & 0b0011].clone();
+                } else {
+                    result = self.seg_set[index & 0b0111].clone();
+                }
             }
 
             RegisterType::FPUReg => {

@@ -1,24 +1,17 @@
-#![allow(dead_code, unused)]
+#[allow(dead_code, unused)]
 mod instruction_tree;
-use bevy_reflect::{
-    DynamicStruct, GetPath, PartialReflect, Reflect, TypeRegistry, serde::ReflectSerializer,
-};
+use bevy_reflect::{GetPath, PartialReflect, Reflect};
 use core::panic;
-use goblin::{
-    Object,
-    elf::{Elf, SectionHeader},
-    pe::{PE, section_table::SectionTable},
-};
+use goblin::{Object, elf::SectionHeader, pe::section_table::SectionTable};
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::Serialize;
-use serde_json::{self, to_string};
+use serde_json::{self};
 use std::{
     collections::HashMap,
     env,
-    fmt::{self, Display},
+    fmt::{self},
     fs::{self, File},
-    hash::Hash,
-    io::{self, IsTerminal, Read, Seek, SeekFrom, Write},
+    io::{self, Read, Seek, SeekFrom, Write},
     str::FromStr,
 };
 use textwrap::fill;
@@ -61,31 +54,23 @@ struct Argument {
 }
 
 impl Argument {
-    fn is_default(&self) -> bool {
-        self.value.is_none()
-    }
-
-    fn get(&self) -> &ArgValue {
-        self.value.as_ref().unwrap_or(&self.default)
-    }
-
     fn get_str(&self) -> &String {
         match &self.value.as_ref().unwrap_or(&self.default) {
-            ArgValue::Bool(x) => panic!("Can't get a str from a bool argument"),
+            ArgValue::Bool(_) => panic!("Can't get a str from a bool argument"),
             ArgValue::Text(x) => &x,
         }
     }
 
     fn get_usize(&self) -> usize {
         match &self.value.as_ref().unwrap_or(&self.default) {
-            ArgValue::Bool(x) => panic!("Can't get a uszie from a bool argument"),
+            ArgValue::Bool(_) => panic!("Can't get a uszie from a bool argument"),
             ArgValue::Text(x) => usize::from_str_radix(x, 10).expect("Invalid argument"),
         }
     }
 
     fn get_bool(&self) -> bool {
         match &self.value.as_ref().unwrap_or(&self.default) {
-            ArgValue::Text(x) => panic!("Can't get a bool from a str argument"),
+            ArgValue::Text(_) => panic!("Can't get a bool from a str argument"),
             ArgValue::Bool(x) => x.clone(),
         }
     }
@@ -170,11 +155,6 @@ impl Arguments {
     fn get(&mut self, name: &str) -> &mut Argument {
         let i = self.names.get(name);
         &mut self.raw_args[*i.unwrap()]
-    }
-
-    fn get_val(&self, name: &str) -> &ArgValue {
-        let i = self.names.get(name);
-        &self.raw_args[*i.unwrap()].get()
     }
 }
 
@@ -285,7 +265,7 @@ impl From<&String> for Executable {
         };
         let mut file = fs::File::open(path).unwrap();
         let mut buff = Vec::new();
-        file.read_to_end(&mut buff);
+        let _ = file.read_to_end(&mut buff);
         // Parse file headers
         match Object::parse(&buff).unwrap_or(Object::Unknown(0)) {
             Object::Elf(elf) => {
@@ -435,14 +415,13 @@ fn main() {
         // Step through parsing a la GDB
         // Parse arbitrary hex strings
         // Write to files (?)
-        let mut active = true;
-        while active {
+        loop {
             // Print cursor
             let mut input = String::new();
             print!("> ");
-            io::stdout().flush();
+            let _ = io::stdout().flush();
             io::stdin().read_line(&mut input).expect("Failed to read");
-            let (cmd, mut args) = match parse_command(&input) {
+            let (cmd, args) = match parse_command(&input) {
                 Some(tuple) => tuple,
                 None => {
                     println!("Unknown command");
@@ -467,7 +446,7 @@ fn main() {
                     }
                     let tree = match serde_json::from_str(&tree_str.as_ref().unwrap()) {
                         Ok(x) => x,
-                        Err(e) => {
+                        Err(_) => {
                             println!("Invalid tree JSON");
                             continue;
                         }
@@ -486,13 +465,12 @@ fn main() {
                     };
                     let mut sects: Vec<usize> = Vec::new();
                     println!("Decoder loaded");
-                    let mut parsing = true;
-                    while parsing {
+                    loop {
                         print!("Decoder> ");
-                        io::stdout().flush();
+                        let _ = io::stdout().flush();
                         input = String::new();
                         io::stdin().read_line(&mut input).expect("Failed to read");
-                        let (cmd, mut args) = match parse_command(&input) {
+                        let (cmd, args) = match parse_command(&input) {
                             Some(tuple) => tuple,
                             None => {
                                 println!("Unknown command");
@@ -536,11 +514,11 @@ fn main() {
                             InterCmd::Step => {
                                 // Step through parsing process
                                 for index in &sects {
-                                    file.seek(SeekFrom::Start(
+                                    let _ = file.seek(SeekFrom::Start(
                                         root.source.code[*index].offset as u64,
                                     ));
                                     let mut buff = Vec::new();
-                                    let x = file.read_to_end(&mut buff);
+                                    let _ = file.read_to_end(&mut buff);
                                     buff.drain(root.source.code[*index].size..);
                                     dec.load_code(&buff);
                                     let _ = writeln!(
@@ -577,11 +555,11 @@ fn main() {
                             InterCmd::Parse => {
                                 // Start parsing
                                 for index in &sects {
-                                    file.seek(SeekFrom::Start(
+                                    let _ = file.seek(SeekFrom::Start(
                                         root.source.code[*index].offset as u64,
                                     ));
                                     let mut buff = Vec::new();
-                                    let x = file.read_to_end(&mut buff);
+                                    let _ = file.read_to_end(&mut buff);
                                     buff.drain(root.source.code[*index].size..);
                                     dec.load_code(&buff);
                                     root.source.code[*index].disassembled = dec.parse();
@@ -622,22 +600,22 @@ fn main() {
         // Get write object for output
         let mut output = open_output(opts.get("output").get_str());
         let instruction_max = opts.get("lines").get_usize();
-        for mut section in &mut exe.code {
+        for section in &mut exe.code {
             // Get code
-            writeln!(io::stderr(), "Loading section {}", section.name);
-            file.seek(SeekFrom::Start(section.offset as u64));
+            let _ = writeln!(io::stderr(), "Loading section {}", section.name);
+            let _ = file.seek(SeekFrom::Start(section.offset as u64));
             let mut buff = Vec::new();
-            let x = file.read_to_end(&mut buff);
+            let _ = file.read_to_end(&mut buff);
             buff.drain(section.size..);
             dec.load_code(&buff);
-            writeln!(io::stderr(), "Loaded {} bytes", section.size);
-            writeln!(io::stderr(), "Disassembling...");
+            let _ = writeln!(io::stderr(), "Loaded {} bytes", section.size);
+            let _ = writeln!(io::stderr(), "Disassembling...");
             section.disassembled = if instruction_max == 0 {
                 parse_with_progress(&mut dec)
             } else {
                 dec.parse_n(instruction_max)
             };
-            writeln!(io::stderr(), "{} instructions", section.disassembled.len());
+            let _ = writeln!(io::stderr(), "{} instructions", section.disassembled.len());
         }
 
         output_parsed(
@@ -652,7 +630,7 @@ fn main() {
 const INSTRUCTIONS_PER_UPDATE: usize = 5;
 fn parse_with_progress(dec: &mut Decoder) -> Vec<ParseResponse> {
     // Create progress bar with max as the full size in bytes of the code
-    let mut bar = ProgressBar::new(dec.code.len() as u64);
+    let bar = ProgressBar::new(dec.code.len() as u64);
     bar.set_style(
         ProgressStyle::with_template(
             "{elapsed_precise} {bar:100.cyan} {bytes}/{total_bytes} \n{msg:110}{bytes_per_sec}",
@@ -755,9 +733,8 @@ fn output_parsed(
             let _ = write!(output, "{}", json.unwrap());
         }
         OutputFormat::PrettyPrint => {
-            for mut sec in &exe.code {
+            for sec in &exe.code {
                 let _ = writeln!(output, "section {}", sec.name);
-                let mut vaddr: u64 = 0;
                 for rep in &sec.disassembled {
                     if rep.bytes.is_some() {
                         let tmp = rep.bytes.as_ref().unwrap();
@@ -774,20 +751,17 @@ fn output_parsed(
                     // Print code
                     output_one(rep, output, format, opts);
                     // Increment address
-                    if rep.bytes.is_some() {
-                        vaddr += rep.bytes.as_ref().unwrap().len() as u64;
-                    }
                 }
-                write!(output, "\n");
+                let _ = write!(output, "\n");
             }
         }
         OutputFormat::PlusBytes => {
-            for mut sec in &exe.code {
+            for sec in &exe.code {
                 let _ = writeln!(output, "{}", sec.name);
                 for rep in &sec.disassembled {
                     output_one(rep, output, format, opts);
                 }
-                write!(output, "\n");
+                let _ = write!(output, "\n");
             }
         }
     }
@@ -810,7 +784,7 @@ fn output_one(
         OutputFormat::PlusBytes => {
             let _ = writeln!(output, "{}", response.bytes_to_string());
             let _ = writeln!(output, "{}", response.custom_format(opts));
-            output.flush();
+            let _ = output.flush();
         }
     }
 }
@@ -836,7 +810,7 @@ fn intr_set(root: &mut InterContext, args: Option<String>) {
                 println!("Invalid value");
             }
         }
-        Err(e) => println!("Invalid path"),
+        Err(_) => println!("Invalid path"),
     }
 }
 
@@ -847,7 +821,7 @@ fn intr_print(root: &mut InterContext, args: Option<String>) {
             Ok(x) => {
                 println!("{:#?}", x);
             }
-            Err(e) => println!("Invalid path"),
+            Err(_) => println!("Invalid path"),
         }
     } else {
         println!("Invalid argument")
@@ -929,7 +903,7 @@ fn file_from_path(filename: &str) -> String {
     // Get string version of path
     let path_str = match env::var("PATH") {
         Ok(val) => val,
-        Err(e) => panic!("Failed to fetch PATH from environment"),
+        Err(_) => panic!("Failed to fetch PATH from environment"),
     };
     // Split into array of search directories
     // Seperated by semicolons on windows, and colons on linux/macos
@@ -1186,7 +1160,7 @@ fn parse_format(format: &str) -> OutputFormat {
 }
 
 fn test() {
-    let mut test_bytes = vec![0x0f, 0x20, 0b11000000, 0];
+    let test_bytes = vec![0x0f, 0x20, 0b11000000, 0];
     let format = InstructionFormatting {
         ..Default::default()
     };
@@ -1203,11 +1177,6 @@ fn test() {
     };
     dec.parse_n_print();
     return;
-    let mut reps = dec.parse();
-    for rep in reps {
-        println!("{}", rep.custom_format(&format));
-        rep.print_bytes();
-    }
 }
 
 fn build_tree() {

@@ -1,5 +1,4 @@
 use core::panic;
-use std::usize;
 use std::{collections::HashMap, fmt};
 
 use bevy_reflect::Reflect;
@@ -541,8 +540,7 @@ impl<'a> InstructionTree {
     }
 
     pub fn from_legacy_json(json: &String) -> Vec<Vec<Instruction>> {
-        let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
-        let mut tables: Vec<Vec<InstructionJSON>> = serde_json::from_str(json).expect("Bad JSON");
+        let tables: Vec<Vec<InstructionJSON>> = serde_json::from_str(json).expect("Bad JSON");
         let mut updated: Vec<Vec<Instruction>> = Vec::new();
         for table in tables {
             let mut instructions: Vec<Instruction> = Vec::new();
@@ -618,7 +616,7 @@ impl<'a> InstructionTree {
                 OperandSize::Z
             } else if ins_ops[i].ends_with("256") {
                 OperandSize::QuadQuad
-            } else if (ins_ops[i].ends_with("128") || ins_ops[i].starts_with("xmm")) {
+            } else if ins_ops[i].ends_with("128") || ins_ops[i].starts_with("xmm") {
                 OperandSize::DoubleQuad
             } else if ins_ops[i].ends_with("80") {
                 OperandSize::Penta
@@ -670,7 +668,7 @@ impl<'a> InstructionTree {
                         new.size = OperandSize::Any;
                         Some(RegisterType::CtrlReg)
                     } else if ins_ops[i].starts_with("DR") {
-                        new.size == OperandSize::Any;
+                        new.size = OperandSize::Any;
                         Some(RegisterType::DbgReg)
                     } else if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
@@ -692,7 +690,7 @@ impl<'a> InstructionTree {
                         new.size = OperandSize::Any;
                         Some(RegisterType::CtrlReg)
                     } else if ins_ops[i].starts_with("DR") {
-                        new.size == OperandSize::Any;
+                        new.size = OperandSize::Any;
                         Some(RegisterType::DbgReg)
                     } else if ins_ops[i].contains("mm") || new.size >= OperandSize::DoubleQuad {
                         Some(RegisterType::MMXReg)
@@ -1431,11 +1429,6 @@ pub struct Decoder {
 
 const MAX_PREFIX: usize = 4;
 const MAX_WIDTH: usize = MAX_PREFIX + 8;
-const BASE_REGS_REX_EXTENDED: [&str; 16] = [
-    "A", "C", "D", "B", "SP", "BP", "SI", "DI", "R8", "R9", "R10", "R11", "R12", "R13", "R14",
-    "R15",
-];
-const BASE_REGS: [&str; 8] = ["A", "C", "D", "B", "AH", "CH", "DH", "BH"];
 
 impl Decoder {
     pub fn has_code(&self) -> bool {
@@ -1646,8 +1639,6 @@ impl Decoder {
                 x: 0,
             }
         };
-        // # of operands
-        let mut offset = 0;
         // # of bytes comprising the opperands
         let mut size = 0;
         let mut operands: Vec<Operand> = Vec::new();
@@ -1655,7 +1646,7 @@ impl Decoder {
         // the order of these operands isn't consistant, so modreg may be parsed before or after
         // modrm, which may advance the decoding to parse an SIB byte, ergo we can't rely on the
         // current code to be the modrm byte
-        let mut modrm = Modrm {
+        let modrm = Modrm {
             mode: (self.code.get() & 0b11000000) >> 6,
             reg: (self.code.get() & 0b00111000) >> 3,
             rm: (self.code.get() & 0b00000111),
@@ -1663,7 +1654,7 @@ impl Decoder {
         let mut has_modrm = false;
         for op in instruction.operands.as_ref().unwrap() {
             // Consider prefixes for ops of unspecified size
-            let mut real_size = if op.size != OperandSize::Any {
+            let real_size = if op.size != OperandSize::Any {
                 &op.size
             } else if rex.w {
                 &OperandSize::Quad
@@ -1952,139 +1943,6 @@ impl Decoder {
             i += 1;
         }
         return Immediate { value: val };
-    }
-
-    fn format_reg(&self, index: usize, size: &OperandSize, group: &RegisterType) -> String {
-        let mut result;
-        match group {
-            RegisterType::GPReg => {
-                result = if self.context.rex.is_some() || *size != OperandSize::Byte {
-                    String::from(BASE_REGS_REX_EXTENDED[index])
-                } else {
-                    // These should only be used for byte operations
-                    String::from(BASE_REGS[index])
-                };
-
-                match size {
-                    OperandSize::Quad => {
-                        if result.starts_with("R") {
-                        } else if result.len() == 1 {
-                            result.insert(0, 'R');
-                            result = result + "X";
-                        } else {
-                            result.insert(0, 'R');
-                        }
-                    }
-                    OperandSize::Double => {
-                        if result.starts_with("R") {
-                            result = result + "D";
-                        } else if result.len() == 1 {
-                            result.insert(0, 'E');
-                            result = result + "X";
-                        } else {
-                            result.insert(0, 'E');
-                        }
-                    }
-                    OperandSize::Word => {
-                        if result.starts_with("R") {
-                            result = result + "W";
-                        } else if result.len() == 1 {
-                            result = result + "X";
-                        }
-                    }
-                    OperandSize::Byte => {
-                        if result.starts_with("R") {
-                            result = result + "B";
-                        }
-                    }
-                    _ => panic!("Invalid operand size for General Purpose Register"),
-                }
-            }
-
-            RegisterType::MMXReg => {
-                result = String::from("MM");
-                match size {
-                    // ZMM
-                    OperandSize::DoubleQuadQuad => {
-                        // Size prefix
-                        result.insert(0, 'Z');
-                        // Append number to end
-                        result += &index.to_string();
-                    }
-                    // YMM
-                    OperandSize::QuadQuad => {
-                        // Size prefix
-                        result.insert(0, 'Y');
-                        // Append number to end
-                        result += &index.to_string();
-                    }
-                    // XMM
-                    OperandSize::DoubleQuad => {
-                        // Size prefix
-                        result.insert(0, 'X');
-                        // Append number to end
-                        result += &index.to_string();
-                    }
-                    // MM
-                    OperandSize::Quad => {
-                        // Append number to end
-                        result += &index.to_string();
-                    }
-                    _ => panic!("Invalid operand size for MMX Register"),
-                }
-            }
-
-            RegisterType::KReg => {
-                result = String::from('K');
-                result += &index.to_string();
-            }
-
-            RegisterType::BoundReg => {
-                result = String::from("BND");
-                if index < 4 {
-                    result += &index.to_string();
-                } else {
-                    panic!("Invalid register index for bounds register");
-                }
-            }
-
-            RegisterType::SegReg => {
-                result = String::from(match index {
-                    0 => "ES",
-                    1 => "CS",
-                    2 => "SS",
-                    3 => "DS",
-                    4 => "FS",
-                    5 => "GS",
-                    _ => panic!("Invalid register index for segment register"),
-                });
-            }
-
-            RegisterType::FPUReg => {
-                result = String::from("ST(");
-                result += &index.to_string();
-                result.push(')');
-            }
-
-            RegisterType::CtrlReg => {
-                result = String::from("CR");
-                // CR8 is only accessable when REX.R is set
-                if self.context.rex.is_some() && self.context.rex.as_ref().unwrap().r == 1 {
-                    result += "8"
-                } else {
-                    result += &index.to_string();
-                }
-            }
-
-            RegisterType::DbgReg => {
-                result = String::from("DR");
-                result += &index.to_string();
-            }
-        }
-        if !self.format.reg_uppercase {
-            result = result.to_lowercase();
-        }
-        result
     }
 
     pub fn parse_instruction(&mut self) -> InstructionResponse {

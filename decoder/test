@@ -1,0 +1,4323 @@
+section .init
+	ENDBR64
+	SUB RSP, 0x8
+	MOV RAX, qword [0x7fb9]
+	TEST RAX, RAX
+	JZ 0x2
+	CALL RAX
+	ADD RSP, 0x8
+
+section .plt
+	PUSH qword [0x7dba]
+	JMP qword [0x7dbc]
+	NOP dword [RAX+0x0]
+	ENDBR64
+	PUSH 0x0
+	JMP 0xffffffe2
+	0F
+	PUSH
+	CLI
+	PUSH 0x1
+	JMP 0xffffffd2
+	0F
+	PUSH
+	CLI
+	PUSH 0x2
+	JMP 0xffffffc2
+	0F
+	PUSH
+	CLI
+	PUSH 0x3
+	JMP 0xffffffb2
+	0F
+	PUSH
+	CLI
+	PUSH 0x4
+	JMP 0xffffffa2
+	0F
+	PUSH
+	CLI
+	PUSH 0x5
+	JMP 0xffffff92
+	0F
+	PUSH
+	CLI
+	PUSH 0x6
+	JMP 0xffffff82
+	0F
+	PUSH
+	CLI
+	PUSH 0x7
+	JMP 0xffffff72
+	0F
+	PUSH
+	CLI
+	PUSH 0x8
+	JMP 0xffffff62
+	0F
+	PUSH
+	CLI
+	PUSH 0x9
+	JMP 0xffffff52
+	0F
+	PUSH
+	CLI
+	PUSH 0xa
+	JMP 0xffffff42
+	0F
+	PUSH
+	CLI
+	PUSH 0xb
+	JMP 0xffffff32
+	0F
+	PUSH
+	CLI
+	PUSH 0xc
+	JMP 0xffffff22
+	0F
+	PUSH
+	CLI
+	PUSH 0xd
+	JMP 0xffffff12
+	0F
+	PUSH
+	CLI
+	PUSH 0xe
+	JMP 0xffffff02
+	0F
+	PUSH
+	CLI
+	PUSH 0xf
+	JMP 0xfffffef2
+	0F
+	PUSH
+	CLI
+	PUSH 0x10
+	JMP 0xfffffee2
+	0F
+	PUSH
+	CLI
+	PUSH 0x11
+	JMP 0xfffffed2
+	0F
+	PUSH
+	CLI
+	PUSH 0x12
+	JMP 0xfffffec2
+	0F
+	PUSH
+	CLI
+	PUSH 0x13
+	JMP 0xfffffeb2
+	0F
+	PUSH
+	CLI
+	PUSH 0x14
+	JMP 0xfffffea2
+	0F
+	PUSH
+	CLI
+	PUSH 0x15
+	JMP 0xfffffe92
+	0F
+	PUSH
+	CLI
+	PUSH 0x16
+	JMP 0xfffffe82
+	0F
+	PUSH
+	CLI
+	PUSH 0x17
+	JMP 0xfffffe72
+	0F
+	PUSH
+	CLI
+	PUSH 0x18
+	JMP 0xfffffe62
+	0F
+	PUSH
+	CLI
+	PUSH 0x19
+	JMP 0xfffffe52
+	0F
+	PUSH
+	CLI
+	PUSH 0x1a
+	JMP 0xfffffe42
+	0F
+	PUSH
+	CLI
+	PUSH 0x1b
+	JMP 0xfffffe32
+	0F
+	PUSH
+	CLI
+	PUSH 0x1c
+	JMP 0xfffffe22
+	0F
+	PUSH
+	CLI
+	PUSH 0x1d
+	JMP 0xfffffe12
+	0F
+	PUSH
+	CLI
+	PUSH 0x1e
+	JMP 0xfffffe02
+	0F
+	PUSH
+	CLI
+	PUSH 0x1f
+	JMP 0xfffffdf2
+	0F
+	PUSH
+	CLI
+	PUSH 0x20
+	JMP 0xfffffde2
+	0F
+	PUSH
+	CLI
+	PUSH 0x21
+	JMP 0xfffffdd2
+	0F
+	PUSH
+	CLI
+	PUSH 0x22
+	JMP 0xfffffdc2
+	0F
+	PUSH
+	CLI
+	PUSH 0x23
+	JMP 0xfffffdb2
+	0F
+	PUSH
+	CLI
+	PUSH 0x24
+	JMP 0xfffffda2
+	0F
+	PUSH
+	CLI
+	PUSH 0x25
+	JMP 0xfffffd92
+	0F
+	PUSH
+	CLI
+	PUSH 0x26
+	JMP 0xfffffd82
+	0F
+	PUSH
+	CLI
+	PUSH 0x27
+	JMP 0xfffffd72
+	0F
+	PUSH
+	CLI
+	PUSH 0x28
+	JMP 0xfffffd62
+	0F
+	PUSH
+	CLI
+	PUSH 0x29
+	JMP 0xfffffd52
+	0F
+	PUSH
+	CLI
+	PUSH 0x2a
+	JMP 0xfffffd42
+	0F
+	PUSH
+	CLI
+	PUSH 0x2b
+	JMP 0xfffffd32
+	0F
+	PUSH
+	CLI
+	PUSH 0x2c
+	JMP 0xfffffd22
+	0F
+	PUSH
+	CLI
+	PUSH 0x2d
+	JMP 0xfffffd12
+	0F
+	PUSH
+	CLI
+	PUSH 0x2e
+	JMP 0xfffffd02
+	0F
+	PUSH
+	CLI
+	PUSH 0x2f
+	JMP 0xfffffcf2
+	0F
+	PUSH
+	CLI
+	PUSH 0x30
+	JMP 0xfffffce2
+	0F
+	PUSH
+	CLI
+	PUSH 0x31
+	JMP 0xfffffcd2
+	0F
+	PUSH
+	CLI
+	PUSH 0x32
+	JMP 0xfffffcc2
+	0F
+	PUSH
+	CLI
+	PUSH 0x33
+	JMP 0xfffffcb2
+	0F
+	PUSH
+	CLI
+	PUSH 0x34
+	JMP 0xfffffca2
+	0F
+	PUSH
+	CLI
+	PUSH 0x35
+	JMP 0xfffffc92
+	0F
+	PUSH
+	CLI
+	PUSH 0x36
+	JMP 0xfffffc82
+	90
+
+section .plt.got
+	ENDBR64
+	JMP qword [0x7c3e]
+	00
+
+section .plt.sec
+	ENDBR64
+	JMP qword [0x7a36]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a2e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a26]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a1e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a16]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a0e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7a06]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79fe]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79f6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79ee]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79e6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79de]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79d6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79ce]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79c6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79be]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79b6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79ae]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x79a6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x799e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7996]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x798e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7986]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x797e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7976]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x796e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7966]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x795e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7956]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x794e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7946]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x793e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7936]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x792e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7926]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x791e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7916]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x790e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7906]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78fe]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78f6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78ee]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78e6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78de]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78d6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78ce]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78c6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78be]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78b6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78ae]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x78a6]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x789e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7896]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x788e]
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	JMP qword [0x7886]
+	00
+
+section .text
+	CALL 0xfffffc9b
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	NOP
+	ENDBR64
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R15
+	PUSH R14
+	PUSH R13
+	PUSH R12
+	PUSH RBX
+	SUB RSP, 0x2c8
+	MOV dword [RBP+0xfffffd4c], EDI
+	MOV RBX, qword [RSI]
+	MOV qword [RBP+0xfffffd40], RSI
+	MOV RAX, qword [RBP+0x28]
+	MOV qword [RBP+0xc8], RAX
+	XOR EAX, EAX
+	TEST RBX, RBX
+	JZ 0x10fe
+	MOV ESI, 0x2f
+	MOV RDI, RBX
+	CALL 0xfffffd53
+	MOV R12, RAX
+	TEST RAX, RAX
+	JZ 0x2e
+	LEA R13, qword [RAX+0x1]
+	MOV RAX, R13
+	SUB RAX, RBX
+	CMP RAX, 0x6
+	JNG 0x1e
+	LEA RDI, qword [R12+0xfa]
+	MOV EDX, 0x7
+	LEA RSI, qword [0x490f]
+	CALL 0xfffffc35
+	TEST EAX, EAX
+	JZ 0x18e
+	MOV RAX, qword [0x7816]
+	MOV EDI, 0x6
+	XOR R15D, R15D
+	LEA RSI, qword [0x48e3]
+	MOV qword [0x79d0], RBX
+	LEA R14, qword [0x72c9]
+	LEA R13, qword [0x49c7]
+	MOV qword [RAX], RBX
+	LEA R12, qword [0x54cc]
+	CALL 0xfffffe23
+	LEA RSI, qword [0x48cd]
+	LEA RDI, qword [0x4851]
+	CALL 0xfffffc60
+	LEA RDI, qword [0x4845]
+	CALL 0xfffffc34
+	LEA RDI, qword [0x3b4d]
+	CALL 0x3c78
+	MOV byte [RBP+0xfffffd8e], 0x0
+	MOV byte [RBP+0xfffffd8f], 0x0
+	MOV byte [RBP+0xfffffd8b], 0x0
+	MOV byte [RBP+0xfffffd8a], 0x0
+	MOV byte [RBP+0xfffffd8d], 0x0
+	MOV RSI, qword [RBP+0xfffffd40]
+	XOR R8D, R8D
+	MOV RCX, R14
+	MOV RDX, R13
+	MOV EDI, dword [RBP+0xfffffd4c]
+	CALL 0xfffffc6a
+	CMP EAX, 0xff
+	JZ 0x115
+	CMP EAX, 0x76
+	JNLE 0xb44
+	CMP EAX, 0x40
+	JNG 0x6b
+	SUB EAX, 0x41
+	CMP EAX, 0x35
+	JNBE 0xb33
+	MOVSXD RAX, dword [RAX*4+R12]
+	ADD RAX, R12
+	JMP RAX
+	MOV R15D, 0x1
+	MOV byte [RBP+0xfffffd8e], 0x1
+	MOV byte [RBP+0xfffffd8f], 0x1
+	JMP 0xa2
+	MOV byte [RBP+0xfffffd8a], 0x1
+	MOV byte [RBP+0xfffffd8d], 0x1
+	JMP 0x92
+	MOV byte [RBP+0xfffffd8b], 0x1
+	JMP 0x89
+	MOV R15D, 0x1
+	JMP 0x81
+	MOV byte [RBP+0xfffffd8e], 0x1
+	JMP 0xffffff75
+	MOV byte [RBP+0xfffffd8e], 0x1
+	MOV R15D, 0x1
+	JMP 0xffffff63
+	CMP EAX, 0xffffff7d
+	JNZ 0xb02
+	LEA RDI, qword [0x487e]
+	MOV RSI, RDI
+	CALL 0x149e
+	LEA RSI, qword [0x4883]
+	LEA RDI, qword [0x488f]
+	MOV RBX, RAX
+	CALL 0x1488
+	SUB RSP, 0x8
+	MOV R9, RBX
+	LEA RCX, qword [0x488b]
+	MOV R8, RAX
+	MOV RAX, qword [0x7698]
+	LEA RDX, qword [0x4721]
+	LEA RSI, qword [0x4728]
+	MOV RDI, qword [RAX]
+	PUSH 0x0
+	XOR EAX, EAX
+	CALL 0x1836
+	XOR EDI, EDI
+	CALL 0xfffffd4f
+	MOV EDX, 0x3
+	LEA RSI, qword [0x4770]
+	MOV RDI, R13
+	MOV RBX, R13
+	CALL 0xfffffa88
+	TEST EAX, EAX
+	JNZ 0xfffffe53
+	MOV RAX, qword [0x7679]
+	LEA RBX, qword [R12+0x4]
+	MOV qword [RAX], RBX
+	JMP 0xfffffe3f
+	LEA RAX, qword [RBP+0xfffffdb0]
+	MOV EDI, 0x1
+	MOV RSI, RAX
+	MOV qword [RBP+0xfffffd10], RAX
+	CALL 0xfffffd71
+	MOV EDX, 0x5
+	LEA RSI, qword [0x4815]
+	TEST EAX, EAX
+	JS 0xd38
+	MOV RSI, qword [RBP+0xfffffde8]
+	MOV EDI, dword [RBP+0xfffffdc8]
+	MOV RDX, 0x1fffffffffffffff
+	MOV R14D, 0x20000
+	AND EDI, 0xf000
+	LEA RAX, qword [RSI+0xff]
+	MOV dword [RBP+0xfffffd1c], EDI
+	CMP RDX, RAX
+	JNAE 0x20
+	MOV ECX, 0x1ffff
+	MOV RAX, RCX
+	CQO
+	IDIV RSI
+	SUB RCX, RDX
+	LEA R14, qword [RSI+RCX]
+	CMP EDI, 0x8000
+	JZ 0xf6f
+	MOV RAX, qword [RBP+0xfffffdb0]
+	LEA RBX, qword [0x46bc]
+	MOV qword [0x77ae], RBX
+	MOV qword [RBP+0xfffffd28], RAX
+	MOV RAX, qword [RBP+0xfffffdb8]
+	MOV qword [RBP+0xfffffd20], RAX
+	MOVZX EAX, byte [RBP+0xfffffd8d]
+	OR A, byte [RBP+0xfffffd8f]
+	MOV byte [RBP+0xfffffd4a], A
+	MOV RAX, qword [0x7587]
+	MOV R12D, dword [RAX]
+	CALL 0xfffffc2f
+	MOV byte [RBP+0xfffffd4b], 0x1
+	MOV dword [RBP+0xfffffd34], EAX
+	MOVSXD RAX, R12D
+	MOV qword [RBP+0xfffffd38], RAX
+	MOV byte [RBP+0xfffffd49], 0x0
+	CMP dword [RBP+0xfffffd4c], R12D
+	JNLE 0x60
+	MOV RDI, RBX
+	JMP 0x74
+	MOV RDI, qword [RBP+0xfffffd78]
+	SUB RBX, RDI
+	TEST RBX, RBX
+	JNLE 0x86f
+	MOV RDI, qword [RBP+0xfffffd78]
+	MOV dword [0x771e], R8D
+	CALL 0xfffff91d
+	MOV RDI, qword [RBP+0xfffffd98]
+	CALL 0xfffff911
+	MOV EAX, dword [RBP+0xfffffd30]
+	TEST EAX, EAX
+	JNZ 0x7fa
+	ADD qword [RBP+0xfffffd38], 0x1
+	MOV RAX, qword [RBP+0xfffffd38]
+	CMP dword [RBP+0xfffffd4c], EAX
+	JNG 0xcd5
+	MOV RAX, qword [RBP+0xfffffd40]
+	MOV RSI, qword [RBP+0xfffffd38]
+	MOV RDI, qword [RSI*8+RAX]
+	MOV qword [0x76d7], RDI
+	MOVZX EAX, byte [RDI]
+	SUB EAX, 0x2d
+	MOV dword [RBP+0xfffffd30], EAX
+	JZ 0x6ad
+	XOR ESI, ESI
+	XOR EAX, EAX
+	CALL 0xfffffb44
+	MOV dword [0x76b2], EAX
+	MOV EBX, EAX
+	TEST EAX, EAX
+	JS 0x7ae
+	MOV RSI, qword [RBP+0xfffffd10]
+	MOV EDI, EBX
+	CALL 0xfffffbe6
+	TEST EAX, EAX
+	JS 0xd71
+	MOV RSI, qword [RBP+0xfffffde8]
+	MOV EDI, dword [RBP+0xfffffdc8]
+	MOV qword [RBP+0xfffffd70], 0x20000
+	LEA RAX, qword [RSI+0xff]
+	SHR RAX, 0x3d
+	JNZ 0x2d
+	MOV ECX, 0x1ffff
+	AND EDI, 0xf000
+	MOV RAX, RCX
+	CQO
+	IDIV RSI
+	SUB RCX, RDX
+	LEA RAX, qword [RSI+RCX]
+	MOV qword [RBP+0xfffffd70], RAX
+	CMP EDI, 0x8000
+	JZ 0x7a2
+	XOR EDX, EDX
+	XOR ESI, ESI
+	MOV ECX, 0x2
+	MOV EDI, EBX
+	CALL 0xfffff9bf
+	CMP dword [RBP+0xfffffd1c], 0x8000
+	JZ 0x639
+	CMP byte [RBP+0xfffffd4a], 0x0
+	JNZ 0x19
+	MOVZX EAX, byte [RBP+0xfffffd8e]
+	OR A, R15B
+	JNZ 0xd
+	CMP byte [RBP+0xfffffd8b], 0x0
+	JZ 0x66b
+	MOVSXD RBX, dword [RBP+0xfffffd34]
+	MOV R13, qword [RBP+0xfffffd70]
+	MOV RDI, RBX
+	LEA RSI, qword [R13+0x1]
+	CALL 0xfffffaf3
+	MOV qword [RBP+0xfffffd98], RAX
+	MOV R12, RAX
+	TEST RAX, RAX
+	JZ 0xce1
+	IMUL RAX, R13, 0x4
+	JO 0xcd7
+	ADD RAX, R14
+	JO 0xcce
+	ADD RAX, 0x13
+	MOV qword [RBP+0xfffffd50], RAX
+	JO 0xcbd
+	MOV RSI, RAX
+	MOV RDI, RBX
+	CALL 0xfffffab1
+	MOV qword [RBP+0xfffffd78], RAX
+	TEST RAX, RAX
+	JZ 0xca2
+	MOV R10, R12
+	LEA RSI, qword [R14+RAX]
+	LEA R12, qword [R12+0x1]
+	MOV byte [RBP+0xfffffd8c], 0x1
+	MOV qword [RBP+0xfffffd58], R12
+	MOV R8D, dword [0x756c]
+	MOV RBX, RAX
+	MOV R9, R10
+	MOV qword [RBP+0xfffffd90], RSI
+	NOP dword [RAX]
+	MOV RAX, qword [RBP+0xfffffd90]
+	CMP RBX, RAX
+	JNC 0x260
+	CMP R9, R12
+	JNC 0x2fa
+	CMP byte [RBP+0xfffffd8c], 0x0
+	MOV dword [RBP+0xfffffdac], 0x0
+	JNZ 0x3d8
+	MOV RAX, qword [RBP+0xfffffd78]
+	MOV R12, RBX
+	SUB R12, RAX
+	TEST R12, R12
+	JNLE 0x40a
+	MOV R12D, dword [0x7517]
+	NOP dword [RAX]
+	MOV RDX, qword [RBP+0xfffffd70]
+	MOV RSI, qword [RBP+0xfffffd98]
+	MOV EDI, R12D
+	MOV dword [RBP+0xfffffd80], R8D
+	CALL 0x1283
+	MOV R8D, dword [RBP+0xfffffd80]
+	CMP RAX, 0xff
+	JZ 0xbf8
+	TEST RAX, RAX
+	JZ 0xfffffd96
+	MOV RCX, qword [RBP+0xfffffd98]
+	MOV R12, qword [RBP+0xfffffd58]
+	LEA R9, qword [RAX+RCX]
+	MOV RAX, RCX
+	MOV byte [R9], 0xa
+	MOVZX R13D, byte [RAX]
+	CMP R13B, 0xa
+	JZ 0xffffff52
+	CMP byte [0x74ab], 0x0
+	JZ 0xf
+	MOV byte [0x74a2], 0x0
+	ADD RBX, 0x1
+	MOV byte [RBX+0xff], 0xd
+	TEST R8D, R8D
+	JS 0x2e
+	CMP byte [RBP+0xfffffd8d], 0x0
+	JZ 0x25
+	MOV qword [RBP+0xfffffd80], R9
+	MOV RDI, RBX
+	CALL 0xe7d
+	MOV RSI, qword [0x731e]
+	CALL 0xfffff731
+	MOV R9, qword [RBP+0xfffffd80]
+	MOV RBX, RAX
+	CMP byte [RBP+0xfffffd8e], 0x0
+	MOVZX EDX, word [0x508f]
+	JZ 0x6f
+	MOV EAX, R15D
+	MOVZX EDX, word [0x507f]
+	XOR EAX, 0x1
+	JMP 0x1e
+	NOP dword [RAX+RAX+0x0]
+	CMP R13B, 0x7e
+	JNBE 0x7a
+	MOV byte [RBX], R13B
+	ADD RBX, 0x1
+	MOVZX R13D, byte [R12]
+	ADD R12, 0x1
+	CMP R13B, 0x1f
+	JNBE 0xe4
+	CMP R13B, 0x9
+	JNZ 0x92
+	TEST A, A
+	JZ 0x8a
+	MOV byte [RBX], 0x9
+	ADD RBX, 0x1
+	JMP 0xd6
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	TEST R15B, R15B
+	JZ 0x19
+	MOVZX EAX, byte [R12]
+	MOV word [RBX], DX
+	ADD RBX, 0x2
+	ADD R12, 0x1
+	MOV R13D, EAX
+	CMP R13B, 0x9
+	JZ 0xe2
+	CMP R13B, 0xa
+	JZ 0x258
+	MOVZX EAX, byte [R12]
+	CMP R13B, 0xd
+	JZ 0x91
+	MOV byte [RBX], R13B
+	ADD RBX, 0x1
+	JMP 0xd1
+	CMP R13B, 0x7f
+	JZ 0x5a
+	MOVZX ECX, word [0x4fe7]
+	MOV word [RBX], CX
+	CMP R13B, 0x9f
+	JNA 0x5a
+	CMP R13B, 0xff
+	JZ 0x230
+	ADD R13D, 0x80
+	ADD RBX, 0x3
+	MOV byte [RBX+0xff], R13B
+	JMP 0xffffff5c
+	NOP dword [RAX+0x0]
+	CMP R13B, 0xa
+	JZ 0x1fe
+	ADD R13D, 0x40
+	MOV byte [RBX], 0x5e
+	ADD RBX, 0x2
+	MOV byte [RBX+0xff], R13B
+	JMP 0xffffff37
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	MOV word [RBX], DX
+	ADD RBX, 0x2
+	JMP 0xffffff21
+	NOP dword [RAX+0x0]
+	SUB R13D, 0x40
+	MOV byte [RBX+0x2], 0x5e
+	ADD RBX, 0x4
+	MOV byte [RBX+0xff], R13B
+	JMP 0xffffff08
+	NOP dword [RAX]
+	CMP AL, 0xa
+	JNZ 0xffffff67
+	CMP byte [RBP+0xfffffd8f], 0x0
+	JZ 0xffffff5a
+	CMP R12, R9
+	JZ 0x18e
+	MOV EDX, 0x4d5e
+	MOV RAX, qword [RBP+0xfffffd90]
+	ADD RBX, 0x2
+	ADD R12, 0x1
+	MOV word [RBX+0xfe], DX
+	MOV R8D, 0xffffffff
+	CMP RBX, RAX
+	JNAE 0xfffffda3
+	NOP dword [RAX]
+	MOV qword [RBP+0xfffffd68], R9
+	MOV R13, qword [RBP+0xfffffd78]
+	MOV qword [RBP+0xfffffd80], R12
+	MOV R12, R14
+	MOV R14D, R8D
+	NOP dword [RAX+RAX+0x0]
+	MOV RSI, R12
+	MOV RDI, R13
+	CALL 0x3505
+	CMP R12, RAX
+	JNZ 0x41a
+	ADD R13, R12
+	MOV RDX, RBX
+	SUB RDX, R13
+	CMP R12, RDX
+	JNG 0xde
+	MOV RBX, qword [RBP+0xfffffd78]
+	MOV R9, qword [RBP+0xfffffd68]
+	MOV RSI, R13
+	MOV dword [RBP+0xfffffd68], R14D
+	MOV RCX, qword [RBP+0xfffffd50]
+	MOV R14, R12
+	MOV R12, qword [RBP+0xfffffd80]
+	MOV qword [RBP+0xfffffd80], RDX
+	MOV RDI, RBX
+	MOV qword [RBP+0xfffffd60], R9
+	CALL 0xfffff65f
+	MOV RDX, qword [RBP+0xfffffd80]
+	MOV R9, qword [RBP+0xfffffd60]
+	MOV R8D, dword [RBP+0xfffffd68]
+	LEA RBX, qword [RDX+RBX]
+	CMP R9, R12
+	JNAE 0xfffffd06
+	ADD R8D, 0x1
+	LEA RDX, qword [R12+0x1]
+	TEST R8D, R8D
+	JNG 0x6f
+	CMP R8D, 0x1
+	JZ 0x13
+	CMP byte [RBP+0xfffffd8b], 0x0
+	MOV R8D, 0x2
+	JNZ 0x17a
+	CMP byte [RBP+0xfffffd8a], 0x0
+	JNZ 0x4d
+	CMP byte [RBP+0xfffffd8d], 0x0
+	JZ 0x44
+	MOV dword [RBP+0xfffffd60], R8D
+	MOV RDI, RBX
+	MOV qword [RBP+0xfffffd68], R9
+	MOV qword [RBP+0xfffffd80], RDX
+	CALL 0xbf7
+	MOV RSI, qword [0x7098]
+	CALL 0xfffff4ab
+	MOV R8D, dword [RBP+0xfffffd60]
+	MOV R9, qword [RBP+0xfffffd68]
+	MOV RDX, qword [RBP+0xfffffd80]
+	MOV RBX, RAX
+	NOP dword [RAX]
+	CMP byte [RBP+0xfffffd8f], 0x0
+	MOV RAX, RBX
+	JZ 0x26
+	CMP byte [0x71bd], 0x0
+	JZ 0x16
+	MOVZX EAX, word [0x4de4]
+	MOV byte [0x71ad], 0x0
+	ADD RBX, 0x2
+	MOV word [RBX+0xfe], AX
+	MOV byte [RBX], 0x24
+	LEA RAX, qword [RBX+0x1]
+	MOV byte [RAX], 0xa
+	LEA RBX, qword [RAX+0x1]
+	MOV RAX, R12
+	MOV R12, RDX
+	JMP 0xfffffccc
+	MOV byte [0x7185], 0x1
+	ADD R12, 0x1
+	NOP
+	MOV R8D, 0xffffffff
+	JMP 0xfffffc15
+	NOP dword [RAX+RAX+0x0]
+	MOVZX ECX, word [0x4d9b]
+	ADD RBX, 0x4
+	MOV word [RBX+0xfe], CX
+	JMP 0xfffffd29
+	NOP dword [RAX+0x0]
+	MOV R12D, dword [0x7155]
+	XOR EAX, EAX
+	LEA RDX, qword [RBP+0xfffffdac]
+	MOV ESI, 0x541b
+	MOV dword [RBP+0xfffffd80], R8D
+	MOV EDI, R12D
+	CALL 0xfffff484
+	MOV R8D, dword [RBP+0xfffffd80]
+	TEST EAX, EAX
+	JS 0x4e
+	MOV ECX, dword [RBP+0xfffffdac]
+	TEST ECX, ECX
+	JNZ 0xfffffc0b
+	JMP 0xfffffbe6
+	00
+	ADD byte [RAX+0x8b], C
+	POPFQ
+	JS 0xfd
+	DEC dword [RCX*4+RCX+0xe6]
+	MOV dword [RBP+0xfffffd80], R8D
+	MOV RDI, RBX
+	CALL 0x3337
+	CMP R12, RAX
+	JNZ 0x24c
+	MOV R12D, dword [0x70eb]
+	MOV R8D, dword [RBP+0xfffffd80]
+	JMP 0xfffffbcb
+	CALL 0xfffff2f6
+	MOV R8D, dword [RBP+0xfffffd80]
+	MOV R13, RAX
+	MOV EAX, dword [RAX]
+	CMP EAX, 0x19
+	JNLE 0x26
+	CMP EAX, 0x12
+	JNG 0x2b
+	MOV EDX, 0x2480000
+	BT RDX, RAX
+	JNC 0x20
+	MOV byte [RBP+0xfffffd8c], 0x0
+	JMP 0x83
+	MOVZX R13D, byte [R12]
+	MOV R12, RDX
+	JMP 0xfffffbe3
+	CMP EAX, 0x26
+	JZ 0xe5
+	CMP EAX, 0x5f
+	JZ 0xe0
+	PXOR
+	ROR byte [RAX+0x8b], 0x3d
+	XCHG EDX, EAX
+	JO 0x0
+	ADD byte [RAX+0x8d], C
+	MOV BH, 0x40
+	INC dword [RCX*4+RCX+0x85]
+	NOP
+	STD
+	DEC dword [RDI]
+	ADC dword [RBP+0xfffffe48], EAX
+	MOVUPS
+	TEST dword [RAX+0xfe], EBX
+	JMP qword [RSI+0xf]
+	OUT
+	ROR byte [RDI], 0x11
+	TEST dword [RAX+0xfe], EBP
+	DEC dword [RAX+0xc7]
+	TEST dword [RAX+0xfe], EAX
+	INC dword [RAX+RAX]
+	ADD byte [RAX], A
+	CALL 0x2f73
+	MOV EDX, 0x5
+	LEA RSI, qword [0x4075]
+	XOR EDI, EDI
+	MOV RBX, RAX
+	CALL 0xfffff30d
+	MOV ESI, dword [R13+0x0]
+	MOV RCX, RBX
+	XOR EDI, EDI
+	MOV RDX, RAX
+	XOR EAX, EAX
+	CALL 0xfffff4aa
+	MOV R8D, dword [RBP+0xfffffd90]
+	MOV byte [RBP+0xfffffd4b], 0x0
+	JMP 0xfffff8e7
+	NOP dword [RAX+0x0]
+	MOVZX EAX, byte [RDI+0x1]
+	MOV dword [RBP+0xfffffd30], EAX
+	TEST EAX, EAX
+	JNZ 0xfffff941
+	MOV dword [0x6ff8], 0x0
+	XOR EBX, EBX
+	MOV byte [RBP+0xfffffd49], 0x1
+	JMP 0xfffff942
+	MOV RAX, qword [RBP+0xfffffd28]
+	CMP qword [RBP+0xfffffdb0], RAX
+	JZ 0x160
+	CMP byte [RBP+0xfffffd4a], 0x0
+	JNZ 0xfffff9c8
+	MOVZX EAX, byte [RBP+0xfffffd8e]
+	OR A, R15B
+	JNZ 0xfffff9b8
+	CMP byte [RBP+0xfffffd8b], 0x0
+	JNZ 0xfffff9ab
+	MOV EAX, dword [RBP+0xfffffdc8]
+	AND EAX, 0xf000
+	CMP EAX, 0x8000
+	JZ 0x769
+	MOV RAX, qword [RBP+0xfffffd70]
+	MOVSXD RDI, dword [RBP+0xfffffd34]
+	CMP R14, RAX
+	CMOVGE RAX, R14
+	MOV RSI, RAX
+	MOV RBX, RAX
+	CALL 0xfffff482
+	MOV qword [RBP+0xfffffd98], RAX
+	MOV R13, qword [RBP+0xfffffd98]
+	TEST RAX, RAX
+	JNZ 0x23
+	JMP 0x66b
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	MOV RSI, RAX
+	MOV RDI, R13
+	CALL 0x3185
+	CMP R12, RAX
+	JNZ 0x9a
+	MOV EDI, dword [0x6f3a]
+	MOV RDX, RBX
+	MOV RSI, R13
+	CALL 0xcbb
+	MOV R12, RAX
+	CMP RAX, 0xff
+	JZ 0x550
+	TEST RAX, RAX
+	JNZ 0xc9
+	MOV EAX, 0x1
+	AND byte [RBP+0xfffffd4b], A
+	JMP 0xfffff7ec
+	MOV EDI, dword [0x6f07]
+	CALL 0xfffff26e
+	TEST EAX, EAX
+	JNS 0xfffff7f3
+	MOV RDI, qword [0x6ef7]
+	CALL 0x303a
+	MOV RBX, RAX
+	CALL 0xfffff102
+	MOV RCX, RBX
+	LEA RDX, qword [0x3f19]
+	XOR EDI, EDI
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xfffff34d
+	MOV byte [RBP+0xfffffd4b], 0x0
+	JMP 0xfffff7be
+	MOV RSI, RBX
+	MOV dword [RBP+0xfffffd90], R8D
+	CALL 0x30f2
+	MOV R8D, dword [RBP+0xfffffd90]
+	CMP RBX, RAX
+	JZ 0xfffff772
+	CALL 0xa1d
+	MOV RSI, RAX
+	LEA RAX, qword [RAX+0xff]
+	TEST RSI, RAX
+	JZ 0xfffff84e
+	BSR RAX, RSI
+	LEA ECX, dword [RAX+0x1]
+	MOV EAX, 0x1
+	SAL RAX, CL
+	MOV qword [RBP+0xfffffd70], RAX
+	JMP 0xfffff833
+	MOV RAX, qword [RBP+0xfffffd20]
+	CMP qword [RBP+0xfffffdb8], RAX
+	JNZ 0xfffffe8c
+	XOR ESI, ESI
+	MOV EDX, 0x1
+	MOV EDI, EBX
+	CALL 0xfffff190
+	CMP RAX, qword [RBP+0xfffffde0]
+	JNL 0xfffffe71
+	MOV RDI, qword [0x6e44]
+	CALL 0x2f87
+	MOV EDX, 0x5
+	LEA RSI, qword [0x3e3b]
+	XOR EDI, EDI
+	MOV RBX, RAX
+	CALL 0xfffff0f1
+	MOV RCX, RBX
+	XOR ESI, ESI
+	XOR EDI, EDI
+	MOV RDX, RAX
+	XOR EAX, EAX
+	CALL 0xfffff290
+	MOV byte [RBP+0xfffffd4b], 0x0
+	JMP 0xfffff6f3
+	MOV EDX, 0x5
+	LEA RSI, qword [0x4570]
+	XOR EDI, EDI
+	CALL 0xfffff0c1
+	MOV RCX, RBX
+	MOV ESI, 0x2
+	MOV RDX, RAX
+	MOV RAX, qword [0x6c1f]
+	MOV RDI, qword [RAX]
+	XOR EAX, EAX
+	CALL 0xfffff2d5
+	MOV EDI, 0x1
+	CALL 0xfffff2ab
+	CMP EAX, 0xffffff7e
+	JNZ 0xc0
+	MOV EDX, 0x5
+	LEA RSI, qword [0x40d0]
+	XOR EDI, EDI
+	CALL 0xfffff081
+	MOV RDX, RBX
+	MOV EDI, 0x2
+	LEA R13, qword [0x3c48]
+	MOV RSI, RAX
+	XOR EAX, EAX
+	CALL 0xfffff208
+	MOV RBX, qword [0x6b99]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x40c3]
+	MOV R12, qword [RBX]
+	CALL 0xfffff04b
+	MOV RDI, RAX
+	MOV RSI, R12
+	CALL 0xfffff130
+	MOV R12, qword [RBX]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x40cf]
+	CALL 0xfffff02a
+	MOV RSI, R12
+	MOV RDI, RAX
+	CALL 0xfffff10f
+	MOV R12, qword [RBX]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x40e6]
+	CALL 0xfffff009
+	MOV RSI, R12
+	MOV RDI, RAX
+	CALL 0xfffff0ee
+	MOV R12, qword [RBX]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x4215]
+	CALL 0xffffefe8
+	MOV RSI, R12
+	MOV RDI, RAX
+	CALL 0xfffff0cd
+	MOV R12, qword [RBX]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x42cc]
+	CALL 0xffffefc7
+	MOV RSI, R12
+	MOV RDI, RAX
+	CALL 0xfffff0ac
+	MOV R12, qword [RBX]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x42db]
+	CALL 0xffffefa6
+	MOV RSI, R12
+	MOV RDI, RAX
+	CALL 0xfffff08b
+	MOV R12, qword [0x6cb4]
+	MOV EDX, 0x5
+	XOR EDI, EDI
+	LEA RSI, qword [0x42f6]
+	CALL 0xffffef81
+	MOV RCX, R12
+	MOV RDX, R12
+	MOV EDI, 0x2
+	MOV RSI, RAX
+	XOR EAX, EAX
+	LEA R12, qword [RBP+0xfffffe40]
+	CALL 0xfffff105
+	LEA RAX, qword [0x3bc2]
+	LEA RSI, qword [0x3bb9]
+	MOVQ
+	SHL byte [RSI+0x48]
+	MOVD
+	LEA RAX, qword [0x3bba]
+	PUNPCKLQDQ
+	RET 0x4866
+	MOVD
+	FMUL
+	LEA RAX, qword [0x3bc0]
+	MOVAPS
+	TEST dword [RAX+0xfe], EAX
+	PUSH RBX
+	MOVD
+	ADD EAX, 0x6687
+	PUNPCKLQDQ
+	RET
+	MOVAPS
+	TEST dword [RAX+0xfe], EDX
+	JMP qword [RSI+0x48]
+	MOVD
+	ROR byte [RAX+0x8d], 0x5
+	MOVSXD EDI, dword [RBX]
+	ADD byte [RAX], A
+	MOVQ
+	ENTER 0x8d48, 0x5
+	CWDE
+	CMP EAX, dword [RAX]
+	ADD byte [RSI+0xf], AH
+	INSB
+	ROR dword [RDI], 0x29
+	TEST dword [RAX+0xfe], ESP
+	JMP qword [RSI+0x48]
+	MOVD
+	ROR byte [RAX+0x8d], 0x5
+	MOV EDI, dword [RBX]
+	ADD byte [RAX], A
+	PUNPCKLQDQ
+	ROR dword [RDI], 0x29
+	TEST dword [RAX+0xfe], ESI
+	JMP qword [RSI+0x48]
+	MOVD
+	ROR byte [RAX+0x8d], 0x5
+	JNG 0x3b
+	ADD byte [RAX], A
+	PUNPCKLQDQ
+	ROR dword [RDI], 0x29
+	TEST dword [RAX+0x66fffffe], EAX
+	MOVQ
+	SHL byte [RSI+0xf], 0x6c
+	ROR dword [RDI], 0x29
+	TEST dword [RAX+0x66fffffe], EDX
+	PXOR
+	ROR byte [RDI], 0x29
+	TEST dword [RAX+0xebfffffe], ESP
+	ADC byte [RCX*4+RCX+0xef], C
+	CALL 0xffffefa6
+	TEST EAX, EAX
+	JZ 0xd
+	ADD R12, 0x10
+	MOV RSI, qword [R12]
+	TEST RSI, RSI
+	JNZ 0xe7
+	MOV R14, qword [R12+0x8]
+	MOV EDX, 0x5
+	LEA RSI, qword [0x3b36]
+	XOR EDI, EDI
+	TEST R14, R14
+	JZ 0xf4
+	CALL 0xffffee74
+	LEA R12, qword [0x426d]
+	MOV EDI, 0x2
+	LEA RDX, qword [0x3a29]
+	MOV RSI, RAX
+	MOV RCX, R12
+	XOR EAX, EAX
+	CALL 0xffffeff4
+	XOR ESI, ESI
+	MOV EDI, 0x5
+	CALL 0xffffefd8
+	TEST RAX, RAX
+	JZ 0x1c
+	MOV EDX, 0x3
+	LEA RSI, qword [0x3b00]
+	MOV RDI, RAX
+	CALL 0xffffed8f
+	TEST EAX, EAX
+	JNZ 0x11e
+	MOV EDX, 0x5
+	LEA RSI, qword [0x3ae8]
+	XOR EDI, EDI
+	CALL 0xffffee14
+	MOV RCX, R13
+	MOV RDX, R12
+	MOV EDI, 0x2
+	MOV RSI, RAX
+	XOR EAX, EAX
+	LEA RBX, qword [0x3a29]
+	CALL 0xffffef98
+	CMP R14, R13
+	JZ 0xd3
+	MOV EDX, 0x5
+	LEA RSI, qword [0x4253]
+	XOR EDI, EDI
+	CALL 0xffffeddc
+	MOV EDI, 0x2
+	MOV RCX, RBX
+	MOV RDX, R14
+	MOV RSI, RAX
+	XOR EAX, EAX
+	CALL 0xffffef67
+	XOR EDI, EDI
+	CALL 0xffffefd0
+	XOR EDI, EDI
+	CALL 0xffffee59
+	TEST EAX, EAX
+	JNS 0xe8
+	MOV EDX, 0x5
+	LEA RSI, qword [0x3b1b]
+	XOR EDI, EDI
+	CALL 0xffffed9e
+	MOV RBX, RAX
+	CALL 0xffffece6
+	MOV RDX, RBX
+	MOV EDI, 0x1
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xffffef35
+	CALL 0xffffed80
+	LEA R12, qword [0x4179]
+	LEA RDX, qword [0x393a]
+	MOV EDI, 0x2
+	MOV RSI, RAX
+	MOV RCX, R12
+	LEA R14, qword [0x3936]
+	XOR EAX, EAX
+	CALL 0xffffeef9
+	XOR ESI, ESI
+	MOV EDI, 0x5
+	CALL 0xffffeedd
+	TEST RAX, RAX
+	JNZ 0xffffff01
+	MOV EDX, 0x5
+	LEA RSI, qword [0x3a05]
+	XOR EDI, EDI
+	CALL 0xffffed31
+	MOV RCX, R13
+	MOV RDX, R12
+	MOV EDI, 0x2
+	MOV RSI, RAX
+	XOR EAX, EAX
+	CALL 0xffffeebc
+	LEA R14, qword [0x38eb]
+	LEA RBX, qword [0x398c]
+	JMP 0xffffff1a
+	MOV RBX, qword [RBX]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	LEA RSI, qword [0x4120]
+	CALL 0xffffecf3
+	MOV RDI, RAX
+	MOV RSI, RBX
+	CALL 0xffffedd8
+	JMP 0xfffffebc
+	CMP byte [0x6a0c], 0x0
+	JNZ 0xa4
+	CMP byte [RBP+0xfffffd49], 0x0
+	JNZ 0xffffff09
+	MOVZX EAX, byte [RBP+0xfffffd4b]
+	XOR EAX, 0x1
+	MOVZX EAX, A
+	MOV RDX, qword [RBP+0xc8]
+	SUB RDX, qword [RBP+0x28]
+	JNZ 0x76
+	LEA RSP, qword [RBP+0xd8]
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP R15
+	POP RBP
+	RET
+	MOVDQA
+	ADD EAX, 0x45e6
+	MOV RDI, qword [0x69c7]
+	LEA RSI, qword [RBP+0xfffffe40]
+	MOV qword [RBP+0xfffffe40], 0x3
+	MOVUPS
+	TEST dword [RAX+0xfe], ECX
+	JMP qword [RSI+0xf]
+	OUT
+	ROR byte [RDI], 0x11
+	TEST dword [RAX+0xfe], EBX
+	JMP qword [RSI+0xf]
+	OUT
+	ROR byte [RDI], 0x11
+	TEST dword [RAX+0xfe], EBP
+	JMP AX
+	STOSD
+	SUB byte [RAX], A
+	ADD byte [RAX+0x89], C
+	RET
+	CALL 0xffffeba3
+	MOV RCX, RBX
+	LEA RDX, qword [0x39ba]
+	XOR EDI, EDI
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xffffedee
+	XOR EAX, EAX
+	JMP 0xfffffa53
+	CALL 0xffffec62
+	MOV ESI, 0x1
+	LEA RDI, qword [0x399a]
+	CALL 0x2b91
+	SUB RAX, 0x1
+	JZ 0xffffff41
+	JMP 0xfffffaa0
+	MOV RAX, qword [0x677b]
+	MOV EDX, 0x37
+	MOV ESI, 0x1
+	LEA RDI, qword [0x3c0a]
+	MOV RCX, qword [RAX]
+	CALL 0xffffee12
+	CALL 0xffffeb2d
+	MOV RDI, qword [0x691e]
+	CALL 0x2a61
+	MOV RBX, RAX
+	CALL 0xffffeb29
+	MOV RCX, RBX
+	LEA RDX, qword [0x3940]
+	XOR EDI, EDI
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xffffed74
+	JMP 0xfffffadf
+	CALL 0x6da
+	MOVDQA
+	ADD EAX, 0x4502
+	MOV RDI, qword [0x68e3]
+	LEA RSI, qword [RBP+0xfffffe40]
+	MOV dword [RBP+0xfffffd90], R8D
+	MOV qword [RBP+0xfffffe40], 0x3
+	MOVUPS
+	TEST dword [RAX+0xfe], ECX
+	JMP qword [RSI+0xf]
+	OUT
+	ROR byte [RDI], 0x11
+	TEST dword [RAX+0xfe], EBX
+	JMP qword [RSI+0xf]
+	OUT
+	ROR byte [RDI], 0x11
+	TEST dword [RAX+0xfe], EBP
+	JMP AX
+	SHL byte [RDI], 0x0
+	ADD byte [RCX+0x89], C
+	LES EBP, AX
+	MOV EAX, 0x31ffffea
+	DEC dword [RCX*4+RCX+0xe1]
+	LEA RDX, qword [0x38cd]
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xffffed03
+	MOV RDI, qword [RBP+0xfffffd78]
+	MOV R8D, dword [RBP+0xfffffd90]
+	SUB RBX, RDI
+	TEST RBX, RBX
+	JNG 0xfffff846
+	MOV RSI, RBX
+	CALL 0x2aa1
+	MOV R8D, dword [RBP+0xfffffd90]
+	CMP RBX, RAX
+	JZ 0xfffff82e
+	JMP 0xfffff9aa
+	LEA RAX, qword [R14+0xff]
+	TEST RAX, R14
+	JZ 0xfffff084
+	BSR R8, R14
+	MOV R14D, 0x1
+	LEA ECX, dword [R8+0x1]
+	SAL R14, CL
+	JMP 0xfffff06e
+	MOV R12, 0x7fffffffc0000000
+	XOR R13D, R13D
+	CMP byte [0x680d], 0x0
+	MOV EBX, dword [0x6813]
+	JZ 0x3a
+	CMP byte [0x67fe], 0x0
+	JNG 0xa4
+	XOR R9D, R9D
+	XOR ECX, ECX
+	XOR ESI, ESI
+	MOV R8, R12
+	MOV EDX, 0x1
+	MOV EDI, EBX
+	CALL 0xffffeb4a
+	CMP RAX, 0xff
+	JZ 0x8f
+	TEST RAX, RAX
+	JZ 0x2a
+	MOV R13D, 0x1
+	JMP 0xb7
+	LEA RDI, qword [RBP+0xfffffe40]
+	CALL 0xffffeaf7
+	CMP byte [RBP+0xfffffec3], 0x2e
+	MOV EAX, 0x1
+	JZ 0x2f
+	MOV byte [0x67ab], A
+	JMP 0xa4
+	MOV EAX, 0x1
+	TEST R13B, R13B
+	JZ 0xfffff811
+	TEST EAX, EAX
+	SETNLE A
+	XOR ESI, ESI
+	AND byte [RBP+0xfffffd4b], A
+	MOV qword [RBP+0xfffffd98], RSI
+	JMP 0xfffff06d
+	CMP byte [RBP+0xfffffec2], 0x35
+	JNLE 0xc8
+	MOV EAX, 0xffffffff
+	JNZ 0xc1
+	CMP byte [RBP+0xfffffec5], 0x2e
+	MOV EAX, 0x1
+	JNZ 0xb3
+	CMP byte [RBP+0xfffffec4], 0x32
+	SETNLE A
+	LEA EAX, dword [RAX+RAX+0xff]
+	JMP 0xa3
+	CALL 0xffffe977
+	MOV dword [RAX], 0x26
+	CALL 0xffffe96c
+	MOV RBX, RAX
+	MOV EAX, dword [RAX]
+	CMP EAX, 0x1a
+	JNLE 0x3c
+	TEST EAX, EAX
+	JNG 0xf
+	MOV EDX, 0x4440202
+	BT RDX, RAX
+	JNAE 0xfffff79d
+	MOV RDI, qword [0x6730]
+	CALL 0x2873
+	MOV ESI, dword [RBX]
+	LEA RDX, qword [0x375b]
+	XOR EDI, EDI
+	MOV RCX, RAX
+	XOR EAX, EAX
+	CALL 0xffffeb8e
+	OR EAX, 0xff
+	JMP 0xffffff63
+	CMP EAX, 0x26
+	JZ 0xfffff76b
+	CMP EAX, 0x5f
+	JZ 0xfffff762
+	JMP 0xc3
+	0F
+	PUSH
+	CLI
+	XOR EBP, EBP
+	MOV R9, RDX
+	POP RSI
+	MOV RDX, RSP
+	AND RSP, 0xf0
+	PUSH RAX
+	PUSH RSP
+	XOR R8D, R8D
+	XOR ECX, ECX
+	LEA RDI, qword [0xffffec51]
+	CALL qword [0x64c3]
+	HLT
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	LEA RDI, qword [0x6571]
+	LEA RAX, qword [0x656a]
+	CMP RAX, RDI
+	JZ 0x15
+	MOV RAX, qword [0x64a6]
+	TEST RAX, RAX
+	JZ 0x9
+	JMP RAX
+	NOP dword [RAX+0x0]
+	RET
+	NOP dword [RAX+0x0]
+	LEA RDI, qword [0x6541]
+	LEA RSI, qword [0x653a]
+	SUB RSI, RDI
+	MOV RAX, RSI
+	SHR RSI, 0x3f
+	SAR RAX, 0x3
+	ADD RSI, RAX
+	SAR RSI
+	JZ 0x14
+	MOV RAX, qword [0x648d]
+	TEST RAX, RAX
+	JZ 0x8
+	JMP RAX
+	00
+	ADD B, A
+	NOP dword [RAX+0x0]
+	ENDBR64
+	CMP byte [0x6515], 0x0
+	JNZ 0x2b
+	PUSH RBP
+	CMP qword [0x6472], 0x0
+	MOV RBP, RSP
+	JZ 0xc
+	MOV RDI, qword [0x6486]
+	CALL 0xffffe819
+	CALL 0xffffff64
+	MOV byte [0x64ed], 0x1
+	POP RBP
+	RET
+	NOP dword [RAX]
+	RET
+	NOP dword [RAX+0x0]
+	ENDBR64
+	JMP 0xffffff77
+	NOP dword [RAX+0x0]
+	MOV RCX, qword [0x64a9]
+	LEA RAX, qword [0x6473]
+	JMP 0xd
+	SUB RAX, 0x1
+	MOV byte [RAX+0x1], 0x30
+	CMP RAX, RCX
+	JNAE 0x13
+	MOVZX EDX, byte [RAX]
+	CMP D, 0x38
+	JNLE 0xeb
+	ADD EDX, 0x1
+	MOV byte [RAX], D
+	RET
+	NOP dword [RAX+RAX+0x0]
+	LEA RAX, qword [0x6439]
+	CMP RAX, RCX
+	JNC 0x2c
+	LEA RDX, qword [RCX+0xff]
+	MOV byte [RCX+0xff], 0x31
+	MOV qword [0x6465], RDX
+	MOV RAX, qword [0x6456]
+	CMP RDX, RAX
+	JNC 0xb
+	SUB RAX, 0x1
+	MOV qword [0x6446], RAX
+	RET
+	NOP dword [RAX+RAX+0x0]
+	MOV byte [0x6401], 0x3e
+	MOV RDX, RCX
+	JMP 0xd7
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	NOP
+	MOV RAX, RDI
+	MOV RDI, RSI
+	MOVSX ESI, D
+	SUB ESI, 0x41
+	MOVZX R8D, byte [RAX+0x7]
+	CMP ESI, 0x19
+	JNBE 0xa6
+	AND R8D, 0xdf
+	CMP R8B, D
+	JNZ 0xb9
+	MOVSX EDX, C
+	MOVZX R8D, byte [RAX+0x8]
+	SUB EDX, 0x41
+	CMP EDX, 0x19
+	JNBE 0xad
+	AND R8D, 0xdf
+	CMP C, R8B
+	JNZ 0x98
+	MOV ESI, 0x1
+	CMP RAX, RDI
+	JZ 0x64
+	MOV EDX, 0x9
+	JMP 0x24
+	NOP dword [RAX+0x0]
+	ADD R8D, 0x20
+	ADD ESI, 0x20
+	CMP R10D, 0x19
+	JNBE 0x7
+	ADD R9D, 0x20
+	ADD ECX, 0x20
+	ADD RDX, 0x1
+	CMP SI, C
+	JNZ 0x30
+	MOVZX R8D, byte [RDX+RAX]
+	MOVZX R9D, byte [RDX+RDI]
+	LEA R11D, dword [R8+0xbf]
+	MOV ESI, R8D
+	LEA R10D, dword [R9+0xbf]
+	MOV ECX, R9D
+	CMP R11D, 0x19
+	JNA 0xc5
+	CMP R10D, 0x19
+	JNBE 0x7
+	ADD R9D, 0x20
+	ADD ECX, 0x20
+	TEST R8D, R8D
+	JNZ 0xc7
+	XOR ESI, ESI
+	CMP R8D, R9D
+	SETZ SI
+	MOV EAX, ESI
+	RET
+	NOP dword [RAX+0x0]
+	XOR ESI, ESI
+	CMP D, R8B
+	JNZ 0xef
+	MOV ESI, 0x1
+	TEST D, D
+	JNZ 0xffffff53
+	MOV EAX, ESI
+	RET
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	XOR ESI, ESI
+	MOV EAX, ESI
+	RET
+	NOP dword [RAX]
+	XOR ESI, ESI
+	CMP C, R8B
+	JNZ 0xc7
+	MOV ESI, 0x1
+	TEST C, C
+	JZ 0xbe
+	JMP 0xffffff4b
+	NOP dword [RAX]
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R12
+	PUSH RBX
+	CALL 0xffffe694
+	MOV RBX, qword [0x6275]
+	MOV R12D, dword [RAX]
+	MOV RDI, qword [RBX]
+	CALL 0xffffe982
+	MOV RDI, qword [RBX]
+	CALL 0xffffe6da
+	MOV RDI, qword [RBX]
+	CALL 0xffffe6b2
+	MOV EDX, 0x5
+	LEA RSI, qword [0x329a]
+	XOR EDI, EDI
+	CALL 0xffffe70f
+	MOV ESI, R12D
+	MOV EDI, 0x1
+	MOV RDX, RAX
+	XOR EAX, EAX
+	CALL 0xffffe8ad
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	BA
+	MOV EDX, 0x5
+	MOV RBP, RSP
+	PUSH R13
+	MOV R13, RSI
+	MOV RSI, RDI
+	PUSH R12
+	MOV R12, RDI
+	XOR EDI, EDI
+	PUSH RBX
+	SUB RSP, 0x8
+	CALL 0xffffe6ce
+	MOV RBX, RAX
+	CMP R12, RAX
+	JZ 0xe
+	ADD RSP, 0x8
+	MOV RAX, RBX
+	POP RBX
+	POP R12
+	POP R13
+	POP RBP
+	RET
+	MOV EDI, 0xe
+	CALL 0xffffe80e
+	TEST RAX, RAX
+	JZ 0x16
+	CMP byte [RAX], 0x0
+	JZ 0x11
+	LEA RDX, qword [0x3233]
+	CMP RAX, RDX
+	JNZ 0xc
+	MOV RBX, R13
+	JMP 0xcd
+	LEA RAX, qword [0x321c]
+	LEA R8, qword [0x321b]
+	JMP 0x1e
+	ADD EDI, 0x20
+	ADD ECX, 0x20
+	CMP R9D, 0x19
+	JNBE 0x6
+	ADD ESI, 0x20
+	ADD EDX, 0x20
+	ADD RAX, 0x1
+	ADD R8, 0x1
+	CMP C, D
+	JNZ 0x28
+	MOVZX EDI, byte [RAX]
+	MOVZX ESI, byte [R8]
+	LEA R10D, dword [RDI+0xbf]
+	MOV ECX, EDI
+	LEA R9D, dword [RSI+0xbf]
+	MOV EDX, ESI
+	CMP R10D, 0x19
+	JNA 0xc9
+	CMP R9D, 0x19
+	JNBE 0x3
+	ADD ESI, 0x20
+	MOV EDX, ESI
+	TEST EDI, EDI
+	JNZ 0xcc
+	CMP EDI, ESI
+	CMOVE RBX, R13
+	JMP 0xffffff6c
+	48
+	MOV RBP, RSP
+	PUSH R12
+	MOV R12D, ESI
+	PUSH RBX
+	MOV RBX, RDI
+	MOV EDI, 0xe
+	CALL 0xffffe779
+	TEST RAX, RAX
+	JZ 0x63
+	MOV RDI, RAX
+	MOVZX EAX, byte [RAX]
+	TEST A, A
+	JZ 0x59
+	AND EAX, 0xdf
+	CMP AL, 0x55
+	JNZ 0x43
+	MOVZX EAX, byte [RDI+0x1]
+	AND EAX, 0xdf
+	CMP AL, 0x54
+	JNZ 0x47
+	MOVZX EAX, byte [RDI+0x2]
+	AND EAX, 0xdf
+	CMP AL, 0x46
+	JNZ 0x3c
+	CMP byte [RDI+0x3], 0x2d
+	JNZ 0x36
+	CMP byte [RDI+0x4], 0x38
+	JNZ 0x30
+	CMP byte [RDI+0x5], 0x0
+	JNZ 0x2a
+	CMP byte [RBX], 0x60
+	LEA RAX, qword [0x316d]
+	LEA RDX, qword [0x3175]
+	POP RBX
+	CMOVE RAX, RDX
+	POP R12
+	POP RBP
+	RET
+	NOP
+	CMP AL, 0x47
+	JNZ 0xb
+	MOVZX EAX, byte [RDI+0x1]
+	AND EAX, 0xdf
+	CMP AL, 0x42
+	JZ 0x21
+	CMP R12D, 0x9
+	LEA RAX, qword [0x314b]
+	LEA RDX, qword [0x3142]
+	POP RBX
+	CMOVE RAX, RDX
+	POP R12
+	POP RBP
+	RET
+	00
+	ADD byte [RAX+0x7531027f], A
+	FLD
+	CMP byte [RDI+0x3], 0x38
+	JNZ 0xd3
+	CMP byte [RDI+0x4], 0x30
+	JNZ 0xcd
+	CMP byte [RDI+0x5], 0x33
+	JNZ 0xc7
+	CMP byte [RDI+0x6], 0x30
+	JNZ 0xc1
+	XOR ECX, ECX
+	XOR EDX, EDX
+	LEA RSI, qword [0x3116]
+	CALL 0xfffffd12
+	TEST EAX, EAX
+	JZ 0xad
+	CMP byte [RBX], 0x60
+	LEA RAX, qword [0x30f4]
+	LEA RDX, qword [0x30f4]
+	POP RBX
+	CMOVE RAX, RDX
+	POP R12
+	POP RBP
+	RET
+	NOP dword [RAX+0x0]
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R14
+	MOV R14D, EDI
+	PUSH R13
+	MOV R13, RSI
+	PUSH R12
+	MOV R12, RDX
+	PUSH RBX
+	NOP dword [RAX+0x0]
+	MOV RDX, R12
+	MOV RSI, R13
+	MOV EDI, R14D
+	CALL 0xffffe5ea
+	MOV RBX, RAX
+	TEST RAX, RAX
+	JNS 0x22
+	CALL 0xffffe45d
+	MOV EAX, dword [RAX]
+	CMP EAX, 0x4
+	JZ 0xde
+	CMP EAX, 0x16
+	JNZ 0x11
+	CMP R12, 0x7ff00000
+	JNA 0x8
+	MOV R12D, 0x7ff00000
+	JMP 0xc8
+	MOV RAX, RBX
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP RBP
+	RET
+	NOP dword [RAX+0x0]
+	PUSH RBP
+	MOV EDX, 0x5
+	LEA RSI, qword [0x308a]
+	XOR EDI, EDI
+	MOV RBP, RSP
+	PUSH RBX
+	SUB RSP, 0x8
+	MOV EBX, dword [0x6057]
+	CALL 0xffffe4be
+	LEA RDX, qword [0x3228]
+	XOR ESI, ESI
+	MOV RCX, RAX
+	MOV EDI, EBX
+	XOR EAX, EAX
+	CALL 0xffffe659
+	CALL 0xffffe3e4
+	NOP dword [RAX+0x0]
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R13
+	PUSH R12
+	PUSH RBX
+	MOV RBX, RDI
+	SUB RSP, 0x8
+	CALL 0xffffe5bb
+	MOV RDI, RBX
+	TEST EAX, EAX
+	JS 0x6b
+	CALL 0xffffe5ef
+	TEST EAX, EAX
+	JNZ 0x43
+	MOV RDI, RBX
+	CALL 0xffffe5e3
+	TEST EAX, EAX
+	JNZ 0x6f
+	MOV RDI, RBX
+	CALL 0xffffe5b7
+	TEST EAX, EAX
+	JZ 0x47
+	CALL 0xffffe3ae
+	MOV RDI, RBX
+	MOV R13D, dword [RAX]
+	MOV R12, RAX
+	CALL 0xffffe420
+	TEST R13D, R13D
+	JNZ 0xb7
+	ADD RSP, 0x8
+	POP RBX
+	POP R12
+	POP R13
+	POP RBP
+	RET
+	NOP dword [RAX+0x0]
+	MOV RDI, RBX
+	CALL 0xffffe560
+	XOR ESI, ESI
+	MOV EDX, 0x1
+	MOV EDI, EAX
+	CALL 0xffffe492
+	CMP RAX, 0xff
+	JNZ 0xa1
+	MOV RDI, RBX
+	ADD RSP, 0x8
+	POP RBX
+	POP R12
+	POP R13
+	POP RBP
+	JMP 0xffffe3da
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	TEST dword [RBX], 0x100
+	JZ 0x89
+	MOV RAX, qword [RBX+0x8]
+	CMP qword [RBX+0x10], RAX
+	JZ 0x1e
+	MOV EDX, 0x1
+	XOR ESI, ESI
+	MOV RDI, RBX
+	CALL 0xffffe5af
+	JMP 0xffffff6b
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	MOV RAX, qword [RBX+0x20]
+	CMP qword [RBX+0x28], RAX
+	JNZ 0xd8
+	CMP qword [RBX+0x48], 0x0
+	JNZ 0xd1
+	MOV RDI, RBX
+	CALL 0xffffe4e7
+	XOR ESI, ESI
+	MOV EDX, 0x1
+	MOV EDI, EAX
+	CALL 0xffffe419
+	CMP RAX, 0xff
+	JZ 0xffffff30
+	AND dword [RBX], 0xef
+	MOV qword [RBX+0x90], RAX
+	JMP 0xffffff21
+	MOV dword [R12], R13D
+	MOV EAX, 0xffffffff
+	JMP 0xffffff3b
+	48
+	MOV RBP, RSP
+	PUSH R13
+	PUSH R12
+	PUSH RBX
+	MOV RBX, RDI
+	SUB RSP, 0x8
+	CALL 0xffffe2eb
+	MOV R12D, dword [RBX]
+	MOV RDI, RBX
+	MOV R13, RAX
+	AND R12D, 0x20
+	CALL 0xfffffeb9
+	TEST R12D, R12D
+	JNZ 0x24
+	TEST EAX, EAX
+	JZ 0x15
+	TEST R13, R13
+	JNZ 0x2a
+	CALL 0xffffe296
+	CMP dword [RAX], 0x9
+	SETNZ A
+	MOVZX EAX, A
+	NEG EAX
+	ADD RSP, 0x8
+	POP RBX
+	POP R12
+	POP R13
+	POP RBP
+	RET
+	TEST EAX, EAX
+	JNZ 0xb
+	CALL 0xffffe277
+	MOV dword [RAX], 0x0
+	MOV EAX, 0xffffffff
+	JMP 0xdf
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	PUSH RBP
+	MOV R10, RCX
+	MOV RBP, RSP
+	PUSH R15
+	PUSH R14
+	PUSH R13
+	PUSH R12
+	MOV R12, RDI
+	PUSH RBX
+	SUB RSP, 0x168
+	MOV qword [RBP+0xffffff40], R8
+	MOV qword [RBP+0xffffff48], R9
+	TEST A, A
+	JZ 0x29
+	MOVAPS
+	TEST dword [RAX+0xff], EDX
+	DEC dword [RDI]
+	SUB dword [RBP+0xffffff60], ECX
+	MOVAPS
+	XCHG EBP, EAX
+	JO 0xff
+	DEC dword [RDI]
+	SUB dword [RBP+0x80], EBX
+	MOVAPS
+	NOP
+	MOVAPS
+	INSD
+	MOV AL, 0xf
+	SUB dword [RBP+0xb0], ESI
+	MOVAPS
+	JNL 0xc0
+	MOV RAX, qword [RBP+0x28]
+	MOV qword [RBP+0xffffff18], RAX
+	XOR EAX, EAX
+	LEA R9, qword [RBP+0xffffff20]
+	LEA RAX, qword [RBP+0x10]
+	XOR EDI, EDI
+	MOV qword [RBP+0xfffffea8], RAX
+	LEA RCX, qword [RBP+0x10]
+	XOR R8D, R8D
+	XOR EBX, EBX
+	MOV dword [RBP+0xfffffea0], 0x20
+	MOV EDX, 0x20
+	LEA RSI, qword [RBP+0xfffffec0]
+	MOV dword [RBP+0xfffffea4], 0x30
+	MOV qword [RBP+0xfffffeb0], R9
+	JMP 0x2b
+	NOP dword [RAX]
+	MOV EAX, EDX
+	MOV R8D, 0x1
+	ADD EDX, 0x8
+	ADD RAX, R9
+	MOV RAX, qword [RAX]
+	MOV qword [RBX*8+RSI], RAX
+	TEST RAX, RAX
+	JZ 0x2b
+	ADD RBX, 0x1
+	CMP RBX, 0xa
+	JZ 0xee
+	CMP EDX, 0x2f
+	JNA 0xd3
+	MOV RAX, RCX
+	MOV EDI, 0x1
+	ADD RCX, 0x8
+	MOV RAX, qword [RAX]
+	MOV qword [RBX*8+RSI], RAX
+	TEST RAX, RAX
+	JNZ 0xd5
+	TEST DI, DI
+	JZ 0x7
+	MOV qword [RBP+0xfffffea8], RCX
+	TEST R8B, R8B
+	JZ 0x6
+	MOV dword [RBP+0xfffffea0], EDX
+	MOV R9, R10
+	LEA R8, qword [0x2dc2]
+	MOV RDI, R12
+	XOR EAX, EAX
+	LEA RCX, qword [0x2dc4]
+	LEA RDX, qword [0x2dc1]
+	MOV ESI, 0x2
+	CALL 0xffffe40d
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2db5]
+	CALL 0xffffe1ca
+	MOV R8D, 0x7e7
+	MOV ESI, 0x2
+	MOV RDI, R12
+	MOV RCX, RAX
+	LEA RDX, qword [0x3ad2]
+	XOR EAX, EAX
+	CALL 0xffffe3db
+	MOV RSI, R12
+	MOV EDI, 0xa
+	CALL 0xffffe2ae
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2f80]
+	CALL 0xffffe18b
+	MOV ESI, 0x2
+	MOV RDI, R12
+	LEA RCX, qword [0x301c]
+	MOV RDX, RAX
+	XOR EAX, EAX
+	CALL 0xffffe3a2
+	MOV RSI, R12
+	MOV EDI, 0xa
+	CALL 0xffffe275
+	CMP RBX, 0x9
+	JNBE 0x169
+	LEA RDX, qword [0x3634]
+	MOVSXD RAX, dword [RBX*4+RDX]
+	ADD RAX, RDX
+	JMP RAX
+	MOV R9, R10
+	LEA R8, qword [0x2d08]
+	MOV RDI, R12
+	XOR EAX, EAX
+	LEA RCX, qword [0x2d0a]
+	LEA RDX, qword [0x2d07]
+	MOV ESI, 0x2
+	CALL 0xffffe353
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2cfd]
+	XOR EDI, EDI
+	CALL 0xffffe110
+	MOV R8D, 0x7e7
+	MOV ESI, 0x2
+	MOV RDI, R12
+	MOV RCX, RAX
+	LEA RDX, qword [0x3a18]
+	XOR EAX, EAX
+	CALL 0xffffe321
+	MOV RSI, R12
+	MOV EDI, 0xa
+	CALL 0xffffe1f4
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2ec8]
+	XOR EDI, EDI
+	CALL 0xffffe0d1
+	LEA RCX, qword [0x2f6a]
+	MOV ESI, 0x2
+	MOV RDI, R12
+	MOV RDX, RAX
+	XOR EAX, EAX
+	CALL 0xffffe2e8
+	MOV RSI, R12
+	MOV EDI, 0xa
+	CALL 0xffffe1bb
+	MOV R11, qword [RBP+0xffffff00]
+	MOV R10, qword [RBP+0xfffffef8]
+	MOV EDX, 0x5
+	MOV R9, qword [RBP+0xfffffed0]
+	MOV R8, qword [RBP+0xfffffec8]
+	LEA RSI, qword [0x2f4b]
+	MOV RCX, qword [RBP+0xfffffec0]
+	MOV qword [RBP+0xfffffe78], R11
+	MOV qword [RBP+0xfffffe80], R10
+	MOV R14, qword [RBP+0xfffffef0]
+	MOV qword [RBP+0xfffffe88], R9
+	MOV R13, qword [RBP+0xfffffee8]
+	MOV qword [RBP+0xfffffe90], R8
+	MOV RBX, qword [RBP+0xfffffee0]
+	MOV qword [RBP+0xfffffe98], RCX
+	MOV R15, qword [RBP+0xfffffed8]
+	XOR EDI, EDI
+	CALL 0xffffe036
+	MOV R11, qword [RBP+0xfffffe78]
+	MOV RDX, RAX
+	PUSH R11
+	MOV R10, qword [RBP+0xfffffe80]
+	MOV R9, qword [RBP+0xfffffe88]
+	MOV RDI, R12
+	XOR EAX, EAX
+	MOV R8, qword [RBP+0xfffffe90]
+	MOV RCX, qword [RBP+0xfffffe98]
+	MOV ESI, 0x2
+	PUSH R10
+	PUSH R14
+	PUSH R13
+	PUSH RBX
+	PUSH R15
+	CALL 0xffffe226
+	ADD RSP, 0x30
+	MOV RAX, qword [RBP+0xffffff18]
+	SUB RAX, qword [RBP+0x28]
+	JNZ 0x33c
+	LEA RSP, qword [RBP+0xd8]
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP R15
+	POP RBP
+	RET
+	MOV R10, qword [RBP+0xfffffef8]
+	MOV R9, qword [RBP+0xfffffed0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV R8, qword [RBP+0xfffffec8]
+	MOV RCX, qword [RBP+0xfffffec0]
+	LEA RSI, qword [0x2f4b]
+	MOV qword [RBP+0xfffffe80], R10
+	MOV R14, qword [RBP+0xfffffef0]
+	MOV qword [RBP+0xfffffe88], R9
+	MOV R13, qword [RBP+0xfffffee8]
+	MOV qword [RBP+0xfffffe90], R8
+	MOV RBX, qword [RBP+0xfffffee0]
+	MOV qword [RBP+0xfffffe98], RCX
+	MOV R15, qword [RBP+0xfffffed8]
+	CALL 0xffffdf66
+	MOV RDX, RAX
+	PUSH RAX
+	JMP 0xffffff33
+	MOV R9, qword [RBP+0xfffffed0]
+	MOV R14, qword [RBP+0xfffffef0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV R13, qword [RBP+0xfffffee8]
+	MOV RBX, qword [RBP+0xfffffee0]
+	LEA RSI, qword [0x2eab]
+	MOV R15, qword [RBP+0xfffffed8]
+	MOV R8, qword [RBP+0xfffffec8]
+	MOV qword [RBP+0xfffffe88], R9
+	MOV RCX, qword [RBP+0xfffffec0]
+	MOV qword [RBP+0xfffffe90], R8
+	MOV qword [RBP+0xfffffe98], RCX
+	CALL 0xffffdf04
+	PUSH R14
+	MOV R9, qword [RBP+0xfffffe88]
+	PUSH R13
+	MOV RDX, RAX
+	PUSH RBX
+	PUSH R15
+	MOV R8, qword [RBP+0xfffffe90]
+	MOV RCX, qword [RBP+0xfffffe98]
+	MOV RDI, R12
+	XOR EAX, EAX
+	MOV ESI, 0x2
+	CALL 0xffffe106
+	ADD RSP, 0x20
+	JMP 0xfffffedb
+	MOV RCX, qword [RBP+0xfffffec0]
+	MOV R8, qword [RBP+0xfffffec8]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV R13, qword [RBP+0xfffffee8]
+	MOV RBX, qword [RBP+0xfffffee0]
+	LEA RSI, qword [0x2df3]
+	MOV R15, qword [RBP+0xfffffed8]
+	MOV R14, qword [RBP+0xfffffed0]
+	MOV qword [RBP+0xfffffe98], RCX
+	MOV qword [RBP+0xfffffe90], R8
+	CALL 0xffffde82
+	MOV R9, R14
+	PUSH RCX
+	MOV RDX, RAX
+	PUSH R13
+	PUSH RBX
+	PUSH R15
+	JMP 0x81
+	MOV RCX, qword [RBP+0xfffffec0]
+	MOV RBX, qword [RBP+0xfffffee0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV R15, qword [RBP+0xfffffed8]
+	LEA RSI, qword [0x2d79]
+	MOV R14, qword [RBP+0xfffffed0]
+	MOV qword [RBP+0xfffffe98], RCX
+	MOV R13, qword [RBP+0xfffffec8]
+	CALL 0xffffde37
+	PUSH RBX
+	MOV RCX, qword [RBP+0xfffffe98]
+	MOV R9, R14
+	PUSH R15
+	MOV RDX, RAX
+	MOV R8, R13
+	MOV ESI, 0x2
+	MOV RDI, R12
+	XOR EAX, EAX
+	CALL 0xffffe045
+	POP RSI
+	POP RDI
+	JMP 0xfffffe1c
+	MOV R15, qword [RBP+0xfffffed8]
+	MOV R14, qword [RBP+0xfffffed0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV R13, qword [RBP+0xfffffec8]
+	MOV RBX, qword [RBP+0xfffffec0]
+	LEA RSI, qword [0x2cec]
+	CALL 0xffffdddf
+	MOV R9, R14
+	PUSH R8
+	MOV RDX, RAX
+	MOV R8, R13
+	MOV RCX, RBX
+	PUSH R15
+	JMP 0xa9
+	MOV R14, qword [RBP+0xfffffed0]
+	MOV R13, qword [RBP+0xfffffec8]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV RBX, qword [RBP+0xfffffec0]
+	LEA RSI, qword [0x29bb]
+	CALL 0xffffdda5
+	MOV R9, R14
+	MOV R8, R13
+	MOV ESI, 0x2
+	MOV RDX, RAX
+	MOV RCX, RBX
+	MOV RDI, R12
+	XOR EAX, EAX
+	CALL 0xffffdfba
+	JMP 0xfffffd93
+	MOV R13, qword [RBP+0xfffffec8]
+	MOV RBX, qword [RBP+0xfffffec0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2963]
+	CALL 0xffffdd64
+	MOV R8, R13
+	MOV RCX, RBX
+	MOV ESI, 0x2
+	MOV RDX, RAX
+	MOV RDI, R12
+	XOR EAX, EAX
+	CALL 0xffffdf7c
+	JMP 0xfffffd55
+	MOV RBX, qword [RBP+0xfffffec0]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	LEA RSI, qword [0x291c]
+	CALL 0xffffdd2d
+	MOV ESI, 0x2
+	MOV RDI, R12
+	MOV RDX, RAX
+	MOV RCX, RBX
+	XOR EAX, EAX
+	CALL 0xffffdf48
+	JMP 0xfffffd21
+	MOV R11, qword [RBP+0xffffff00]
+	MOV R10, qword [RBP+0xfffffef8]
+	MOV EDX, 0x5
+	LEA RSI, qword [0x2cd1]
+	MOV R9, qword [RBP+0xfffffed0]
+	MOV R8, qword [RBP+0xfffffec8]
+	MOV RCX, qword [RBP+0xfffffec0]
+	MOV qword [RBP+0xfffffe78], R11
+	MOV qword [RBP+0xfffffe80], R10
+	MOV R14, qword [RBP+0xfffffef0]
+	MOV qword [RBP+0xfffffe88], R9
+	MOV R13, qword [RBP+0xfffffee8]
+	MOV qword [RBP+0xfffffe90], R8
+	MOV RBX, qword [RBP+0xfffffee0]
+	MOV qword [RBP+0xfffffe98], RCX
+	MOV R15, qword [RBP+0xfffffed8]
+	JMP 0xfffffc63
+	CALL 0xffffdccb
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	PUSH RBP
+	XOR ESI, ESI
+	XOR EDI, EDI
+	MOV RBP, RSP
+	PUSH RBX
+	SUB RSP, 0x118
+	MOV RAX, qword [RBP+0x28]
+	MOV qword [RBP+0xe8], RAX
+	XOR EAX, EAX
+	CALL 0xffffddfc
+	TEST RAX, RAX
+	JZ 0x13
+	MOV RDI, RAX
+	MOV RBX, RAX
+	CALL 0xffffdc7c
+	CMP RAX, 0x100
+	JNA 0x24
+	XOR EAX, EAX
+	MOV RDX, qword [RBP+0xe8]
+	SUB RDX, qword [RBP+0x28]
+	JNZ 0xb9
+	MOV RBX, qword [RBP+0xf8]
+	LEAVE
+	RET
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	LEA R8, qword [RBP+0xfffffee0]
+	ADD RAX, 0x1
+	MOV RDI, R8
+	CMP EAX, 0x8
+	JNC 0x7d
+	XOR EDX, EDX
+	TEST AL, 0x4
+	JNZ 0x67
+	TEST AL, 0x2
+	JNZ 0x4b
+	TEST AL, 0x1
+	JNZ 0x2f
+	CMP byte [RBP+0xfffffee0], 0x43
+	JZ 0x16
+	LEA RSI, qword [0x282c]
+	MOV RDI, R8
+	CALL 0xffffdcf7
+	TEST EAX, EAX
+	SETNZ A
+	JMP 0x9e
+	CMP byte [RBP+0xfffffee1], 0x0
+	JZ 0x93
+	JMP 0xdf
+	NOP dword [RAX+RAX+0x0]
+	MOVZX EAX, byte [RDX+RBX]
+	MOV byte [RDX+RDI], A
+	CMP byte [RBP+0xfffffee0], 0x43
+	JNZ 0xca
+	JMP 0xde
+	00
+	ADD byte [RDI], C
+	MOV DH, 0xc
+	ADC ESP, dword [RSI+0x89]
+	OR AL, 0x17
+	ADD RDX, 0x2
+	TEST AL, 0x1
+	JZ 0xa9
+	JMP 0xd6
+	00
+	ADD byte [RBX+0xba178913], C
+	ADD AL, 0x0
+	ADD byte [RAX], A
+	TEST AL, 0x2
+	JZ 0x90
+	JMP 0xd9
+	NOP
+	MOV ECX, EAX
+	MOV RSI, RBX
+	XOR EDX, EDX
+	SHR ECX, 0x3
+	REP MOVSQ
+	MOV RBX, RSI
+	TEST AL, 0x4
+	JZ 0xffffff71
+	JMP 0xd6
+	CALL 0xffffdbb1
+	NOP
+	PUSH RBP
+	MOV R11, RSI
+	MOV RBP, RSP
+	PUSH R15
+	PUSH R14
+	PUSH R13
+	PUSH R12
+	PUSH RBX
+	SUB RSP, 0xc8
+	MOV qword [RBP+0x80], R9
+	MOV R14, qword [RBP+0x10]
+	MOV R9, 0xffffffff
+	MOV qword [RBP+0x90], RDX
+	MOV R15, qword [RBP+0x18]
+	MOV dword [RBP+0xffffff44], R8D
+	MOV R13, R14
+	MOV R14, R9
+	MOV R9, RDI
+	MOV RAX, qword [RBP+0x28]
+	MOV qword [RBP+0xc8], RAX
+	XOR EAX, EAX
+	MOV dword [RBP+0xa4], ECX
+	MOV qword [RBP+0x98], R11
+	MOV qword [RBP+0xa8], R9
+	CALL 0xffffdb33
+	MOV EBX, dword [RBP+0xffffff44]
+	MOV qword [RBP+0xffffff30], RAX
+	MOV EAX, dword [RBP+0xa4]
+	AND EBX, 0x2
+	SETNZ byte [RBP+0xa3]
+	CMP EAX, 0xa
+	JNBE 0xffffdda3
+	LEA RSI, qword [0x3004]
+	MOV R9, qword [RBP+0xa8]
+	MOV R11, qword [RBP+0x98]
+	MOVSXD RAX, dword [RAX*4+RSI]
+	ADD RAX, RSI
+	JMP RAX
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	CMP dword [RBP+0xa4], 0xa
+	JZ 0x64
+	LEA R12, qword [0x2706]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV qword [RBP+0x98], R11
+	MOV RSI, R12
+	MOV qword [RBP+0xa8], R9
+	CALL 0xffffdabc
+	MOV R9, qword [RBP+0xa8]
+	MOV R11, qword [RBP+0x98]
+	CMP RAX, R12
+	MOV R13, RAX
+	JZ 0x15ae
+	LEA R12, qword [0x2646]
+	XOR EDI, EDI
+	MOV EDX, 0x5
+	MOV qword [RBP+0x98], R11
+	MOV RSI, R12
+	MOV qword [RBP+0xa8], R9
+	CALL 0xffffda8a
+	MOV R9, qword [RBP+0xa8]
+	MOV R11, qword [RBP+0x98]
+	CMP RAX, R12
+	MOV R15, RAX
+	JZ 0x1561
+	MOV qword [RBP+0xa8], 0x0
+	TEST EBX, EBX
+	JZ 0x1494
+	MOV RDI, R15
+	MOV qword [RBP+0xffffff70], R11
+	MOV qword [RBP+0xffffff78], R9
+	CALL 0xffffda70
+	MOV byte [RBP+0x98], 0x1
+	MOV R9, qword [RBP+0xffffff78]
+	MOV qword [RBP+0x88], RAX
+	MOV R11, qword [RBP+0xffffff70]
+	MOV qword [RBP+0xffffff48], R15
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa1], 0x1
+	NOP dword [RAX+0x0]
+	XOR EBX, EBX
+	00
+	ADD byte [RDI+RCX+0xf3], C
+	SETNZ R10B
+	CMP R14, 0xff
+	JNZ 0xc
+	MOV RAX, qword [RBP+0x90]
+	CMP byte [RBX+RAX], 0x0
+	SETNZ R10B
+	TEST R10B, R10B
+	JZ 0xeb7
+	CMP dword [RBP+0xa4], 0x2
+	MOV RDI, qword [RBP+0x90]
+	SETNZ A
+	AND A, byte [RBP+0xa1]
+	CMP qword [RBP+0x88], 0x0
+	MOV R8D, EAX
+	SETNZ A
+	LEA RCX, qword [RBX+RDI]
+	AND A, R8B
+	MOV R12D, EAX
+	JNZ 0x7a5
+	MOVZX ESI, byte [RCX]
+	CMP SI, 0x3f
+	JNLE 0xba8
+	TEST SI, SI
+	JS 0x17f
+	CMP SI, 0x3f
+	JNBE 0x175
+	LEA RDI, qword [0x2ed2]
+	MOVZX EAX, SI
+	MOVSXD RAX, dword [RAX*4+RDI]
+	ADD RAX, RDI
+	JMP RAX
+	CMP dword [RBP+0xa4], 0x2
+	MOV ESI, 0xc
+	MOV EAX, 0x66
+	SETZ D
+	NOP dword [RAX+0x0]
+	CMP byte [RBP+0xa1], 0x0
+	JNZ 0x366
+	XOR R10D, R10D
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JZ 0xd7
+	XOR EAX, EAX
+	MOV RCX, qword [RBP+0x80]
+	TEST RCX, RCX
+	JZ 0xc8
+	MOV EDX, ESI
+	SHR D, 0x5
+	MOVZX EDX, D
+	MOV EDX, dword [RDX*4+RCX]
+	MOV ECX, ESI
+	SHR EDX, CL
+	AND EDX, 0x1
+	JZ 0xb0
+	CMP dword [RBP+0xa4], 0x2
+	SETZ D
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0x32e
+	MOVZX EAX, byte [RBP+0xa2]
+	XOR EAX, 0x1
+	AND A, D
+	JZ 0x3c
+	MOV RDI, qword [RBP+0xa8]
+	CMP RDI, R11
+	JNC 0x5
+	MOV byte [RDI+R9], 0x27
+	MOV RCX, qword [RBP+0xa8]
+	LEA RDX, qword [RCX+0x1]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RCX+R9+0x1], 0x24
+	MOV RDI, qword [RBP+0xa8]
+	LEA RDX, qword [RDI+0x2]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RDI+R9+0x2], 0x27
+	ADD qword [RBP+0xa8], 0x3
+	MOV byte [RBP+0xa2], A
+	MOV RAX, qword [RBP+0xa8]
+	CMP RAX, R11
+	JNC 0x5
+	MOV byte [RAX+R9], 0x5c
+	ADD qword [RBP+0xa8], 0x1
+	ADD RBX, 0x1
+	MOV RAX, qword [RBP+0xa8]
+	CMP RAX, R11
+	JNC 0x4
+	MOV byte [RAX+R9], SI
+	MOVZX EAX, byte [RBP+0x98]
+	ADD qword [RBP+0xa8], 0x1
+	MOV EDI, 0x0
+	TEST R10B, R10B
+	CMOVZ EAX, EDI
+	MOV byte [RBP+0x98], A
+	JMP 0xfffffe90
+	MOV qword [RBP+0xa8], RCX
+	MOV R12D, EAX
+	MOV ESI, 0x30
+	MOV EAX, R10D
+	XOR R10D, R10D
+	00
+	ADD byte [RBX+0xf02a47d], A
+	XCHG ESP, EAX
+	RET 0x8445
+	IN 0xff47850f
+	INC dword [RBX+0x834801f0]
+	RET
+	ADD dword [RDX], ESP
+	MOV 0x84, AL
+	JZ 0xa1
+	MOV RAX, qword [RBP+0xa8]
+	CMP RAX, R11
+	JNC 0x5
+	MOV byte [RAX+R9], 0x27
+	MOV RCX, qword [RBP+0xa8]
+	LEA RAX, qword [RCX+0x1]
+	CMP RAX, R11
+	JNC 0x6
+	MOV byte [RCX+R9+0x1], 0x27
+	ADD qword [RBP+0xa8], 0x2
+	MOV byte [RBP+0xa2], 0x0
+	JMP 0xffffff72
+	NOP dword [RAX]
+	XOR R12D, R12D
+	NOP dword [RAX+RAX+0x0]
+	CMP qword [RBP+0xffffff30], 0x1
+	JNZ 0xb32
+	MOV qword [RBP+0xffffff60], R11
+	MOV qword [RBP+0xffffff68], R9
+	MOV byte [RBP+0xffffff70], SI
+	MOV byte [RBP+0xffffff78], R8B
+	CALL 0xffffda91
+	MOVZX R8D, byte [RBP+0xffffff78]
+	MOV R9, qword [RBP+0xffffff68]
+	MOV RDX, RAX
+	MOVZX EAX, byte [RBP+0xffffff70]
+	MOV R11, qword [RBP+0xffffff60]
+	MOV RDX, qword [RDX]
+	MOV RSI, RAX
+	TEST byte [RAX*2+RDX+0x1], 0x40
+	MOV EAX, 0x1
+	SETNZ R10B
+	SETZ D
+	AND D, byte [RBP+0xa1]
+	TEST D, D
+	JZ 0xfffffe54
+	MOVZX EDX, byte [RBP+0xa1]
+	XOR R10D, R10D
+	MOV byte [RBP+0xffffff60], R10B
+	MOV R8, qword [RBP+0xa8]
+	LEA RCX, qword [RAX+RBX]
+	XOR EDI, EDI
+	MOV qword [RBP+0xffffff78], R14
+	MOVZX R10D, byte [RBP+0xa2]
+	MOV qword [RBP+0xffffff70], R13
+	MOV R14, qword [RBP+0x90]
+	MOV qword [RBP+0xffffff68], R15
+	MOVZX R13D, byte [RBP+0xa3]
+	MOV R15D, dword [RBP+0xa4]
+	JMP 0xb1
+	NOP dword [RAX]
+	CMP R15D, 0x2
+	SETZ A
+	TEST R13B, R13B
+	JNZ 0x1038
+	MOV EDI, R10D
+	XOR EDI, 0x1
+	AND A, DI
+	JZ 0x2f
+	CMP R8, R11
+	JNC 0x5
+	MOV byte [R8+R9], 0x27
+	LEA RDI, qword [R8+0x1]
+	CMP RDI, R11
+	JNC 0x6
+	MOV byte [R8+R9+0x1], 0x24
+	LEA RDI, qword [R8+0x2]
+	CMP RDI, R11
+	JNC 0x6
+	MOV byte [R8+R9+0x2], 0x27
+	ADD R8, 0x3
+	MOV R10D, EAX
+	CMP R8, R11
+	JNC 0x5
+	MOV byte [R8+R9], 0x5c
+	LEA RAX, qword [R8+0x1]
+	CMP RAX, R11
+	JNC 0xd
+	MOV EAX, ESI
+	SHR A, 0x6
+	ADD EAX, 0x30
+	MOV byte [R8+R9+0x1], A
+	LEA RAX, qword [R8+0x2]
+	CMP RAX, R11
+	JNC 0x10
+	MOV EAX, ESI
+	SHR A, 0x3
+	AND EAX, 0x7
+	ADD EAX, 0x30
+	MOV byte [R8+R9+0x2], A
+	AND ESI, 0x7
+	ADD RBX, 0x1
+	ADD R8, 0x3
+	ADD ESI, 0x30
+	CMP RBX, RCX
+	JNC 0xfd8
+	MOV EDI, EDX
+	CMP R8, R11
+	JNC 0x4
+	MOV byte [R8+R9], SI
+	MOVZX ESI, byte [RBX+R14]
+	ADD R8, 0x1
+	TEST D, D
+	JNZ 0xffffff4a
+	MOV EAX, EDI
+	XOR EAX, 0x1
+	AND EAX, R10D
+	TEST R12B, R12B
+	JZ 0xe
+	CMP R8, R11
+	JNC 0x5
+	MOV byte [R8+R9], 0x5c
+	ADD R8, 0x1
+	ADD RBX, 0x1
+	CMP RBX, RCX
+	JNC 0xf40
+	TEST A, A
+	JZ 0x1054
+	CMP R8, R11
+	JNC 0x5
+	MOV byte [R8+R9], 0x27
+	LEA RAX, qword [R8+0x1]
+	CMP RAX, R11
+	JNC 0x6
+	MOV byte [R8+R9+0x1], 0x27
+	ADD R8, 0x2
+	XOR R12D, R12D
+	XOR R10D, R10D
+	JMP 0x91
+	NOP dword [RAX+RAX+0x0]
+	XOR R10D, R10D
+	CMP dword [RBP+0xa4], 0x2
+	JNZ 0xfffffcf0
+	CMP byte [RBP+0xa3], 0x0
+	JZ 0xfffffce6
+	MOV dword [RBP+0xa4], 0x2
+	CMP byte [RBP+0xa1], 0x0
+	MOV EAX, 0x4
+	CMOVZ EAX, dword [RBP+0xa4]
+	MOV dword [RBP+0xa4], EAX
+	AND dword [RBP+0xffffff44], 0xfd
+	MOV qword [RBP+0x80], 0x0
+	JMP 0xfffffaf6
+	CMP dword [RBP+0xa4], 0x2
+	MOV ESI, 0x8
+	MOV EAX, 0x62
+	SETZ D
+	CMP byte [RBP+0xa1], 0x0
+	JZ 0xfffffc9d
+	NOP dword [RAX]
+	XOR R10D, R10D
+	CMP byte [RBP+0xa3], 0x0
+	MOV ESI, EAX
+	JZ 0xfffffcd2
+	AND byte [RBP+0xa1], D
+	JMP 0xaa
+	CMP dword [RBP+0xa4], 0x2
+	MOV ESI, 0xb
+	MOV EAX, 0x76
+	SETZ D
+	JMP 0xfffffc66
+	CMP dword [RBP+0xa4], 0x2
+	JZ 0xb44
+	CMP dword [RBP+0xa4], 0x5
+	JNZ 0x70a
+	TEST byte [RBP+0xffffff44], 0x4
+	JZ 0x6fd
+	LEA RAX, qword [RBX+0x2]
+	XOR R10D, R10D
+	MOV ESI, 0x3f
+	CMP RAX, R14
+	JNC 0xfffffc3d
+	MOV RDX, qword [RBP+0x90]
+	CMP byte [RBX+RDX+0x1], 0x3f
+	JNZ 0xfffffc2e
+	MOVZX ESI, byte [RAX+RDX]
+	CMP SI, 0x3e
+	JNBE 0x10b9
+	MOV RDX, 0x7000a38200000000
+	BT RDX, RSI
+	SETNAE R10B
+	TEST R10B, R10B
+	JZ 0x109e
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xffffff2c
+	MOV RBX, qword [RBP+0xa8]
+	CMP RBX, R11
+	JNC 0x5
+	MOV byte [RBX+R9], 0x3f
+	MOV RBX, qword [RBP+0xa8]
+	LEA RDX, qword [RBX+0x1]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RBX+R9+0x1], 0x22
+	MOV RBX, qword [RBP+0xa8]
+	LEA RDX, qword [RBX+0x2]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RBX+R9+0x2], 0x22
+	MOV RBX, qword [RBP+0xa8]
+	LEA RDX, qword [RBX+0x3]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RBX+R9+0x3], 0x3f
+	MOV RBX, RAX
+	ADD qword [RBP+0xa8], 0x4
+	XOR R10D, R10D
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffffba9
+	JMP 0xfffffc7b
+	NOP dword [RAX]
+	CMP dword [RBP+0xa4], 0x2
+	MOV byte [RBP+0xa0], R10B
+	MOV ESI, 0x27
+	JNZ 0xfffffb82
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xfffffe99
+	TEST R11, R11
+	JZ 0xd30
+	XOR EDX, EDX
+	CMP qword [RBP+0xffffff38], 0x0
+	JNZ 0xd20
+	MOV qword [RBP+0xffffff38], R11
+	XOR EAX, EAX
+	MOV R11, RDX
+	MOV ESI, 0x27
+	ADD qword [RBP+0xa8], 0x3
+	MOV byte [RBP+0xa0], R10B
+	MOV byte [RBP+0xa2], 0x0
+	JMP 0xfffffc2f
+	CMP dword [RBP+0xa4], 0x2
+	MOV ESI, 0x7
+	MOV EAX, 0x61
+	SETZ D
+	JMP 0xfffffb19
+	CMP byte [RBP+0xa1], 0x0
+	JNZ 0x507
+	TEST byte [RBP+0xffffff44], 0x1
+	JNZ 0xd17
+	XOR R12D, R12D
+	XOR R10D, R10D
+	XOR ESI, ESI
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffffb07
+	JMP 0xfffffbd9
+	MOV ESI, 0x23
+	NOP dword [RAX+0x0]
+	TEST RBX, RBX
+	JNZ 0xfffffae1
+	JMP 0xfffffde5
+	MOV ESI, 0x20
+	JMP 0xfffffddb
+	MOV ESI, 0x9
+	MOV EAX, 0x74
+	CMP dword [RBP+0xa4], 0x2
+	MOVZX R12D, byte [RBP+0xa3]
+	SETZ D
+	AND R12B, D
+	JZ 0xfffffaa9
+	JMP 0xfffffdcb
+	MOV ESI, 0xd
+	MOV EAX, 0x72
+	JMP 0xda
+	MOV ESI, 0xa
+	MOV EAX, 0x6e
+	JMP 0xce
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x0
+	MOV byte [RBP+0xa1], 0x1
+	MOV qword [RBP+0x88], 0x0
+	MOV qword [RBP+0xffffff48], 0x0
+	MOV qword [RBP+0xa8], 0x0
+	JMP 0xfffff9ad
+	MOV byte [RBP+0x98], 0x1
+	TEST EBX, EBX
+	JNZ 0x12e
+	MOV byte [RBP+0xa2], 0x0
+	XOR EAX, EAX
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa1], 0x1
+	TEST R11, R11
+	JZ 0x4
+	MOV byte [R9], 0x27
+	MOV byte [RBP+0xa0], A
+	LEA RAX, qword [0x1f36]
+	MOV byte [RBP+0xa3], 0x0
+	MOV qword [RBP+0x88], 0x1
+	MOV qword [RBP+0xffffff48], RAX
+	MOV qword [RBP+0xa8], 0x1
+	MOV dword [RBP+0xa4], 0x2
+	JMP 0xfffff952
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x0
+	MOV byte [RBP+0xa1], 0x0
+	MOV qword [RBP+0x88], 0x0
+	MOV qword [RBP+0xffffff48], 0x0
+	MOV qword [RBP+0xa8], 0x0
+	JMP 0xfffff913
+	TEST EBX, EBX
+	JNZ 0xd83
+	TEST R11, R11
+	JZ 0x4
+	MOV byte [R9], 0x22
+	LEA RAX, qword [0x1eb6]
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x0
+	MOV byte [RBP+0xa1], 0x1
+	MOV qword [RBP+0x88], 0x1
+	MOV qword [RBP+0xffffff48], RAX
+	MOV qword [RBP+0xa8], 0x1
+	JMP 0xfffff8c0
+	LEA RAX, qword [0x1e74]
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x1
+	MOV byte [RBP+0xa1], 0x1
+	MOV qword [RBP+0x88], 0x1
+	MOV qword [RBP+0xffffff48], RAX
+	MOV qword [RBP+0xa8], 0x0
+	MOV dword [RBP+0xa4], 0x5
+	JMP 0xfffff877
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x1
+	MOV byte [RBP+0xa1], 0x0
+	LEA RAX, qword [0x1e0e]
+	MOV qword [RBP+0x88], 0x1
+	MOV qword [RBP+0xffffff48], RAX
+	MOV qword [RBP+0xa8], 0x0
+	MOV dword [RBP+0xa4], 0x2
+	JMP 0xfffff82e
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x1
+	MOV byte [RBP+0xa1], 0x1
+	JMP 0xb5
+	NOP dword [RAX+RAX+0x0]
+	MOV RAX, qword [RBP+0x88]
+	LEA RDX, qword [RBX+RAX]
+	CMP R14, 0xff
+	JNZ 0x64
+	CMP RAX, 0x1
+	JNA 0x5e
+	MOV qword [RBP+0xffffff50], R11
+	MOV qword [RBP+0xffffff58], R9
+	MOV qword [RBP+0xffffff60], RCX
+	MOV byte [RBP+0xffffff68], R10B
+	MOV qword [RBP+0xffffff70], RDX
+	MOV byte [RBP+0xffffff78], R8B
+	CALL 0xffffd1fd
+	MOV R11, qword [RBP+0xffffff50]
+	MOV R9, qword [RBP+0xffffff58]
+	MOV RCX, qword [RBP+0xffffff60]
+	MOVZX R10D, byte [RBP+0xffffff68]
+	MOV R14, RAX
+	MOV RDX, qword [RBP+0xffffff70]
+	MOVZX R8D, byte [RBP+0xffffff78]
+	CMP R14, RDX
+	JNAE 0x1c5
+	MOV RDX, qword [RBP+0x88]
+	MOV RSI, qword [RBP+0xffffff48]
+	MOV RDI, RCX
+	MOV qword [RBP+0xffffff58], R11
+	MOV qword [RBP+0xffffff60], R9
+	MOV byte [RBP+0xffffff68], R10B
+	MOV byte [RBP+0xffffff70], R8B
+	MOV qword [RBP+0xffffff78], RCX
+	CALL 0xffffd24f
+	MOV RCX, qword [RBP+0xffffff78]
+	MOVZX R8D, byte [RBP+0xffffff70]
+	TEST EAX, EAX
+	MOVZX R10D, byte [RBP+0xffffff68]
+	MOV R9, qword [RBP+0xffffff60]
+	MOV R11, qword [RBP+0xffffff58]
+	JNZ 0x162
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xfffffafe
+	MOVZX ESI, byte [RCX]
+	CMP SI, 0x3f
+	JNLE 0x6bb
+	TEST SI, SI
+	JS 0xfffff8f2
+	CMP SI, 0x3f
+	JNBE 0xfffff8e8
+	LEA RDX, qword [0x2745]
+	MOVZX EAX, SI
+	MOVSXD RAX, dword [RAX*4+RDX]
+	ADD RAX, RDX
+	JMP RAX
+	NOP dword [RAX]
+	MOV R10D, R12D
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff792
+	JMP 0xfffff864
+	XOR EDX, EDX
+	MOV ESI, 0xa
+	MOV EAX, 0x6e
+	JMP 0xfffff763
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x61
+	JMP 0xfffff7a5
+	MOV RAX, qword [RBP+0xa8]
+	LEA RCX, qword [RAX+0x1]
+	MOV EAX, R12D
+	NOP
+	MOV RSI, qword [RBP+0xa8]
+	CMP RSI, R11
+	JNC 0x5
+	MOV byte [RSI+R9], 0x5c
+	TEST R8B, R8B
+	JZ 0xfffff809
+	LEA RDX, qword [RBX+0x1]
+	CMP RDX, R14
+	JNC 0x1c
+	MOV RSI, qword [RBP+0x90]
+	MOVZX ESI, byte [RBX+RSI+0x1]
+	LEA EDX, dword [RSI+0xd0]
+	MOV byte [RBP+0xffffff78], SI
+	CMP D, 0x9
+	JNA 0xa69
+	MOV R12D, EAX
+	MOV qword [RBP+0xa8], RCX
+	MOV EAX, R10D
+	MOV ESI, 0x30
+	XOR R10D, R10D
+	JMP 0xfffff710
+	XOR EDX, EDX
+	MOV ESI, 0x9
+	MOV EAX, 0x74
+	JMP 0xfffff6e4
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x62
+	JMP 0xfffff726
+	MOV R10D, R12D
+	MOV ESI, 0x20
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff6da
+	JMP 0xfffff7ac
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x76
+	JMP 0xfffff6fe
+	XOR EDX, EDX
+	MOV ESI, 0xd
+	MOV EAX, 0x72
+	JMP 0xfffff69c
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x66
+	JMP 0xfffff6de
+	MOV byte [RBP+0xa0], R12B
+	MOV R10D, R12D
+	MOV ESI, 0x27
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff68e
+	JMP 0xfffff760
+	NOP dword [RAX+RAX+0x0]
+	MOVZX ESI, byte [RCX]
+	CMP SI, 0x3f
+	JNLE 0x263
+	TEST SI, SI
+	JS 0xfffff792
+	CMP SI, 0x3f
+	JNBE 0xfffff788
+	LEA RDX, qword [0x26ed]
+	MOVZX EAX, SI
+	MOVSXD RAX, dword [RAX*4+RDX]
+	ADD RAX, RDX
+	JMP RAX
+	NOP dword [RAX]
+	MOV R10D, R12D
+	MOV EAX, R8D
+	XOR R12D, R12D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff637
+	JMP 0xfffff709
+	NOP
+	XOR R12D, R12D
+	JMP 0xfffff61a
+	NOP dword [RAX+RAX+0x0]
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xae8
+	MOVZX EDX, byte [RBP+0xa2]
+	CMP dword [RBP+0xa4], 0x2
+	MOV RSI, qword [RBP+0xa8]
+	SETZ A
+	XOR EDX, 0x1
+	LEA RCX, qword [RSI+0x1]
+	AND A, D
+	JZ 0xfffffe98
+	CMP RSI, R11
+	JNC 0x5
+	MOV byte [RSI+R9], 0x27
+	CMP RCX, R11
+	JNC 0x5
+	MOV byte [RCX+R9], 0x24
+	MOV RSI, qword [RBP+0xa8]
+	LEA RDX, qword [RSI+0x2]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RSI+R9+0x2], 0x27
+	MOV RSI, qword [RBP+0xa8]
+	LEA RDX, qword [RSI+0x3]
+	ADD RSI, 0x4
+	MOV qword [RBP+0xa8], RSI
+	CMP RDX, R11
+	JNC 0x875
+	MOV byte [RDX+R9], 0x5c
+	XOR R10D, R10D
+	MOV ESI, 0x30
+	MOV byte [RBP+0xa2], A
+	JMP 0xfffff68b
+	XOR EDX, EDX
+	XOR R12D, R12D
+	MOV ESI, 0xa
+	MOV EAX, 0x6e
+	JMP 0xfffff577
+	XOR R12D, R12D
+	MOV ESI, 0x23
+	JMP 0xfffffa8a
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x61
+	JMP 0xfffff5a2
+	XOR R12D, R12D
+	CMP dword [RBP+0xa4], 0x5
+	JZ 0xfffff8fc
+	00
+	ADD byte [RBP+0x31], A
+	SAR byte [RSI+0x3f], CL
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff54d
+	JMP 0xfffff61f
+	MOV byte [RBP+0xa0], R12B
+	MOV R10D, R12D
+	MOV ESI, 0x27
+	XOR R12D, R12D
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff52d
+	JMP 0xfffff5ff
+	XOR EDX, EDX
+	XOR R12D, R12D
+	MOV ESI, 0xd
+	MOV EAX, 0x72
+	JMP 0xfffff4fb
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x66
+	JMP 0xfffff533
+	XOR EDX, EDX
+	XOR R12D, R12D
+	MOV ESI, 0x9
+	MOV EAX, 0x74
+	JMP 0xfffff4d8
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x62
+	JMP 0xfffff510
+	XOR EDX, EDX
+	XOR R10D, R10D
+	MOV ESI, 0x76
+	JMP 0xfffff501
+	MOV R10D, R12D
+	MOV ESI, 0x20
+	XOR R12D, R12D
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xfffff4bc
+	JMP 0xfffff58e
+	00
+	ADD byte [RAX+0x80], A
+	JPE 0x7f
+	BOUND EAX, dword [RAX+0x80]
+	INC byte [RAX+0xf]
+	TEST A, D
+	CMC
+	DEC dword [RBP+0x1b8bf4e]
+	ADD byte [RAX], A
+	ADD byte [RAX+0xba], C
+	CALL qword [RBX+0xff]
+	INC dword [RBX]
+	SAL RAX, CL
+	TEST RAX, RDX
+	JNZ 0xfffff477
+	TEST EAX, 0xa4000000
+	JNZ 0xfffff76f
+	CMP dword [RBP+0xa4], 0x2
+	JNZ 0x9a
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xfffff779
+	MOVZX EAX, byte [RBP+0xa2]
+	ADD RBX, 0x1
+	XOR R10D, R10D
+	MOV ESI, 0x5c
+	JMP 0xfffff540
+	00
+	ADD byte [RAX+0x80], A
+	JNL 0x74
+	ADC byte [RDI], C
+	MOV word [RAX], ES
+	ADD byte [RAX], A
+	CMP SI, 0x7b
+	JNZ 0x67f
+	CMP R14, 0xff
+	JZ 0x2b0
+	CMP R14, 0x1
+	JNZ 0xfffff410
+	JMP 0xfffff921
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	CMP SI, 0x7a
+	JNLE 0x2a6
+	CMP SI, 0x40
+	JZ 0xfffff524
+	LEA ECX, dword [RSI+0xbf]
+	MOV EAX, 0x1
+	MOV RDX, 0x3ffffff53ffffff
+	SAL RAX, CL
+	TEST RAX, RDX
+	JNZ 0x68e
+	TEST EAX, 0xa4000000
+	JNZ 0xfffffda3
+	MOVZX R12D, byte [RBP+0xa1]
+	AND R12B, byte [RBP+0xa3]
+	JZ 0x2f1
+	CMP qword [RBP+0x88], 0x0
+	JZ 0xfffff6df
+	JMP 0xffffff51
+	NOP dword [RAX+0x0]
+	CMP SI, 0x7e
+	JZ 0xfffff8ae
+	MOV ESI, 0x7f
+	CMP qword [RBP+0xffffff30], 0x1
+	JZ 0xfffff4d1
+	NOP dword [RAX]
+	LEA RAX, qword [RBP+0xc0]
+	MOV qword [RBP+0xc0], 0x0
+	MOV qword [RBP+0xffffff78], RAX
+	CMP R14, 0xff
+	JNZ 0x54
+	MOV RDI, qword [RBP+0x90]
+	MOV qword [RBP+0xffffff50], R11
+	MOV qword [RBP+0xffffff58], R9
+	MOV byte [RBP+0xffffff60], SI
+	MOV byte [RBP+0xffffff68], R10B
+	MOV byte [RBP+0xffffff70], R8B
+	CALL 0xffffcccb
+	MOV R11, qword [RBP+0xffffff50]
+	MOV R9, qword [RBP+0xffffff58]
+	MOVZX ESI, byte [RBP+0xffffff60]
+	MOVZX R10D, byte [RBP+0xffffff68]
+	MOV R14, RAX
+	MOVZX R8D, byte [RBP+0xffffff70]
+	MOV byte [RBP+0xffffff70], R10B
+	XOR EAX, EAX
+	MOV byte [RBP+0xffffff42], R8B
+	MOV qword [RBP+0xffffff60], RBX
+	MOV byte [RBP+0xffffff43], R10B
+	MOV byte [RBP+0xffffff41], SI
+	MOV byte [RBP+0xffffff40], R12B
+	MOV qword [RBP+0xffffff50], R9
+	MOV qword [RBP+0xffffff28], R11
+	MOV qword [RBP+0xffffff20], R13
+	MOV qword [RBP+0xffffff18], R15
+	MOV qword [RBP+0xffffff58], R14
+	MOV R14, RAX
+	MOV RAX, qword [RBP+0xffffff60]
+	LEA RBX, qword [R14+RAX]
+	MOV RAX, qword [RBP+0x90]
+	LEA R15, qword [RBX+RAX]
+	MOV R12, R15
+	TEST R15, R15
+	JZ 0x2c2
+	MOV RDX, qword [RBP+0xffffff58]
+	LEA R13, qword [RBP+0xbc]
+	SUB RDX, RBX
+	SETNZ byte [RBP+0xffffff68]
+	MOV RCX, qword [RBP+0xffffff78]
+	MOV RSI, R12
+	MOV RDI, R13
+	CALL 0xffffcc9b
+	MOV RCX, RAX
+	CMP RAX, 0xfd
+	JNA 0x1c6
+	CMP byte [RBP+0xffffff68], 0x0
+	JZ 0x1b9
+	MOV qword [RBP+0xffffff68], RAX
+	CALL 0xffffef35
+	TEST A, A
+	JZ 0x4e1
+	MOV RCX, qword [RBP+0xffffff68]
+	MOV RDX, RBX
+	MOV RAX, R14
+	MOVZX R8D, byte [RBP+0xffffff42]
+	MOV RBX, qword [RBP+0xffffff60]
+	MOVZX ESI, byte [RBP+0xffffff41]
+	MOV R14, qword [RBP+0xffffff58]
+	MOVZX R12D, byte [RBP+0xffffff40]
+	MOV R9, qword [RBP+0xffffff50]
+	MOV R11, qword [RBP+0xffffff28]
+	MOV R13, qword [RBP+0xffffff20]
+	MOV R15, qword [RBP+0xffffff18]
+	CMP RCX, 0xff
+	JZ 0x1c
+	CMP RDX, R14
+	JNC 0x17
+	MOV RCX, qword [RBP+0x90]
+	CMP byte [RDX+RCX], 0x0
+	JZ 0xd
+	ADD RAX, 0x1
+	LEA RDX, qword [RAX+RBX]
+	CMP RDX, R14
+	JNAE 0xe9
+	MOVZX EDX, byte [RBP+0xa1]
+	XOR R10D, R10D
+	CMP RAX, 0x1
+	JNBE 0xfffff384
+	JMP 0xfffff370
+	CMP dword [RBP+0xa4], 0x2
+	SETZ D
+	CMP qword [RBP+0xa8], 0x0
+	SETZ A
+	AND A, D
+	JZ 0x270
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xfffff4c5
+	CMP byte [RBP+0xa0], 0x0
+	JZ 0x6f3
+	CMP byte [RBP+0x98], 0x0
+	JNZ 0x68a
+	CMP qword [RBP+0xffffff38], 0x0
+	SETNZ A
+	TEST R11, R11
+	SETZ D
+	AND A, D
+	JZ 0x702
+	MOV R11, qword [RBP+0xffffff38]
+	JMP 0xfffff739
+	NOP dword [RAX+RAX+0x0]
+	MOV RAX, qword [RBP+0x90]
+	CMP byte [RAX+0x1], 0x0
+	JNZ 0xfffff15c
+	JMP 0xfffff66d
+	NOP dword [RAX+RAX+0x0]
+	CMP SI, 0x7d
+	JZ 0x470
+	JNLE 0x41d
+	XOR R12D, R12D
+	CMP SI, 0x7b
+	JZ 0xfffffd11
+	MOV ESI, 0x7c
+	JMP 0xfffff12b
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xfffff43c
+	XOR R10D, R10D
+	XOR EAX, EAX
+	MOV ESI, 0x3f
+	JMP 0xfffff1ff
+	NOP dword [RAX+0x0]
+	CMP SI, 0x7a
+	JNLE 0x400
+	CMP SI, 0x40
+	JZ 0xfffff22c
+	LEA ECX, dword [RSI+0xbf]
+	MOV EAX, 0x1
+	MOV RDX, 0x3ffffff53ffffff
+	SAL RAX, CL
+	TEST RAX, RDX
+	JNZ 0x44d
+	TEST EAX, 0xa4000000
+	JNZ 0xfffff0c5
+	CMP byte [RBP+0xa1], 0x0
+	JZ 0xfffff0bb
+	XOR R10D, R10D
+	MOV ESI, 0x5c
+	JMP 0xfffff13c
+	NOP dword [RAX+0x0]
+	TEST RCX, RCX
+	JZ 0x60
+	CMP RCX, 0xff
+	JZ 0x4ab
+	CMP RCX, 0xfe
+	JZ 0x59a
+	CMP RCX, 0xfd
+	JZ 0x13
+	CMP dword [RBP+0xa4], 0x2
+	JNZ 0xa
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0xc1
+	ADD R14, RCX
+	MOV EDI, dword [RBP+0xbc]
+	CALL 0xffffcc4e
+	MOVZX EBX, byte [RBP+0xffffff70]
+	MOV RDI, qword [RBP+0xffffff78]
+	TEST EAX, EAX
+	MOV EAX, 0x0
+	CMOVZ EBX, EAX
+	MOV byte [RBP+0xffffff70], B
+	CALL 0xffffcc1b
+	TEST EAX, EAX
+	JZ 0xfffffd82
+	MOVZX R10D, byte [RBP+0xffffff70]
+	MOV RAX, R14
+	MOVZX R8D, byte [RBP+0xffffff42]
+	MOV RBX, qword [RBP+0xffffff60]
+	MOVZX ESI, byte [RBP+0xffffff41]
+	MOV EDX, R10D
+	MOV R14, qword [RBP+0xffffff58]
+	MOVZX R12D, byte [RBP+0xffffff40]
+	XOR EDX, 0x1
+	MOV R9, qword [RBP+0xffffff50]
+	MOV R11, qword [RBP+0xffffff28]
+	MOV R13, qword [RBP+0xffffff20]
+	MOV R15, qword [RBP+0xffffff18]
+	AND D, byte [RBP+0xa1]
+	JMP 0xfffffe13
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	MOVZX EAX, byte [RBP+0xffffff43]
+	XOR R13D, R13D
+	MOV EDX, 0x1
+	LEA R12, qword [0x1566]
+	MOV byte [RBP+0xffffff68], A
+	JMP 0xfffffd32
+	NOP dword [RAX+0x0]
+	CMP RCX, 0x1
+	JZ 0x2fa
+	MOV RAX, qword [RBP+0x90]
+	LEA R8, qword [RCX+R15]
+	LEA RDX, qword [RBX+RAX+0x1]
+	JMP 0x14
+	NOP dword [RAX+0x0]
+	ADD RDX, 0x1
+	CMP R8, RDX
+	JZ 0xffffff12
+	MOVZX EAX, byte [RDX]
+	SUB EAX, 0x5b
+	CMP AL, 0x21
+	JNBE 0xe9
+	MOV RBX, 0x20000002b
+	BT RBX, RAX
+	JNC 0xd9
+	MOV dword [RBP+0xa4], 0x2
+	MOV R14, qword [RBP+0xffffff58]
+	MOV R9, qword [RBP+0xffffff50]
+	MOV R11, qword [RBP+0xffffff28]
+	MOV R13, qword [RBP+0xffffff20]
+	MOV R15, qword [RBP+0xffffff18]
+	JMP 0xfffff268
+	B6
+	MOV CH, 0x45
+	MOV 0x2001f083, EAX
+	RET 0x7675
+	MOV RDI, R11
+	MOV R11, qword [RBP+0xa8]
+	MOV R10, R9
+	MOV RBX, qword [RBP+0xffffff48]
+	TEST RBX, RBX
+	JZ 0x2f
+	TEST A, A
+	JZ 0x2b
+	MOVZX ECX, byte [RBX]
+	MOV RAX, RBX
+	TEST C, C
+	JZ 0x21
+	MOV RDX, R11
+	SUB RAX, R11
+	MOV RSI, RDI
+	CMP RDX, RSI
+	JNC 0x4
+	MOV byte [RDX+R10], C
+	ADD RDX, 0x1
+	MOVZX ECX, byte [RDX+RAX]
+	TEST C, C
+	JNZ 0xeb
+	MOV R11, RDX
+	CMP R11, RDI
+	JNAE 0x39b
+	MOV RAX, qword [RBP+0xc8]
+	SUB RAX, qword [RBP+0x28]
+	JNZ 0x485
+	ADD RSP, 0xc8
+	MOV RAX, R11
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP R15
+	POP RBP
+	RET
+	CMP byte [RBP+0xa0], 0x0
+	JZ 0x41a
+	CMP byte [RBP+0x98], 0x0
+	JNZ 0x3a3
+	TEST R11, R11
+	SETZ A
+	CMP qword [RBP+0xffffff38], 0x0
+	SETNZ D
+	AND A, D
+	JZ 0x408
+	MOV RCX, qword [RBP+0xffffff38]
+	XOR EDX, EDX
+	LEA RBX, qword [0x1397]
+	CMP byte [RBP+0x98], 0x0
+	MOV dword [RBP+0xa4], 0x2
+	MOV qword [RBP+0xa8], 0x0
+	MOV qword [RBP+0xffffff48], RBX
+	MOV qword [RBP+0x88], 0x1
+	JZ 0x3f5
+	MOV byte [RBP+0xa0], A
+	MOVZX EAX, byte [RBP+0x98]
+	MOV R11, qword [RBP+0xffffff38]
+	MOV byte [RBP+0x98], D
+	MOV qword [RBP+0xffffff38], RCX
+	MOV byte [RBP+0xa3], A
+	JMP 0xffffed92
+	MOV RAX, qword [RBP+0xa8]
+	CMP RAX, R11
+	JNC 0x5
+	MOV byte [RAX+R9], 0x27
+	MOV RSI, qword [RBP+0xa8]
+	LEA RAX, qword [RSI+0x1]
+	CMP RAX, R11
+	JNC 0x6
+	MOV byte [RSI+R9+0x1], 0x5c
+	MOV RAX, qword [RBP+0xa8]
+	ADD RAX, 0x2
+	CMP RAX, R11
+	JNC 0xa
+	MOV RAX, qword [RBP+0xa8]
+	MOV byte [RAX+R9+0x2], 0x27
+	MOV RDX, R11
+	MOV R11, qword [RBP+0xffffff38]
+	JMP 0xfffff299
+	ADD RBX, 0x1
+	JMP 0xffffed4a
+	MOV byte [RBP+0xa2], R10B
+	MOV R14, qword [RBP+0xffffff78]
+	MOV qword [RBP+0xa8], R8
+	MOVZX R10D, byte [RBP+0xffffff60]
+	MOV R13, qword [RBP+0xffffff70]
+	MOV R15, qword [RBP+0xffffff68]
+	JMP 0xffffeec2
+	MOV byte [RBP+0xa1], A
+	MOV R14, qword [RBP+0xffffff78]
+	MOV R13, qword [RBP+0xffffff70]
+	MOV R15, qword [RBP+0xffffff68]
+	JMP 0xfffff0c9
+	XOR R10D, R10D
+	MOV ESI, 0x7c
+	JMP 0xfffff0a1
+	MOV byte [RBP+0xa2], R10B
+	MOV R14, qword [RBP+0xffffff78]
+	MOV qword [RBP+0xa8], R8
+	MOVZX R10D, byte [RBP+0xffffff60]
+	MOV R13, qword [RBP+0xffffff70]
+	MOV R15, qword [RBP+0xffffff68]
+	JMP 0xffffee13
+	TEST R13, R13
+	JZ 0xaf
+	MOVZX EAX, byte [R12]
+	CMP dword [RBP+0xa4], 0x2
+	MOV dword [R13+0x0], EAX
+	JNZ 0xa
+	CMP byte [RBP+0xa3], 0x0
+	JNZ 0x96
+	MOV ECX, 0x1
+	JMP 0xfffffcc7
+	XOR EAX, EAX
+	MOV R10D, R12D
+	MOV R12D, EAX
+	JMP 0xffffed44
+	MOV byte [RBP+0xa2], A
+	XOR R10D, R10D
+	MOV ESI, 0x30
+	JMP 0xffffee1b
+	XOR EAX, EAX
+	CMP SI, 0x7e
+	JNZ 0x1a8
+	TEST RBX, RBX
+	JNZ 0x4c
+	MOV R10D, R12D
+	MOV ESI, 0x7e
+	MOV R12D, EAX
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xffffed0c
+	JMP 0xffffedde
+	CMP SI, 0x7d
+	JZ 0xfffff8ca
+	JNLE 0x71
+	CMP SI, 0x7b
+	JZ 0xfffff8be
+	MOV ESI, 0x7c
+	JMP 0xffffecd8
+	XOR R12D, R12D
+	JMP 0xfffff8ac
+	XOR R12D, R12D
+	JMP 0xffffef5a
+	MOV R12D, EAX
+	XOR R10D, R10D
+	XOR EAX, EAX
+	MOV ESI, 0x7e
+	JMP 0xffffecc7
+	ADD R14, 0x1
+	JMP 0xfffffc35
+	CMP RCX, R11
+	JNC 0x5
+	MOV byte [RCX+R9], 0x30
+	MOV RSI, qword [RBP+0xa8]
+	LEA RDX, qword [RSI+0x2]
+	CMP RDX, R11
+	JNC 0x6
+	MOV byte [RSI+R9+0x2], 0x30
+	MOV RCX, qword [RBP+0xa8]
+	ADD RCX, 0x3
+	JMP 0xfffff56d
+	MOV EAX, R12D
+	JMP 0xffffff3b
+	MOV EAX, R12D
+	CMP SI, 0x7e
+	JZ 0xffffff55
+	MOV ESI, 0x7f
+	JMP 0xfffff8d1
+	MOVZX EAX, byte [R13+0x0]
+	TEST A, A
+	JZ 0xffffeb5f
+	XOR R12D, R12D
+	39
+	CMP ESP, EBX
+	JNC 0x4
+	MOV byte [R12+R9], A
+	ADD R12, 0x1
+	MOVZX EAX, byte [R12+RBP+0x84+0x0]
+	JNZ 0xe9
+	MOV qword [RBP+0xa8], R12
+	JMP 0xffffeb3a
+	LEA RAX, qword [0x113c]
+	MOV byte [RBP+0x98], 0x1
+	MOV byte [RBP+0xa0], 0x0
+	MOV byte [RBP+0xa2], 0x0
+	MOV qword [RBP+0xffffff38], 0x0
+	MOV byte [RBP+0xa3], 0x1
+	MOV byte [RBP+0xa1], 0x1
+	MOV qword [RBP+0x88], 0x1
+	MOV qword [RBP+0xffffff48], RAX
+	MOV qword [RBP+0xa8], 0x0
+	JMP 0xffffeb46
+	MOV RAX, R14
+	MOVZX R8D, byte [RBP+0xffffff42]
+	MOV RBX, qword [RBP+0xffffff60]
+	MOVZX ESI, byte [RBP+0xffffff41]
+	MOV R14, qword [RBP+0xffffff58]
+	MOVZX R12D, byte [RBP+0xffffff40]
+	MOV R9, qword [RBP+0xffffff50]
+	MOV R11, qword [RBP+0xffffff28]
+	MOV R13, qword [RBP+0xffffff20]
+	MOV R15, qword [RBP+0xffffff18]
+	JMP 0xfffff9c8
+	MOV ESI, dword [RBP+0xa4]
+	MOV RDI, RAX
+	CALL 0xffffdeda
+	MOV R11, qword [RBP+0x98]
+	MOV R9, qword [RBP+0xa8]
+	MOV R15, RAX
+	JMP 0xffffea84
+	MOV ESI, dword [RBP+0xa4]
+	MOV RDI, RAX
+	CALL 0xffffdebf
+	MOV R11, qword [RBP+0x98]
+	MOV R9, qword [RBP+0xa8]
+	MOV R13, RAX
+	JMP 0xffffea37
+	XOR R12D, R12D
+	MOV ESI, 0x7f
+	JMP 0xffffeca2
+	MOV ESI, 0x3f
+	MOV EAX, R8D
+	OR A, byte [RBP+0xa3]
+	JNZ 0xffffeb62
+	JMP 0xffffec34
+	MOV byte [R11+R10], 0x0
+	JMP 0xfffffc5b
+	MOVZX EAX, byte [RBP+0xa3]
+	MOV byte [RBP+0xa2], 0x0
+	MOV EDX, 0x1
+	XOR ECX, ECX
+	MOV qword [RBP+0xffffff38], R11
+	MOV byte [RBP+0x98], A
+	XOR EAX, EAX
+	MOV byte [RBP+0xa1], 0x0
+	JMP 0xfffffc95
+	MOV EBX, dword [RBP+0xa4]
+	MOV EAX, 0x4
+	CMP EBX, 0x2
+	CMOVNZ EAX, EBX
+	MOV dword [RBP+0xa4], EAX
+	JMP 0xffffee3e
+	MOV dword [RBP+0xa4], 0x5
+	MOV R11, qword [RBP+0xffffff38]
+	JMP 0xffffe935
+	MOV RDX, RBX
+	MOV RAX, R14
+	MOVZX R8D, byte [RBP+0xffffff42]
+	MOV RBX, qword [RBP+0xffffff60]
+	MOVZX ESI, byte [RBP+0xffffff41]
+	MOV R14, qword [RBP+0xffffff58]
+	MOVZX R12D, byte [RBP+0xffffff40]
+	MOV R9, qword [RBP+0xffffff50]
+	MOV R11, qword [RBP+0xffffff28]
+	MOV R13, qword [RBP+0xffffff20]
+	MOV R15, qword [RBP+0xffffff18]
+	JMP 0xfffff8b0
+	MOV RDI, R11
+	MOV R10, R9
+	XOR R11D, R11D
+	JMP 0xfffffb70
+	MOV RDI, R11
+	MOV R10, R9
+	MOV R11, qword [RBP+0xa8]
+	MOV EAX, EDX
+	JMP 0xfffffb5f
+	MOV RDI, R11
+	MOVZX EAX, byte [RBP+0xa0]
+	MOV R11, qword [RBP+0xa8]
+	MOV R10, R9
+	JMP 0xfffffb4c
+	MOV RDI, R11
+	MOVZX EAX, byte [RBP+0xa0]
+	MOV R10, R9
+	XOR R11D, R11D
+	JMP 0xfffffb3a
+	MOV R11, qword [RBP+0xffffff38]
+	MOV byte [RBP+0x98], D
+	MOV qword [RBP+0xffffff38], RCX
+	JMP 0xfffff01b
+	CALL 0xffffc3ea
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R15
+	PUSH R14
+	PUSH R13
+	PUSH R12
+	MOV R12, RSI
+	PUSH RBX
+	SUB RSP, 0x38
+	MOV qword [RBP+0xc8], RDI
+	CALL 0xffffc2e3
+	MOV ECX, dword [0x3f1d]
+	MOV R15, qword [0x3f56]
+	MOV RBX, RAX
+	MOV EAX, dword [RAX]
+	MOV dword [RBP+0xc4], EAX
+	TEST ECX, ECX
+	JNLE 0xc2
+	MOVSXD R9, ECX
+	LEA RDX, qword [0x3f2c]
+	XOR EDI, EDI
+	MOV R14, R9
+	CMP R15, RDX
+	CMOVNE RDI, R15
+	SAR R14
+	ADD R14, R9
+	MOV R13, R14
+	SAL R13, 0x4
+	CMP R13, 0x7f
+	JNG 0x159
+	MOV EAX, 0x1
+	SUB EAX, ECX
+	MOV RCX, R14
+	CDQE
+	SUB RCX, R9
+	CMP RAX, RCX
+	JNG 0x159
+	LEA R14, qword [R9+RAX]
+	MOV qword [RBP+0xb0], R9
+	MOV R13, R14
+	MOV qword [RBP+0xb8], RDI
+	SAL R13, 0x4
+	MOV RSI, R13
+	CALL 0xffffc496
+	MOV RDI, qword [RBP+0xb8]
+	MOV R9, qword [RBP+0xb0]
+	LEA RDX, qword [0x3ec7]
+	TEST RAX, RAX
+	MOV R8, RAX
+	JZ 0x15c
+	MOV qword [0x3ec4], R8
+	CMP R15, RDX
+	JZ 0x13b
+	MOV RDI, R9
+	MOV RCX, R13
+	MOV RDX, R14
+	MOV qword [RBP+0xb8], R8
+	SAL RDI, 0x4
+	CMP RDI, R13
+	CMOVAE RCX, RDI
+	SUB RDX, R9
+	XOR ESI, ESI
+	SAL RDX, 0x4
+	SUB RCX, RDI
+	ADD RDI, R8
+	CALL 0xffffc4bf
+	MOV dword [0x3e48], R14D
+	MOV R15, qword [RBP+0xb8]
+	MOV R8D, dword [R12+0x4]
+	LEA RAX, qword [R12+0x8]
+	MOV R14, qword [R15]
+	MOV R13, qword [R15+0x8]
+	MOV ECX, dword [R12]
+	MOV qword [RBP+0xb0], RAX
+	MOV R9, RAX
+	OR R8D, 0x1
+	MOV RDX, qword [RBP+0xc8]
+	MOV RSI, R14
+	MOV dword [RBP+0xb8], R8D
+	MOV RDI, R13
+	PUSH qword [R12+0x30]
+	PUSH qword [R12+0x28]
+	CALL 0xffffe6f7
+	POP RCX
+	POP RSI
+	CMP RAX, R14
+	JNAE 0x67
+	LEA RSI, qword [RAX+0x1]
+	LEA RAX, qword [0x3e85]
+	MOV qword [R15], RSI
+	CMP R13, RAX
+	JZ 0x10
+	MOV RDI, R13
+	MOV qword [RBP+0xa8], RSI
+	CALL 0xffffc181
+	MOV RSI, qword [RBP+0xa8]
+	MOV RDI, RSI
+	MOV qword [RBP+0xa8], RSI
+	CALL 0xffffc381
+	MOV R13, RAX
+	TEST RAX, RAX
+	JZ 0x80
+	MOV ECX, dword [R12]
+	MOV RDX, qword [RBP+0xc8]
+	MOV qword [R15+0x8], RAX
+	MOV RDI, RAX
+	MOV R9, qword [RBP+0xb0]
+	MOV R8D, dword [RBP+0xb8]
+	PUSH qword [R12+0x30]
+	MOV RSI, qword [RBP+0xa8]
+	PUSH qword [R12+0x28]
+	CALL 0xffffe68b
+	POP RAX
+	POP RDX
+	MOV EAX, dword [RBP+0xc4]
+	MOV dword [RBX], EAX
+	LEA RSP, qword [RBP+0xd8]
+	MOV RAX, R13
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP R15
+	POP RBP
+	RET
+	BD
+	MOV EBP, 0x80
+	MOV R14D, 0x8
+	JMP 0xfffffe96
+	NOP dword [RAX+0x0]
+	MOV RSI, R13
+	MOV qword [RBP+0xb8], R9
+	CALL 0xffffc34c
+	MOV R9, qword [RBP+0xb8]
+	LEA RDX, qword [0x3d81]
+	TEST RAX, RAX
+	MOV R8, RAX
+	JNZ 0xfffffeba
+	CALL 0xffffdcd0
+	MOVDQA
+	ADD EAX, 0x3d68
+	MOVUPS
+	ADD C, BH
+	MOV AH, 0xfe
+	DEC dword [RAX+0x85]
+	PUSH qword [RBP+0x85+0x4d]
+	IN
+	MOV R13D, 0x0
+	JZ 0xfffffe90
+	JMP 0xd4
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	PUSH RBP
+	MOV RBP, RSP
+	SUB RSP, 0x40
+	MOVDQA
+	ADD EAX, 0x1ac0
+	MOV RAX, qword [RBP+0x28]
+	MOV qword [RBP+0xf8], RAX
+	XOR EAX, EAX
+	LEA RSI, qword [RBP+0xc0]
+	MOV qword [RBP+0xc0], 0x3
+	MOVUPS
+	ENTER 0xf66, 0xef
+	ROR byte [RDI], 0x11
+	FSUB
+	PXOR
+	ROR byte [RDI], 0x11
+	CALL 0xfffd8ce8
+	DEC dword [RAX+0x8b]
+	PUSH RBP
+	CLC
+	SUB RDX, qword [RBP+0x28]
+	JNZ 0x2
+	LEAVE
+	RET
+	CALL 0xffffc156
+	00
+	ADD B, CH
+	PUSH
+	CLI
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH RBX
+	SUB RSP, 0x8
+	MOV RAX, qword [0x3c44]
+	MOV RDI, qword [RAX]
+	CALL 0xffffdd84
+	TEST EAX, EAX
+	JZ 0x40
+	MOV EDX, 0x5
+	LEA RSI, qword [0xc78]
+	XOR EDI, EDI
+	CALL 0xffffc0ed
+	MOV RBX, RAX
+	CALL 0xffffc035
+	XOR EDI, EDI
+	MOV RCX, RBX
+	LEA RDX, qword [0xe4a]
+	MOV ESI, dword [RAX]
+	XOR EAX, EAX
+	CALL 0xffffc280
+	MOV EDI, dword [0x3c5e]
+	CALL 0xffffc035
+	NOP dword [RAX+RAX+0x0]
+	MOV RAX, qword [0x3c29]
+	MOV RDI, qword [RAX]
+	CALL 0xffffdd31
+	TEST EAX, EAX
+	JNZ 0x6
+	MOV RBX, qword [RBP+0xf8]
+	LEAVE
+	RET
+	MOV EDI, dword [0x3c35]
+	CALL 0xffffc00c
+	00
+	ADD byte [RAX], A
+	ADD byte [RAX], A
+	NOP
+	PUSH RBP
+	MOV RBP, RSP
+	PUSH R15
+	XOR R15D, R15D
+	PUSH R14
+	MOV R14, RSI
+	PUSH R13
+	MOV R13, RDI
+	PUSH R12
+	PUSH RBX
+	SUB RSP, 0x8
+	TEST RSI, RSI
+	JZ 0x5a
+	NOP
+	MOV R12, R14
+	NOP dword [RAX+RAX+0x0]
+	MOV RDX, R12
+	MOV RSI, R13
+	MOV EDI, 0x1
+	CALL 0xffffbff8
+	MOV RBX, RAX
+	TEST RAX, RAX
+	JNS 0x50
+	CALL 0xffffbf9b
+	MOV EAX, dword [RAX]
+	CMP EAX, 0x4
+	JZ 0xdc
+	CMP R12, 0x7ff00000
+	JNA 0x13
+	CMP EAX, 0x16
+	JNZ 0xe
+	MOV R12D, 0x7ff00000
+	JMP 0xc6
+	00
+	ADD byte [RAX+0x83], C
+	STI
+	PUSH qword [RCX+RBX+0x49]
+	ADD EDI, EBX
+	ADD R13, RBX
+	SUB R14, RBX
+	JNZ 0xa7
+	ADD RSP, 0x8
+	MOV RAX, R15
+	POP RBX
+	POP R12
+	POP R13
+	POP R14
+	POP R15
+	POP RBP
+	RET
+	NOP dword [RAX+RAX+0x0]
+	JNZ 0xdc
+	CALL 0xffffbf49
+	MOV dword [RAX], 0x1c
+	JMP 0xda
+	NOP
+	ENDBR64
+	MOV RDX, qword [0x3b6d]
+	XOR ESI, ESI
+	JMP 0xffffc1be
+
+section .fini
+	ENDBR64
+	SUB RSP, 0x8
+	ADD RSP, 0x8
+

@@ -1,4 +1,5 @@
-#[allow(dead_code, unused)]
+#![allow(dead_code, unused)]
+mod decoder;
 mod instruction_tree;
 use bevy_reflect::{GetPath, PartialReflect, Reflect};
 use core::panic;
@@ -16,10 +17,10 @@ use std::{
 };
 use textwrap::fill;
 
-use crate::instruction_tree::{
-    ArchSize, ByteString, Context, CustomFormat, Decoder, InstructionFormatting, InstructionTree,
-    ParseResponse,
+use crate::decoder::{
+    ArchSize, ByteString, Context, CustomFormat, Decoder, InstructionFormatting, ParseResponse,
 };
+use crate::instruction_tree::{Instruction, InstructionTree, OperandSize};
 
 #[derive(Debug, PartialEq, PartialOrd)]
 enum OutputFormat {
@@ -687,7 +688,7 @@ impl SecJson {
 
 #[derive(Serialize)]
 struct CodeJson {
-    instruction: instruction_tree::Instruction,
+    instruction: Instruction,
     text: String,
     bytes: Vec<u8>,
 }
@@ -698,13 +699,13 @@ impl CodeJson {
             instruction: ins
                 .instruction
                 .as_ref()
-                .unwrap_or(&instruction_tree::Instruction {
+                .unwrap_or(&Instruction {
                     opcode: String::new(),
                     text: String::new(),
                     x64: true,
                     legacy: true,
                     operands: None,
-                    size: instruction_tree::OperandSize::Any,
+                    size: OperandSize::Any,
                     invalid_prefixes: Vec::new(),
                     description: String::new(),
                 })

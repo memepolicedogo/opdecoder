@@ -1046,7 +1046,7 @@ impl ByteString {
 pub struct InstructionResponse {
     pub val: Option<Instruction>,
     pub size: usize,
-    pub pref_size: usize,
+    pub prefixes: Option<Vec<u8>>,
 }
 
 #[derive(Debug)]
@@ -1060,6 +1060,7 @@ pub struct ParseResponse {
     pub instruction: Option<Instruction>,
     pub operands: Option<Vec<Operand>>,
     pub bytes: Option<Vec<u8>>,
+    pub prefixes: Option<Vec<u8>>,
 }
 
 impl CustomFormat for ParseResponse {
@@ -1070,6 +1071,14 @@ impl CustomFormat for ParseResponse {
             format!("{:02X}", self.bytes.as_ref().unwrap()[0])
         } else {
             let mut full_str = String::new();
+            if self.prefixes.is_some() {
+                for prefix in self.prefixes.as_ref().unwrap() {
+                    let str = opts.prefixes.get(prefix);
+                    if str.is_some() {
+                        full_str.push_str(str.unwrap());
+                    }
+                }
+            }
             let ins = self.instruction.as_ref().unwrap();
             // Get the base instruction name sans ops
             full_str.push_str(ins.text.split(' ').collect::<Vec<_>>()[0]);
@@ -1477,6 +1486,7 @@ impl Decoder {
                 instruction: None,
                 operands: None,
                 bytes: None,
+                prefixes: None,
             };
         }
         let instruction = self.parse_instruction();
@@ -1487,15 +1497,22 @@ impl Decoder {
                 instruction: None,
                 operands: None,
                 bytes: Some(vec![byte]),
+                prefixes: None,
             };
         }
         // Format instruction
         let operands = self.parse_operands(&instruction);
-        let start_offset = -((instruction.size + instruction.pref_size + operands.size) as isize);
+        let pref_size = if instruction.prefixes.is_some() {
+            instruction.prefixes.as_ref().unwrap().len()
+        } else {
+            0
+        };
+        let start_offset = -((instruction.size + pref_size + operands.size) as isize);
         ParseResponse {
             instruction: instruction.val,
             operands: operands.val,
             bytes: Some(Vec::from(self.code.get_slice_offset(start_offset, 0))),
+            prefixes: instruction.prefixes,
         }
     }
 
@@ -2118,24 +2135,24 @@ impl Decoder {
             return InstructionResponse {
                 val: None,
                 size: 1,
-                pref_size: 0,
+                prefixes: None,
             };
         }
         // Figure out the prefixes
-        for byte in prefix {
+        for byte in &prefix {
             // If byte isn't in range to be a valid prefix then escape
             if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
-                self.context.rex = Some(Rex::from(byte));
-            } else if byte < 0x26 || byte > 0xf3 {
+                self.context.rex = Some(Rex::from(*byte));
+            } else if *byte < 0x26 || *byte > 0xf3 {
                 break;
-            } else if byte >= 0xf0 {
-                self.context.one = byte;
-            } else if byte == 0x66 {
+            } else if *byte >= 0xf0 {
+                self.context.one = *byte;
+            } else if *byte == 0x66 {
                 self.context.op_override = true;
-            } else if byte == 0x67 {
+            } else if *byte == 0x67 {
                 self.context.addr_override = true;
             } else {
-                self.context.two = match byte {
+                self.context.two = match *byte {
                     0x2e => 0x2e,
                     0x36 => 0x36,
                     0x3e => 0x3e,
@@ -2218,7 +2235,7 @@ impl Decoder {
             return InstructionResponse {
                 val: None,
                 size: 0,
-                pref_size: 0,
+                prefixes: None,
             };
         } else {
             // Adjust size
@@ -2239,7 +2256,7 @@ impl Decoder {
             return InstructionResponse {
                 val: Some(rep),
                 size,
-                pref_size: prefix_count,
+                prefixes: Some(prefix),
             };
         } else if valids[0].description.starts_with("Jump")
             || valids[0].description.starts_with("Mult")
@@ -2255,7 +2272,7 @@ impl Decoder {
             return InstructionResponse {
                 val: Some(rep),
                 size,
-                pref_size: prefix_count,
+                prefixes: Some(prefix),
             };
         } else if valids[0].text.starts_with("PUSH") {
             // PUSHF vs PUSHF(QD) is evil
@@ -2270,7 +2287,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2284,7 +2301,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2305,7 +2322,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2319,7 +2336,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2335,7 +2352,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2349,7 +2366,7 @@ impl Decoder {
                         return InstructionResponse {
                             val: Some(rep),
                             size,
-                            pref_size: prefix_count,
+                            prefixes: Some(prefix),
                         };
                     }
                 }
@@ -2367,7 +2384,7 @@ impl Decoder {
                     return InstructionResponse {
                         val: Some(rep),
                         size,
-                        pref_size: prefix_count,
+                        prefixes: Some(prefix),
                     };
                 }
             }

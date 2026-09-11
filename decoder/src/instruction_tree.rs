@@ -239,9 +239,157 @@ const IGNORED_CODES: [&'static str; 13] = [
 
 const VEX_THREE_BYTE_FORM_REQS: [&'static str; 5] = ["W0", "W1", "0F", "0F38", "0F3A"];
 
+// helper class for handling VEX prefixes
+struct Vex {
+    l: Option<bool>,
+    w: Option<bool>,
+    m: Option<u8>,
+    p: Option<u8>,
+}
+
+impl Vex {
+    pub fn three_byte(&self) -> Vec<OpByte> {
+        let mut bytes = Vec::new();
+        // Three byte prefix
+        bytes.push(OpByte {
+            code: 0b11000100,
+            mask: 0b11111111,
+            inv_code: 0,
+            inv_mask: 0,
+        });
+        let mut code = 0;
+        let mut mask = 0b00011111;
+        match self.m {
+            Some(m) => code = m,
+            None => mask = 0,
+        }
+        bytes.push(OpByte {
+            code,
+            mask,
+            inv_code: 0,
+            inv_mask: 0,
+        });
+        code = 0;
+        mask = 0b10000111;
+        // If w need equal 1 add it to the code, if W is ignored remove it from the mask
+        match self.w {
+            Some(w) => {
+                if w {
+                    code = code | 0b10000000
+                }
+            }
+            None => mask = mask & 0b01111111,
+        }
+        // If L is specified add the specified value to the code
+        // if not clear it from the mask
+        match self.l {
+            Some(l) => {
+                if l {
+                    code = code | 0b100
+                }
+            }
+            None => mask = (mask & 0b11111011),
+        }
+        // If pp is specified add the specified value to the code
+        // if not clear it from the mask
+        match self.p {
+            Some(p) => code = code | p,
+            None => mask = (mask & 0b11111100),
+        }
+        bytes.push(OpByte {
+            code,
+            mask,
+            inv_code: 0,
+            inv_mask: 0,
+        });
+        bytes
+    }
+
+    pub fn two_byte(&self) -> Option<Vec<OpByte>> {
+        // Can be expressed in 2 bytes?
+        if self.w.is_some() || self.m.is_some() {
+            return None;
+        }
+        let mut bytes = Vec::new();
+        // Two byte prefix
+        bytes.push(OpByte {
+            code: 0b11000101,
+            mask: 0b11111111,
+            inv_code: 0,
+            inv_mask: 0,
+        });
+        let mut code = 0;
+        let mut mask = 0b1011;
+        // If L is specified add the specified value to the code
+        // if not clear it from the mask
+        match self.l {
+            Some(l) => {
+                if l {
+                    code = code | 0b100
+                }
+            }
+            None => mask = (mask & 0b011),
+        }
+        // If pp is specified add the specified value to the code
+        // if not clear it from the mask
+        match self.p {
+            Some(p) => code = code | p,
+            None => mask = (mask & 0b1100),
+        }
+        bytes.push(OpByte {
+            code,
+            mask,
+            inv_code: 0,
+            inv_mask: 0,
+        });
+        Some(bytes)
+    }
+
+    pub fn from_str(str: &str) -> Vex {
+        let mut out = Vex {
+            l: None,
+            w: None,
+            m: None,
+            p: None,
+        };
+        for sec in str.split('.') {
+            match sec {
+                "VEX" => continue,
+
+                "256" | "L1" => out.l = Some(true),
+                "128" | "L0" | "LZ" => out.l = Some(false),
+                "LIG" => out.l = None,
+
+                "w1" => out.w = Some(true),
+                "W0" | "WZ" => out.w = Some(false),
+                "WIG" => out.w = None,
+
+                "66" => out.p = Some(0b01),
+                "F3" => out.p = Some(0b10),
+                "F2" => out.p = Some(0b11),
+                "NP" => out.p = None,
+
+                "0F" => out.m = Some(0b00001),
+                "0F38" => out.m = Some(0b00010),
+                "0F3A" => out.m = Some(0b00011),
+
+                _ => continue,
+            }
+        }
+        out
+    }
+}
+
+enum OpcodeResponse {
+    Normal(Vec<OpByte>),
+    Vex(Vec<OpByte>, Option<Vec<OpByte>>),
+}
+
 impl<'a> InstructionTree {
-    fn parse_opcode(opcode: &String) -> Vec<OpByte> {
+    fn parse_opcode(opcode: &String) -> OpcodeResponse {
         let mut result = Vec::new();
+        let mut optional = None;
+        let mut is_vex = false;
         let components = opcode.split(' ');
         for byte in components {
             // Immediate/Code offset means we're at the end of the opcode
@@ -280,6 +428,14 @@ impl<'a> InstructionTree {
                         ..Default::default()
                     });
                 }
+            } else if byte.starts_with("VEX.") {
+                //TODO: VEX
+                is_vex = true;
+                let vex = Vex::from_str(byte);
+                result = vex.three_byte();
+                optional = vex.two_byte();
+            } else if byte.starts_with("EVEX.") {
+                //TODO: EVEX
             } else if byte.starts_with('/') {
                 // MOD | d | R/M
                 if byte.ends_with('0') {
@@ -379,7 +535,18 @@ impl<'a> InstructionTree {
                 panic!("Implement my pages");
             }
         }
-        return result;
+        if is_vex {
+            match optional {
+                Some(mut path) => {
+                    // update 2 byte form with non prefix path (all elements past index 2)
+                    path.extend(result.clone().into_iter().skip(3));
+                    return OpcodeResponse::Vex(result, Some(path));
+                }
+                None => return OpcodeResponse::Vex(result, optional),
+            }
+        } else {
+            return OpcodeResponse::Normal(result);
+        }
     }
 
     pub fn from_legacy_json(json: &String) -> Vec<Vec<Instruction>> {
@@ -592,6 +759,32 @@ impl<'a> InstructionTree {
         return Some(res);
     }
 
+    fn add_instruction(&mut self, path: Vec<OpByte>, instruction: &Instruction) {
+        let mut node_index = self.root;
+        for step in path {
+            // Iterate through every opcode byte in the instruction, creating new nodes as
+            // needed until we're at the end
+            let next_index = if let Some(&child) = self.nodes[node_index].children.get(&step) {
+                child
+            } else {
+                let new_index = self.nodes.len();
+                self.nodes.push(Node {
+                    val: step,
+                    instructions: Vec::new(),
+                    children: HashMap::new(),
+                });
+                self.nodes[node_index].children.insert(step, new_index);
+                new_index
+            };
+
+            node_index = next_index;
+            self.last = node_index;
+        }
+        // Add instruction to final node
+        self.nodes[self.last].instructions.push(instruction.clone());
+        // Reset last
+        self.last = self.root;
+    }
     pub fn from_json(json: &String) -> Self {
         let json_result = serde_json::from_str::<Vec<Vec<Instruction>>>(json);
         let tables = if json_result.is_err() {
@@ -617,32 +810,16 @@ impl<'a> InstructionTree {
         };
         for table in tables {
             for instruction in table {
-                let path = InstructionTree::parse_opcode(&instruction.opcode);
-                let mut node_index = result.root;
-                for step in path {
-                    // Iterate through every opcode byte in the instruction, creating new nodes as
-                    // needed until we're at the end
-                    let next_index =
-                        if let Some(&child) = result.nodes[node_index].children.get(&step) {
-                            child
-                        } else {
-                            let new_index = result.nodes.len();
-                            result.nodes.push(Node {
-                                val: step,
-                                instructions: Vec::new(),
-                                children: HashMap::new(),
-                            });
-                            result.nodes[node_index].children.insert(step, new_index);
-                            new_index
-                        };
-
-                    node_index = next_index;
-                    result.last = node_index;
+                // Get the byte path(s) and add instructions on those paths
+                match InstructionTree::parse_opcode(&instruction.opcode) {
+                    OpcodeResponse::Normal(p) => result.add_instruction(p, &instruction),
+                    OpcodeResponse::Vex(three, two) => {
+                        result.add_instruction(three, &instruction);
+                        if two.is_some() {
+                            result.add_instruction(two.unwrap(), &instruction);
+                        }
+                    }
                 }
-                // Add instruction to final node
-                result.nodes[result.last].instructions.push(instruction);
-                // Reset last
-                result.last = result.root;
             }
         }
 

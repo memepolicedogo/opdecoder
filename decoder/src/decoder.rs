@@ -173,6 +173,96 @@ pub enum ArchSize {
     I64,
 }
 
+// helper class for handling VEX prefixes
+struct Vex {
+    l: Option<bool>,
+    w: Option<bool>,
+    m: Option<u8>,
+    p: Option<u8>,
+}
+
+impl Vex {
+    pub fn from_vec(arr: &Vec<u8>) -> Option<Self> {
+        let mut vex = Self {
+            l: None,
+            w: None,
+            m: None,
+            p: None,
+        };
+
+        match arr[0] {
+            0xC4 => {
+                // Three Byte
+                if arr.len() < 3 {
+                    return None;
+                }
+                vex.m = Some(arr[1] & 0b00011111);
+                vex.w = Some((arr[2] & 0b10000000) != 0);
+                vex.l = Some((arr[2] & 0b00000100) != 0);
+                vex.p = Some(arr[2] & 0b00000011);
+
+                return Some(vex);
+            }
+            0xC5 => {
+                // Two byte
+                if arr.len() < 2 {
+                    return None;
+                }
+                vex.l = Some((arr[1] & 0b00000100) != 0);
+                vex.p = Some(arr[1] & 0b00000011);
+
+                return Some(vex);
+            }
+            _ => return None,
+        }
+    }
+
+    pub fn from(str: &str) -> Self {
+        let mut out = Self {
+            l: None,
+            w: None,
+            m: None,
+            p: None,
+        };
+        for sec in str.split('.') {
+            match sec {
+                "VEX" => continue,
+
+                "256" | "L1" => out.l = Some(true),
+                "128" | "L0" | "LZ" => out.l = Some(false),
+                "LIG" => out.l = None,
+
+                "W1" => out.w = Some(true),
+                "W0" | "WZ" => out.w = Some(false),
+                "WIG" => out.w = None,
+
+                "66" => out.p = Some(0b01),
+                "F3" => out.p = Some(0b10),
+                "F2" => out.p = Some(0b11),
+                "NP" => out.p = None,
+
+                "0F" => out.m = Some(0b00001),
+                "0F38" => out.m = Some(0b00010),
+                "0F3A" => out.m = Some(0b00011),
+
+                "660F" => {
+                    out.m = Some(0b00001);
+                    out.p = Some(0b01);
+                }
+
+                _ => continue,
+            }
+        }
+        out
+    }
+}
+
+impl PartialEq for Vex {
+    fn eq(&self, other: &Self) -> bool {
+        self.l == other.l && self.w == other.w && self.m == other.m && self.p == other.p
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Rex {
     pub w: bool,
@@ -205,6 +295,7 @@ pub struct Context {
     pub op_override: bool,
     pub addr_override: bool,
     pub rex: Option<Rex>,
+    pub vexv: Option<u8>,
 }
 
 impl Default for Context {
@@ -216,6 +307,7 @@ impl Default for Context {
             op_override: false,
             addr_override: false,
             rex: None,
+            vexv: None,
         }
     }
 }
@@ -227,6 +319,7 @@ impl Context {
         self.two = 0;
         self.op_override = false;
         self.addr_override = false;
+        self.vexv = None;
     }
     pub fn addr_size(&self) -> OperandSize {
         match self.size {
@@ -1059,7 +1152,15 @@ impl Decoder {
                     }));
                 }
                 //TODO: Handle Vex.vvvv
-                OperandEncoding::Bespoke | OperandEncoding::Vexv => {
+                OperandEncoding::Vexv => {
+                    operands.push(Operand::Reg(Register {
+                        index: (self.context.vexv.unwrap() ^ 0b1111) as usize,
+                        size: *real_size,
+                        group: RegisterType::MMXReg, //TODO: This isn't always right
+                        rex: false,
+                    }));
+                }
+                OperandEncoding::Bespoke => {
                     let is_reg = Regex::new("([ER]?[AC]X)|([AC][HL])").unwrap();
                     let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
                     // If register literal
@@ -1257,6 +1358,7 @@ impl Decoder {
         let mut byte: u8;
         let mut prefix = Vec::new();
         let mut opcode = Vec::new();
+        let mut skip = 0;
         // Reset Context
         self.tree.reset();
         self.context.reset();
@@ -1267,15 +1369,22 @@ impl Decoder {
         let mut prefix_count = 0;
         let ins = 'parent: loop {
             self.tree.reset();
-            for i in prefix_count..MAX_WIDTH {
+            skip = 0;
+            for position in prefix_count..MAX_WIDTH {
+                let i = position + skip;
                 byte = self.code.get_offset(i as isize);
+                if byte == 0xC4 {
+                    skip = 2;
+                } else if byte == 0xC5 {
+                    skip = 1
+                }
                 let rep = self.tree.step(byte);
                 if rep.bottom && rep.val.is_empty() {
                     prefix_count += 1;
                     break;
                 } else if rep.bottom {
                     // We've found at least one match
-                    // Iterate and handle prefix bytes
+                    // Handle prefix bytes
                     for _ in 0..prefix_count {
                         prefix.push(self.code.get());
                         self.code.inc();
@@ -1292,6 +1401,7 @@ impl Decoder {
                 break Vec::new();
             }
         };
+        //println!("{:#?}", ins);
         if ins.is_empty() {
             return InstructionResponse {
                 val: None,
@@ -1302,17 +1412,7 @@ impl Decoder {
         // Figure out the prefixes
         for byte in &prefix {
             // If byte isn't in range to be a valid prefix then escape
-            if (byte & 0b11111110) == 0b11000100 {
-                //TODO: VEX
-                if (byte % 2) == 1 {
-                    // 2 byte
-                    let _rex = Rex::from(0);
-                } else {
-                    // 3 byte
-                }
-            } else if *byte == 0x62 {
-                //TODO: EVEX
-            } else if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
+            if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
                 self.context.rex = Some(Rex::from(*byte));
             } else if *byte < 0x26 || *byte > 0xf3 {
                 break;
@@ -1340,26 +1440,41 @@ impl Decoder {
         if (opcode[0] & 0b11110000) == 0b01000000 {
             self.context.rex = Some(Rex::from(opcode[0]));
         }
-        // Context is probably accurate now idk
-        // Now we have to do conflict resolution and ensure that the prefixes and the instruction
-        // match
         let mut valids = Vec::new();
-        for instruction in ins {
-            // Check if instruction matches the vibes
-            if instruction.opcode.contains("NP")
-                && (self.context.one == 0xf2
-                    || self.context.one == 0xf3
-                    || self.context.op_override)
-            {
-                //Invalid
-                continue;
-            } else if instruction.opcode.contains("NFx")
-                && (self.context.one == 0xf2 || self.context.one == 0xf3)
-            {
-                //Invalid
-                continue;
+        // VEX!
+        if ((opcode[0] & 0b11111110) == 0b11000100) {
+            // Yup its vex
+            let vex = Vex::from_vec(&opcode).expect("WTF!!!");
+            self.context.vexv = Some((opcode[(2 - (opcode[0] & 1)) as usize] & 0b1111000) >> 3);
+            for instruction in ins {
+                // get vex vibes for instruction
+                // check if it vibes with the jit
+                let ins_vex = Vex::from(&instruction.opcode.split(' ').next().unwrap());
+                if ins_vex == vex {
+                    valids.push(instruction);
+                }
             }
-            valids.push(instruction);
+        } else {
+            // Context is probably accurate now idk
+            // Now we have to do conflict resolution and ensure that the prefixes and the instruction
+            // match
+            for instruction in ins {
+                // Check if instruction matches the vibes
+                if instruction.opcode.contains("NP")
+                    && (self.context.one == 0xf2
+                        || self.context.one == 0xf3
+                        || self.context.op_override)
+                {
+                    //Invalid
+                    continue;
+                } else if instruction.opcode.contains("NFx")
+                    && (self.context.one == 0xf2 || self.context.one == 0xf3)
+                {
+                    //Invalid
+                    continue;
+                }
+                valids.push(instruction);
+            }
         }
         // Are any invalid on target arch?
         let mut i = 0;
@@ -1565,6 +1680,7 @@ impl Decoder {
         // ??
         println!("{:#?}", valids);
         println!("Context: {:#?}", self.context);
+        println!("Opcode: {:#?}", opcode);
         panic!("Multiple instructions found matching paramaters");
     }
 }

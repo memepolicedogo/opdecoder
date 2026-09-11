@@ -221,6 +221,13 @@ impl Default for Context {
 }
 
 impl Context {
+    pub fn reset(&mut self) {
+        self.rex = None;
+        self.one = 0;
+        self.two = 0;
+        self.op_override = false;
+        self.addr_override = false;
+    }
     pub fn addr_size(&self) -> OperandSize {
         match self.size {
             ArchSize::I64 => {
@@ -1051,7 +1058,8 @@ impl Decoder {
                         }
                     }));
                 }
-                OperandEncoding::Bespoke => {
+                //TODO: Handle Vex.vvvv
+                OperandEncoding::Bespoke | OperandEncoding::Vexv => {
                     let is_reg = Regex::new("([ER]?[AC]X)|([AC][HL])").unwrap();
                     let reg_mem_size_dif = Regex::new("r(8|16|32|64)/m(8|16|32|64)").unwrap();
                     // If register literal
@@ -1251,11 +1259,7 @@ impl Decoder {
         let mut opcode = Vec::new();
         // Reset Context
         self.tree.reset();
-        self.context.rex = None;
-        self.context.one = 0;
-        self.context.two = 0;
-        self.context.op_override = false;
-        self.context.addr_override = false;
+        self.context.reset();
         // Step until we bottom out
         // If no instructions parse one byte as prefix, step again
         // Continue until nothing for 4th prefix byte
@@ -1298,7 +1302,17 @@ impl Decoder {
         // Figure out the prefixes
         for byte in &prefix {
             // If byte isn't in range to be a valid prefix then escape
-            if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
+            if (byte & 0b11111110) == 0b11000100 {
+                //TODO: VEX
+                if (byte % 2) == 1 {
+                    // 2 byte
+                    let _rex = Rex::from(0);
+                } else {
+                    // 3 byte
+                }
+            } else if *byte == 0x62 {
+                //TODO: EVEX
+            } else if (byte & 0b11110000) == 0b01000000 && self.context.size == ArchSize::I64 {
                 self.context.rex = Some(Rex::from(*byte));
             } else if *byte < 0x26 || *byte > 0xf3 {
                 break;

@@ -76,6 +76,7 @@ pub enum OperandEncoding {
     Immediate, // Immediate value, including offsets
     Modrm,     // Modrm +? SIB byte(s)
     Modreg,
+    Vexv,    // Vex.vvvv
     Bespoke, // Something evil and vile
 }
 
@@ -531,6 +532,7 @@ impl<'a> InstructionTree {
                     inv_mask,
                 });
             } else {
+                println!("Opcode: {:?}", opcode);
                 println!("Unimplemented Byte: {:?}", byte);
                 panic!("Implement my pages");
             }
@@ -591,14 +593,30 @@ impl<'a> InstructionTree {
         if instruction.operands.is_none() && !op_in_code.is_match(&instruction.opcode) {
             return None;
         }
-        let ops = if instruction.operands.is_none() {
+        let mut ops = if instruction.operands.is_none() {
             // Evil FPU code
-            &vec![String::from("opcode")]
+            &mut vec![String::from("opcode")]
         } else {
-            instruction.operands.as_ref().unwrap()
+            &mut instruction.operands.clone().unwrap()
         };
-        if ops[0] == "N/A" {
+
+        // Return if there are no operands
+        // First check if it's a tuple jit
+        if ops[0] == "N/A" && ops[1] == "N/A" {
             return None;
+        //TODO: Parse tuple info better
+        } else if ops[0] == "N/A"
+            || ops[0].starts_with("Full")
+            || ops[0].starts_with("Tuple")
+            || ops[0].starts_with("Half")
+            || ops[0].starts_with("Quarter")
+            || ops[0].starts_with("Eighth")
+            || ops[0].starts_with("Scalar")
+            || ops[0].starts_with("MOVDDUP")
+        {
+            // This means its got a tuple
+            // Just ignore for now
+            ops.remove(0);
         }
         // ADD r/m64, imm8 -> ["ADD r/m64", " imm8"]
         let mut ins_ops: Vec<&str> = instruction.text.split(",").collect();
@@ -608,7 +626,7 @@ impl<'a> InstructionTree {
         }
         let mut res = Vec::new();
         let mut i = 0;
-        while i < ops.len() && ops[i] != "N/A" {
+        while i < ins_ops.len() && ops[i] != "N/A" {
             if ops[i] == "1" || ops[i].starts_with("Implicit") {
                 break;
             }
@@ -620,11 +638,11 @@ impl<'a> InstructionTree {
                 text: String::from(ins_ops[i]),
             };
             // Get size
-            new.size = if ins_ops[i].ends_with("512") {
+            new.size = if ins_ops[i].ends_with("512") || ins_ops[i].starts_with("zmm") {
                 OperandSize::DoubleQuadQuad
             } else if ins_ops[i].ends_with("384") {
                 OperandSize::Z
-            } else if ins_ops[i].ends_with("256") {
+            } else if ins_ops[i].ends_with("256") || ins_ops[i].starts_with("ymm") {
                 OperandSize::QuadQuad
             } else if ins_ops[i].ends_with("128") || ins_ops[i].starts_with("xmm") {
                 OperandSize::DoubleQuad
@@ -658,6 +676,8 @@ impl<'a> InstructionTree {
                 } else {
                     OperandEncoding::Modrm
                 }
+            } else if ops[i].contains("VEX.vvvv") {
+                OperandEncoding::Vexv
             } else if ops[i].starts_with("imm")
                 || ops[i].starts_with("Offset")
                 || ops[i].starts_with("Moffs")
@@ -735,6 +755,7 @@ impl<'a> InstructionTree {
                     }
                 }
                 OperandEncoding::Immediate => None,
+                OperandEncoding::Vexv => Some(RegisterType::MMXReg),
                 _ => Some(RegisterType::GPReg),
             };
             if new.encoding == OperandEncoding::Bespoke {
@@ -811,6 +832,11 @@ impl<'a> InstructionTree {
         for table in tables {
             for instruction in table {
                 // Get the byte path(s) and add instructions on those paths
+                // Skip EVEX for now
+                //TODO: Delete this when I'm doing EVEX
+                if instruction.opcode.starts_with("EVEX") {
+                    continue;
+                }
                 match InstructionTree::parse_opcode(&instruction.opcode) {
                     OpcodeResponse::Normal(p) => result.add_instruction(p, &instruction),
                     OpcodeResponse::Vex(three, two) => {

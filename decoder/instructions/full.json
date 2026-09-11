@@ -10823,7 +10823,7 @@
     ],
     [
         {
-            "opcode": "66 0F38 CF /r",
+            "opcode": "66 0F 38 CF /r",
             "instruction": "GF2P8MULB xmm1, xmm2/m128",
             "operands": [
                 "N/A",
@@ -45652,7 +45652,7 @@
             "description": "Zero extend 2 packed 16-bit integers in the low 4 bytes of xmm2/m32 to 2 packed 64-bit integers in xmm1."
         },
         {
-            "opcode": "VEX.128.66.0F 38.WIG 35 /r",
+            "opcode": "VEX.128.66.0F38.WIG 35 /r",
             "instruction": "VPMOVZXDQ xmm1, xmm2/m64",
             "operands": [
                 "N/A",
